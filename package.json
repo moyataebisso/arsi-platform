@@ -1,0 +1,22 @@
+{
+  "name": "arsi-platform",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "dev:dashboard": "turbo dev --filter=dashboard",
+    "dev:starter": "turbo dev --filter=starter-app",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check"
+  },
+  "devDependencies": {
+    "turbo": "latest"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

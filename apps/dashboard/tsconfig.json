@@ -1,0 +1,9 @@
+{
+  "extends": "@arsi/config/typescript",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "paths": { "@/*": ["./src/*"] }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.mts"],
+  "exclude": ["node_modules"]
+}

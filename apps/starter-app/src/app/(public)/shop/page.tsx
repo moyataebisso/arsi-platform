@@ -1,0 +1,16 @@
+import { notFound } from 'next/navigation'
+import { isModuleEnabled } from '@/lib/modules'
+import { siteConfig } from '../../../../../site.config'
+
+export const metadata = { title: `${siteConfig.pages.shop.title} | ${siteConfig.business.name}` }
+
+export default function ShopPage() {
+  if (!isModuleEnabled('ecommerce')) notFound()
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-16">
+      <h1 className="text-4xl font-bold mb-6">{siteConfig.pages.shop.title}</h1>
+      <p className="text-gray-600">Products coming soon.</p>
+    </div>
+  )
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@arsi/config",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./tailwind": "./tailwind.config.ts",
+    "./typescript": "./tsconfig.json"
+  }
+}
