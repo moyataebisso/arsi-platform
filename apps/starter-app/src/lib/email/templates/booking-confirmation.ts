@@ -1,4 +1,4 @@
-import { siteConfig } from '../../../../../site.config'
+import { siteConfig } from '@config'
 
 export function bookingConfirmationEmail(params: {
   name: string

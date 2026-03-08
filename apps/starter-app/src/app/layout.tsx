@@ -1,9 +1,6 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
-import { siteConfig } from '../../../site.config'
-
-const inter = Inter({ subsets: ['latin'] })
+import { siteConfig } from '@config'
 
 export const metadata: Metadata = {
   title: siteConfig.seo.defaultTitle,
@@ -13,7 +10,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   )
 }

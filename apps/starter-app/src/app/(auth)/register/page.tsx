@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { siteConfig } from '../../../../../site.config'
+import { siteConfig } from '@config'
 import Link from 'next/link'
 
 export default function RegisterPage() {

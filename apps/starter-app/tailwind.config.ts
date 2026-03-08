@@ -6,13 +6,7 @@ const config: Config = {
     '../../packages/shared-ui/**/*.{ts,tsx}',
   ],
   theme: {
-    extend: {
-      colors: {
-        background: '#0f172a',
-        card: '#1e293b',
-        border: '#334155',
-      },
-    },
+    extend: {},
   },
   plugins: [],
 }

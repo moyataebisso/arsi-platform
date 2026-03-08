@@ -2,7 +2,21 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { siteConfig } from '../../../../../site.config'
+import { siteConfig } from '@config'
+import {
+  LayoutDashboard,
+  Users,
+  Mail,
+  Calendar,
+  Package,
+  ShoppingCart,
+  FileText,
+  Send,
+  Settings,
+  ArrowLeft,
+} from 'lucide-react'
+
+const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings }
 
 const baseLinks = [
   { href: '/admin', label: 'Dashboard', icon: 'LayoutDashboard' },
@@ -32,31 +46,42 @@ export function AdminSidebar() {
   const allLinks = [...baseLinks, ...activeModuleLinks, ...bottomLinks]
 
   return (
-    <aside className="w-64 bg-white border-r min-h-screen p-4">
-      <div className="mb-8">
-        <Link href="/admin" className="text-lg font-bold" style={{ color: siteConfig.branding.primaryColor }}>
+    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col">
+      <div className="p-5 border-b border-gray-200">
+        <Link href="/admin" className="text-lg font-bold text-gray-900">
           {siteConfig.business.name}
         </Link>
-        <p className="text-xs text-gray-500 mt-1">Admin Panel</p>
+        <p className="text-xs text-gray-500 mt-0.5">Admin Panel</p>
       </div>
-      <nav className="space-y-1">
+      <nav className="flex-1 p-3 space-y-0.5">
         {allLinks.map(link => {
           const isActive = pathname === link.href
+          const Icon = iconMap[link.icon as keyof typeof iconMap]
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`block px-3 py-2 rounded-md text-sm ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
                 isActive
-                  ? 'bg-indigo-50 text-indigo-700 font-medium'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-gray-900 text-white font-medium'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
               }`}
             >
+              {Icon && <Icon size={18} />}
               {link.label}
             </Link>
           )
         })}
       </nav>
+      <div className="p-3 border-t border-gray-200">
+        <Link
+          href="/"
+          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Back to site
+        </Link>
+      </div>
     </aside>
   )
 }

@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { siteConfig } from '../../../../site.config'
+import { siteConfig } from '@config'
 
 let resend: Resend | null = null
 

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { siteConfig } from '../../../../site.config'
+import { siteConfig } from '@config'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (

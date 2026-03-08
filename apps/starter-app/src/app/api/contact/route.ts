@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/sender'
 import { leadNotificationEmail } from '@/lib/email/templates/lead-notification'
-import { siteConfig } from '../../../../../site.config'
+import { siteConfig } from '@config'
 
 export async function POST(request: NextRequest) {
   try {

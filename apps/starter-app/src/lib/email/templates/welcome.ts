@@ -1,4 +1,4 @@
-import { siteConfig } from '../../../../../site.config'
+import { siteConfig } from '@config'
 
 export function welcomeEmail(name: string): { subject: string; html: string } {
   return {

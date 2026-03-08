@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { siteConfig } from '../../../../../../site.config'
+import { siteConfig } from '@config'
 
 export async function POST(request: NextRequest) {
   if (!siteConfig.payments.enabled) {
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   try {
     // Import stripe dynamically only when payments are enabled
     const Stripe = (await import('stripe')).default
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-04-10' })
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' as const })
     const event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
 
     switch (event.type) {

@@ -1,5 +1,5 @@
 import { loadStripe, type Stripe } from '@stripe/stripe-js'
-import { siteConfig } from '../../../../site.config'
+import { siteConfig } from '@config'
 
 let stripePromise: Promise<Stripe | null> | null = null
 
