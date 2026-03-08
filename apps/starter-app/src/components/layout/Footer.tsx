@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { siteConfig } from '@config'
 
 export function Footer() {
-  const { business, integrations, pages, modules } = siteConfig
+  const { business, integrations, pages, modules, location } = siteConfig
 
   const navLinks = [
     pages.home.enabled && { href: '/', label: pages.home.title },
@@ -19,45 +19,62 @@ export function Footer() {
     integrations.facebookPage && { href: integrations.facebookPage, label: 'Facebook' },
     integrations.twitter && { href: integrations.twitter, label: 'Twitter' },
     integrations.linkedin && { href: integrations.linkedin, label: 'LinkedIn' },
-  ] as unknown as (false | { href: string; label: string })[]).filter(Boolean) as { href: string; label: string }[]
+  ] as unknown as (false | { href: string; label: string })[]).filter(Boolean) as {
+    href: string
+    label: string
+  }[]
+
+  const fullAddress = `${location.address}, ${location.city}, ${location.state} ${location.zip}`
 
   return (
-    <footer
-      className="border-t"
-      style={{
-        backgroundColor: 'var(--color-surface)',
-        borderColor: 'var(--color-border)',
-      }}
-    >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div className="md:col-span-2">
-            <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--color-text)' }}>
+    <footer style={{ backgroundColor: '#1c0a00', color: '#fef9f0' }}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          {/* About blurb */}
+          <div>
+            <h3
+              className="text-xl font-bold mb-3"
+              style={{ fontFamily: 'var(--font-playfair)', color: '#fff7ed' }}
+            >
               {business.name}
             </h3>
-            <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
-              {business.tagline}
+            <p className="text-sm leading-relaxed mb-4" style={{ color: '#d4a574' }}>
+              {business.tagline}. Proudly serving {location.city}, {location.state} and
+              the surrounding community.
             </p>
-            {business.address && (
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                {business.address}, {business.city}, {business.state} {business.zip}
-              </p>
+            {socialLinks.length > 0 && (
+              <div className="flex gap-4 mt-4">
+                {socialLinks.map(link => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm transition-colors duration-200 hover:text-white"
+                    style={{ color: '#d4a574' }}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
             )}
           </div>
 
           {/* Quick links */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-text)' }}>
+            <h4
+              className="text-sm font-semibold uppercase tracking-wider mb-4"
+              style={{ color: '#fed7aa' }}
+            >
               Quick Links
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {navLinks.map(link => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm transition-colors hover:underline"
-                    style={{ color: 'var(--color-text-muted)' }}
+                    className="text-sm transition-colors duration-200 hover:text-white"
+                    style={{ color: '#d4a574' }}
                   >
                     {link.label}
                   </Link>
@@ -66,42 +83,74 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Contact + Social */}
+          {/* Contact info + hours */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-text)' }}>
-              Contact
+            <h4
+              className="text-sm font-semibold uppercase tracking-wider mb-4"
+              style={{ color: '#fed7aa' }}
+            >
+              Contact & Hours
             </h4>
-            <ul className="space-y-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              {business.email && <li>{business.email}</li>}
-              {business.phone && <li>{business.phone}</li>}
-            </ul>
-            {socialLinks.length > 0 && (
-              <div className="mt-4 flex gap-4">
-                {socialLinks.map(link => (
+            <ul className="space-y-2.5 text-sm" style={{ color: '#d4a574' }}>
+              {business.email && (
+                <li>
                   <a
-                    key={link.label}
-                    href={link.href}
+                    href={`mailto:${business.email}`}
+                    className="hover:text-white transition-colors duration-200"
+                  >
+                    {business.email}
+                  </a>
+                </li>
+              )}
+              {business.phone && (
+                <li>
+                  <a
+                    href={`tel:${business.phone}`}
+                    className="hover:text-white transition-colors duration-200"
+                  >
+                    {business.phone}
+                  </a>
+                </li>
+              )}
+              {location.address && (
+                <li>
+                  <a
+                    href={`https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm transition-colors hover:underline"
-                    style={{ color: 'var(--color-text-muted)' }}
+                    className="hover:text-white transition-colors duration-200"
                   >
-                    {link.label}
+                    {fullAddress}
                   </a>
+                </li>
+              )}
+            </ul>
+            {location.hours.length > 0 && (
+              <div className="mt-4 space-y-1.5 text-sm">
+                {location.hours.map(h => (
+                  <div key={h.day} className="flex justify-between gap-4">
+                    <span style={{ color: '#d4a574' }}>{h.day}</span>
+                    <span style={{ color: '#fed7aa' }}>{h.hours}</span>
+                  </div>
                 ))}
               </div>
             )}
           </div>
         </div>
 
-        <div
-          className="mt-10 pt-8 text-center text-sm border-t"
-          style={{
-            color: 'var(--color-text-muted)',
-            borderColor: 'var(--color-border)',
-          }}
-        >
-          <p>&copy; {new Date().getFullYear()} {business.name}. All rights reserved.</p>
+        {/* Separator */}
+        <div className="mt-12 pt-8 border-t" style={{ borderColor: '#3d1f0a' }}>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+            <p style={{ color: '#8b6740' }}>
+              &copy; {new Date().getFullYear()} {business.name}. All rights reserved.
+            </p>
+            <p style={{ color: '#6b4f30' }}>
+              Built by{' '}
+              <span className="font-medium" style={{ color: '#8b6740' }}>
+                Arsi Technology Group
+              </span>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

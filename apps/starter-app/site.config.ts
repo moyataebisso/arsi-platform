@@ -9,11 +9,11 @@ export const siteConfig = {
     name: "Client Business Name",
     tagline: "Your tagline here",
     email: "hello@clientdomain.com",
-    phone: "",
-    address: "",
+    phone: "(612) 555-0100",
+    address: "123 Main Street",
     city: "Minneapolis",
     state: "MN",
-    zip: "",
+    zip: "55401",
     logo: "/images/logo.png",
     favicon: "/images/favicon.ico",
   },
@@ -21,10 +21,13 @@ export const siteConfig = {
   // -- 2. BRANDING & THEME --
   branding: {
     theme: "warm" as "warm" | "corporate" | "bold",
-    primaryColor: "#6366f1",
-    accentColor: "#22c55e",
-    fontHeading: "Inter",
-    fontBody: "Inter",
+    primaryColor: '#c2410c',
+    accentColor: '#d97706',
+    fontHeading: 'Playfair Display',
+    fontBody: 'DM Sans',
+    heroImage: '/images/hero.jpg',
+    logoText: true,
+    animationStyle: 'subtle' as 'subtle' | 'dramatic' | 'none',
   },
 
   // -- 3. MODULE FLAGS --
@@ -103,6 +106,30 @@ export const siteConfig = {
     notifyOnNewBooking: true,
     notifyOnNewOrder: true,
     notifyOnNewUser: true,
+  },
+
+  // -- 11. LOCATION --
+  location: {
+    address: '123 Main Street',
+    city: 'Minneapolis',
+    state: 'MN',
+    zip: '55401',
+    googleMapsEmbed: '',
+    showMapOnContact: true,
+    showMapOnHome: false,
+    hours: [
+      { day: 'Monday - Friday', hours: '9:00 AM - 6:00 PM' },
+      { day: 'Saturday', hours: '10:00 AM - 4:00 PM' },
+      { day: 'Sunday', hours: 'Closed' },
+    ],
+  },
+
+  // -- 12. RESTAURANT (optional) --
+  restaurant: {
+    enabled: false,
+    menuPdf: '',
+    reservationsUrl: '',
+    featuredDishes: [] as { name: string; description: string; price: string; image: string }[],
   },
 } as const
 

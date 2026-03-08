@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { siteConfig } from '@config'
@@ -8,9 +8,23 @@ import { Menu, X } from 'lucide-react'
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
   const pages = siteConfig.pages
   const modules = siteConfig.modules
+
+  useEffect(() => {
+    function handleScroll() {
+      setScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
 
   const navLinks = [
     pages.home.enabled && { href: '/', label: pages.home.title },
@@ -28,97 +42,153 @@ export function Header() {
   }
 
   return (
-    <header
-      className="sticky top-0 z-50 backdrop-blur-md border-b"
-      style={{
-        backgroundColor: 'color-mix(in srgb, var(--color-background) 85%, transparent)',
-        borderColor: 'var(--color-border)',
-      }}
-    >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link
-            href="/"
-            className="text-xl font-bold tracking-tight transition-colors"
-            style={{ color: 'var(--color-primary)' }}
+    <>
+      <header
+        className="sticky top-0 z-50 backdrop-blur-md border-b transition-all duration-300"
+        style={{
+          backgroundColor: scrolled
+            ? 'color-mix(in srgb, var(--color-background) 95%, transparent)'
+            : 'color-mix(in srgb, var(--color-background) 80%, transparent)',
+          borderColor: scrolled ? 'var(--color-border)' : 'transparent',
+          boxShadow: scrolled ? '0 1px 8px rgba(0,0,0,0.06)' : 'none',
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-18">
+            {/* Logo */}
+            <Link href="/" className="flex flex-col leading-tight group">
+              <span
+                className="text-xl font-bold tracking-tight transition-colors var(--font-playfair)"
+                style={{
+                  color: 'var(--color-primary)',
+                  fontFamily: 'var(--font-playfair)',
+                }}
+              >
+                {siteConfig.business.name}
+              </span>
+              {siteConfig.business.tagline && (
+                <span
+                  className="text-[10px] tracking-wide uppercase"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {siteConfig.business.tagline}
+                </span>
+              )}
+            </Link>
+
+            {/* Desktop nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navLinks.map(link => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`nav-link-underline px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                    isActive(link.href) ? 'active' : ''
+                  }`}
+                  style={{
+                    color: isActive(link.href)
+                      ? 'var(--color-primary)'
+                      : 'var(--color-text-muted)',
+                  }}
+                  onMouseEnter={e => {
+                    if (!isActive(link.href))
+                      (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'
+                  }}
+                  onMouseLeave={e => {
+                    if (!isActive(link.href))
+                      (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)'
+                  }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Link
+                href="/contact"
+                className="ml-4 px-5 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                style={{ backgroundColor: 'var(--color-primary)' }}
+                onMouseEnter={e =>
+                  ((e.currentTarget as HTMLElement).style.backgroundColor =
+                    'var(--color-primary-hover)')
+                }
+                onMouseLeave={e =>
+                  ((e.currentTarget as HTMLElement).style.backgroundColor =
+                    'var(--color-primary)')
+                }
+              >
+                Get In Touch
+              </Link>
+            </nav>
+
+            {/* Mobile toggle */}
+            <button
+              className="md:hidden p-2 rounded-xl transition-colors"
+              style={{ color: 'var(--color-text)' }}
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile drawer overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMobileOpen(false)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+        </div>
+      )}
+
+      {/* Mobile slide-in drawer */}
+      <div
+        className={`fixed top-0 right-0 bottom-0 w-72 z-50 md:hidden transition-transform duration-300 ${
+          mobileOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+        style={{ backgroundColor: 'var(--color-background)' }}
+      >
+        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
+          <span
+            className="text-lg font-bold"
+            style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-playfair)' }}
           >
             {siteConfig.business.name}
-          </Link>
-
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                style={{
-                  color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                }}
-                onMouseEnter={e => {
-                  if (!isActive(link.href)) (e.target as HTMLElement).style.color = 'var(--color-text)'
-                }}
-                onMouseLeave={e => {
-                  if (!isActive(link.href)) (e.target as HTMLElement).style.color = 'var(--color-text-muted)'
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
-            {siteConfig.auth.enabled && (
-              <Link
-                href="/login"
-                className="ml-4 px-4 py-2 rounded-md text-sm font-medium text-white transition-all hover:shadow-md"
-                style={{ backgroundColor: 'var(--color-primary)' }}
-                onMouseEnter={e => (e.target as HTMLElement).style.backgroundColor = 'var(--color-primary-hover)'}
-                onMouseLeave={e => (e.target as HTMLElement).style.backgroundColor = 'var(--color-primary)'}
-              >
-                Sign in
-              </Link>
-            )}
-          </nav>
-
-          {/* Mobile toggle */}
+          </span>
           <button
-            className="md:hidden p-2 rounded-md transition-colors"
+            onClick={() => setMobileOpen(false)}
+            className="p-2 rounded-xl"
             style={{ color: 'var(--color-text)' }}
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
+            aria-label="Close menu"
           >
-            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            <X size={20} />
           </button>
         </div>
-
-        {/* Mobile nav */}
-        {mobileOpen && (
-          <nav className="md:hidden pb-4 space-y-1">
-            {navLinks.map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="block px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                style={{
-                  color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                  backgroundColor: isActive(link.href) ? 'var(--color-surface)' : 'transparent',
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
-            {siteConfig.auth.enabled && (
-              <Link
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="block px-3 py-2 rounded-md text-sm font-medium text-white text-center mt-2"
-                style={{ backgroundColor: 'var(--color-primary)' }}
-              >
-                Sign in
-              </Link>
-            )}
-          </nav>
-        )}
+        <nav className="p-4 space-y-1">
+          {navLinks.map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobileOpen(false)}
+              className="block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200"
+              style={{
+                color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                backgroundColor: isActive(link.href) ? 'var(--color-surface)' : 'transparent',
+              }}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <div className="pt-4">
+            <Link
+              href="/contact"
+              onClick={() => setMobileOpen(false)}
+              className="block px-4 py-3 rounded-xl text-sm font-semibold text-white text-center transition-all"
+              style={{ backgroundColor: 'var(--color-primary)' }}
+            >
+              Get In Touch
+            </Link>
+          </div>
+        </nav>
       </div>
-    </header>
+    </>
   )
 }
