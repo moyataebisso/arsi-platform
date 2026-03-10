@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx next:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(npm run:*)",
+      "Bash(find \"C:\\\\Users\\\\ebiss\\\\Projects\\\\arsi-platform\\\\apps\\\\starter-app\" -type f -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.json\" -o -name \"*.js\" -o -name \"*.jsx\" 2>/dev/null | head -100)",
+      "Bash(git push:*)"
+    ]
+  }
+}

@@ -21,10 +21,10 @@ export function LocationSection() {
                 fontFamily: 'var(--font-playfair)',
               }}
             >
-              Find Us
+              Our Location
             </h2>
             <p className="text-lg" style={{ color: 'var(--color-text-muted)' }}>
-              We&apos;d love to see you in person
+              Visit us or get in touch — we look forward to connecting with you
             </p>
           </div>
         </ScrollReveal>
