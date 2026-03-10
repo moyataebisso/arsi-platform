@@ -12,6 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {siteConfig.modules.booking && <Link href="/dashboard/my-bookings" className="hover:text-indigo-600">My Bookings</Link>}
           {siteConfig.modules.ecommerce && <Link href="/dashboard/my-orders" className="hover:text-indigo-600">My Orders</Link>}
           <Link href="/dashboard/settings" className="hover:text-indigo-600">Settings</Link>
+          <a href="/" className="px-3 py-1 text-gray-500 hover:text-gray-900 border border-gray-300 rounded-md transition-colors">View Site</a>
         </div>
       </nav>
       <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>

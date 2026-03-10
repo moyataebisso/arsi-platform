@@ -22,9 +22,13 @@ export default function LoginPage() {
       setLoading(false)
     } else {
       // Sync role from users table into auth metadata
-      const res = await fetch('/api/auth/sync-role', { method: 'POST' })
-      const data = await res.json()
-      if (data.role === 'admin' || data.role === 'manager') {
+      await fetch('/api/auth/sync-role', { method: 'POST' })
+
+      // Re-fetch user to get updated metadata
+      const { data: { user } } = await supabase.auth.getUser()
+      const role = user?.user_metadata?.role
+
+      if (role === 'admin' || role === 'manager') {
         window.location.href = '/admin'
       } else {
         window.location.href = '/dashboard'

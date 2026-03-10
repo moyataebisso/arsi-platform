@@ -15,6 +15,7 @@ import {
   Settings,
   ArrowLeft,
   ImageIcon,
+  ExternalLink,
 } from 'lucide-react'
 
 const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings, ImageIcon }
@@ -76,14 +77,14 @@ export function AdminSidebar() {
           )
         })}
       </nav>
-      <div className="p-3 border-t border-gray-200">
-        <Link
+      <div className="p-3 border-t border-gray-200 space-y-2">
+        <a
           href="/"
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-gray-900 transition-colors border border-gray-300 rounded-lg"
         >
-          <ArrowLeft size={16} />
-          Back to site
-        </Link>
+          <ExternalLink size={16} />
+          View Site
+        </a>
       </div>
     </aside>
   )
