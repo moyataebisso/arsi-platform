@@ -1,7 +1,32 @@
 -- ============================================================
 -- ARSI STARTER-APP -- Complete Database Schema
 -- Run in client's Supabase SQL Editor during onboarding
+-- Safe to re-run: all DROP IF EXISTS + ON CONFLICT
 -- ============================================================
+
+-- DROP TABLES (reverse order to respect foreign keys)
+DROP TABLE IF EXISTS blog_post_categories CASCADE;
+DROP TABLE IF EXISTS blog_categories CASCADE;
+DROP TABLE IF EXISTS blog_posts CASCADE;
+DROP TABLE IF EXISTS order_items CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS cart_items CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS product_categories CASCADE;
+DROP TABLE IF EXISTS bookings CASCADE;
+DROP TABLE IF EXISTS availability CASCADE;
+DROP TABLE IF EXISTS services CASCADE;
+DROP TABLE IF EXISTS leads CASCADE;
+DROP TABLE IF EXISTS form_submissions CASCADE;
+DROP TABLE IF EXISTS contact_forms CASCADE;
+DROP TABLE IF EXISTS media CASCADE;
+DROP TABLE IF EXISTS audit_log CASCADE;
+DROP TABLE IF EXISTS notifications CASCADE;
+DROP TABLE IF EXISTS email_logs CASCADE;
+DROP TABLE IF EXISTS email_templates CASCADE;
+DROP TABLE IF EXISTS pages CASCADE;
+DROP TABLE IF EXISTS site_settings CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
 -- CORE TABLES (always created)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -284,23 +309,25 @@ CREATE POLICY "admin_all_users" ON users FOR ALL TO authenticated USING (
   EXISTS (SELECT 1 FROM users WHERE auth_id = auth.uid() AND role IN ('admin','manager'))
 );
 
--- MEDIA STORAGE
--- Run this in Supabase SQL Editor after creating the project
+-- STORAGE BUCKET
+-- Creates the site-media bucket for image uploads
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('site-media', 'site-media', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Allow authenticated users to upload
+-- Storage policies (DROP first to avoid conflicts on re-run)
+DROP POLICY IF EXISTS "auth_upload" ON storage.objects;
+DROP POLICY IF EXISTS "public_read" ON storage.objects;
+DROP POLICY IF EXISTS "auth_delete" ON storage.objects;
+
 CREATE POLICY "auth_upload" ON storage.objects
 FOR INSERT TO authenticated
 WITH CHECK (bucket_id = 'site-media');
 
--- Allow public to view all images
 CREATE POLICY "public_read" ON storage.objects
 FOR SELECT TO public
 USING (bucket_id = 'site-media');
 
--- Allow authenticated users to delete their uploads
 CREATE POLICY "auth_delete" ON storage.objects
 FOR DELETE TO authenticated
 USING (bucket_id = 'site-media');
