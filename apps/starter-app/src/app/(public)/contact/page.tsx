@@ -1,6 +1,7 @@
 import { siteConfig } from '@config'
 import { ContactForm } from '@/components/forms/ContactForm'
 import { Mail, Phone, MapPin, Clock, Navigation } from 'lucide-react'
+import { MapEmbed } from '@/components/shared/MapEmbed'
 
 export const metadata = {
   title: `${siteConfig.pages.contact.title} | ${siteConfig.business.name}`,
@@ -172,51 +173,36 @@ export default function ContactPage() {
 
               {/* Map */}
               {siteConfig.location.showMapOnContact && (
-                <div className="rounded-2xl overflow-hidden min-h-[240px]">
-                  {location.googleMapsEmbed ? (
-                    <iframe
-                      src={location.googleMapsEmbed}
-                      width="100%"
-                      height="240"
-                      className="border-0"
-                      allowFullScreen
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      title="Business location"
-                    />
-                  ) : (
-                    <a
-                      href={mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex flex-col items-center justify-center h-[240px] rounded-2xl border-2 border-dashed transition-all duration-300 hover:shadow-md group"
-                      style={{
-                        borderColor: 'var(--color-border)',
-                        backgroundColor: 'var(--color-surface)',
-                      }}
-                    >
-                      <MapPin
-                        size={36}
-                        className="mb-3 transition-transform duration-300 group-hover:scale-110"
-                        style={{ color: 'var(--color-primary)' }}
-                      />
-                      <p
-                        className="text-sm font-medium mb-1"
-                        style={{ color: 'var(--color-text)' }}
-                      >
-                        {location.address}
-                      </p>
-                      <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                        {location.city}, {location.state} {location.zip}
-                      </p>
-                      <span
-                        className="text-xs font-medium mt-2 transition-colors duration-200"
-                        style={{ color: 'var(--color-primary)' }}
-                      >
-                        View on Google Maps &rarr;
-                      </span>
-                    </a>
-                  )}
+                <MapEmbed
+                  embedUrl={location.googleMapsEmbed || undefined}
+                  address={location.address}
+                  city={location.city}
+                  state={location.state}
+                  zip={location.zip}
+                  height={240}
+                />
+              )}
+
+              {/* Hours below map */}
+              {siteConfig.location.showMapOnContact && location.hours.length > 0 && (
+                <div
+                  className="rounded-2xl p-5 border"
+                  style={{
+                    backgroundColor: 'var(--color-card-bg)',
+                    borderColor: 'var(--color-border-light)',
+                  }}
+                >
+                  <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
+                    Business Hours
+                  </h4>
+                  <div className="space-y-1.5 text-sm">
+                    {location.hours.map(h => (
+                      <div key={h.day} className="flex justify-between gap-4">
+                        <span style={{ color: 'var(--color-text-muted)' }}>{h.day}</span>
+                        <span style={{ color: 'var(--color-text)' }}>{h.hours}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

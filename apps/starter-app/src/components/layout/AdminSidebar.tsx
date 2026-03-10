@@ -14,9 +14,10 @@ import {
   Send,
   Settings,
   ArrowLeft,
+  ImageIcon,
 } from 'lucide-react'
 
-const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings }
+const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings, ImageIcon }
 
 const baseLinks = [
   { href: '/admin', label: 'Dashboard', icon: 'LayoutDashboard' },
@@ -32,6 +33,7 @@ const moduleLinks = [
 ]
 
 const bottomLinks = [
+  { href: '/admin/media', label: 'Media Library', icon: 'ImageIcon' },
   { href: '/admin/emails', label: 'Emails', icon: 'Send' },
   { href: '/admin/settings', label: 'Settings', icon: 'Settings' },
 ]

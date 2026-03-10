@@ -116,7 +116,7 @@ export const siteConfig = {
     zip: '55401',
     googleMapsEmbed: '',
     showMapOnContact: true,
-    showMapOnHome: false,
+    showMapOnHome: true,
     hours: [
       { day: 'Monday - Friday', hours: '9:00 AM - 6:00 PM' },
       { day: 'Saturday', hours: '10:00 AM - 4:00 PM' },

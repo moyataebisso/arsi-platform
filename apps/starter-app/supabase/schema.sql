@@ -283,3 +283,24 @@ CREATE POLICY "user_notifications" ON notifications FOR ALL USING (auth.uid() = 
 CREATE POLICY "admin_all_users" ON users FOR ALL TO authenticated USING (
   EXISTS (SELECT 1 FROM users WHERE auth_id = auth.uid() AND role IN ('admin','manager'))
 );
+
+-- MEDIA STORAGE
+-- Run this in Supabase SQL Editor after creating the project
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('site-media', 'site-media', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Allow authenticated users to upload
+CREATE POLICY "auth_upload" ON storage.objects
+FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'site-media');
+
+-- Allow public to view all images
+CREATE POLICY "public_read" ON storage.objects
+FOR SELECT TO public
+USING (bucket_id = 'site-media');
+
+-- Allow authenticated users to delete their uploads
+CREATE POLICY "auth_delete" ON storage.objects
+FOR DELETE TO authenticated
+USING (bucket_id = 'site-media');
