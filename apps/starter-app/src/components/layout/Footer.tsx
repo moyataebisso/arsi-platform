@@ -147,14 +147,23 @@ export async function Footer() {
             <p style={{ color: '#8b6740' }}>
               &copy; {new Date().getFullYear()} {business.name}. All rights reserved.
             </p>
-            {showPoweredBy && (
-              <p style={{ color: '#6b4f30' }}>
-                Built by{' '}
-                <span className="font-medium" style={{ color: '#8b6740' }}>
-                  Arsi Technology Group
-                </span>
-              </p>
-            )}
+            <div className="flex items-center gap-3">
+              {showPoweredBy && (
+                <p style={{ color: '#6b4f30' }}>
+                  Built by{' '}
+                  <span className="font-medium" style={{ color: '#8b6740' }}>
+                    Arsi Technology Group
+                  </span>
+                </p>
+              )}
+              <Link
+                href="/login"
+                className="text-xs opacity-40 hover:opacity-100 transition-opacity duration-200"
+                style={{ color: '#8b6740' }}
+              >
+                Admin
+              </Link>
+            </div>
           </div>
         </div>
       </div>
