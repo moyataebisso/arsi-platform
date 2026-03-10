@@ -88,15 +88,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Admin routes require admin role
+    // Admin routes require admin/manager role (checked from auth metadata)
     if (pathname.startsWith('/admin')) {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('auth_id', user.id)
-        .single()
-
-      if (!profile || profile.role !== 'admin') {
+      const role = user.user_metadata?.role || user.app_metadata?.role
+      if (!role || !['admin', 'manager'].includes(role)) {
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard'
         return NextResponse.redirect(url)

@@ -21,7 +21,14 @@ export default function LoginPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      window.location.href = '/dashboard'
+      // Sync role from users table into auth metadata
+      const res = await fetch('/api/auth/sync-role', { method: 'POST' })
+      const data = await res.json()
+      if (data.role === 'admin' || data.role === 'manager') {
+        window.location.href = '/admin'
+      } else {
+        window.location.href = '/dashboard'
+      }
     }
   }
 

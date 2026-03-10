@@ -331,3 +331,14 @@ USING (bucket_id = 'site-media');
 CREATE POLICY "auth_delete" ON storage.objects
 FOR DELETE TO authenticated
 USING (bucket_id = 'site-media');
+
+-- ============================================================
+-- MANUAL: Sync existing admin user roles to auth metadata
+-- Run this once in the Supabase SQL Editor to backfill:
+--
+-- UPDATE auth.users
+-- SET raw_user_meta_data = COALESCE(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('role', u.role)
+-- FROM public.users u
+-- WHERE auth.users.id = u.auth_id
+--   AND u.role IN ('admin', 'manager');
+-- ============================================================
