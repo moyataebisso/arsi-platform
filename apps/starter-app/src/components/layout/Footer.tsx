@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { siteConfig } from '@config'
+import { showPoweredBy } from '@/lib/platform'
 
 export function Footer() {
   const { business, integrations, pages, modules, location } = siteConfig
@@ -144,12 +145,14 @@ export function Footer() {
             <p style={{ color: '#8b6740' }}>
               &copy; {new Date().getFullYear()} {business.name}. All rights reserved.
             </p>
-            <p style={{ color: '#6b4f30' }}>
-              Built by{' '}
-              <span className="font-medium" style={{ color: '#8b6740' }}>
-                Arsi Technology Group
-              </span>
-            </p>
+            {showPoweredBy && (
+              <p style={{ color: '#6b4f30' }}>
+                Built by{' '}
+                <span className="font-medium" style={{ color: '#8b6740' }}>
+                  Arsi Technology Group
+                </span>
+              </p>
+            )}
           </div>
         </div>
       </div>

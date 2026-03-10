@@ -1,7 +1,7 @@
 'use client'
 
 import { siteConfig } from '@config'
-import { Briefcase, HeartHandshake, Lightbulb, Shield, Star, Wrench } from 'lucide-react'
+import { Briefcase, HeartHandshake, Lightbulb, Wrench } from 'lucide-react'
 import Link from 'next/link'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
 
@@ -9,38 +9,26 @@ const placeholderServices = [
   {
     title: 'Consultation',
     description:
-      'One-on-one sessions to understand your needs and create a personalized plan that works for your situation.',
+      'Personalized assessment and a clear action plan tailored to your needs.',
     icon: Lightbulb,
   },
   {
     title: 'Professional Services',
     description:
-      'Expert solutions delivered with precision and care. We bring years of experience to every project we take on.',
+      'Expert solutions delivered with precision, care, and years of experience.',
     icon: Briefcase,
   },
   {
     title: 'Custom Solutions',
     description:
-      'Tailored approaches designed specifically for your unique challenges. No cookie-cutter answers here.',
+      'Bespoke approaches designed specifically for your unique challenges.',
     icon: Wrench,
   },
   {
     title: 'Ongoing Support',
     description:
-      'We stand by our work with dedicated support and follow-up to ensure your continued satisfaction.',
+      'Dedicated support and follow-up to ensure your continued satisfaction.',
     icon: HeartHandshake,
-  },
-  {
-    title: 'Quality Assurance',
-    description:
-      'Every service backed by our commitment to excellence and attention to detail that sets us apart.',
-    icon: Shield,
-  },
-  {
-    title: 'Premium Care',
-    description:
-      'Our top-tier service package for clients who want the very best. White-glove treatment from start to finish.',
-    icon: Star,
   },
 ]
 
@@ -72,63 +60,45 @@ export function ServicesSection() {
           </div>
         </ScrollReveal>
 
-        {/* Alternating layout */}
-        <div className="space-y-8">
+        {/* 2x2 / 4-column Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {placeholderServices.map((service, index) => {
             const Icon = service.icon
-            const isEven = index % 2 === 1
 
             return (
               <ScrollReveal key={service.title} delay={index * 80}>
                 <div
-                  className="group flex flex-col md:flex-row items-center gap-6 rounded-2xl p-6 sm:p-8 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border"
+                  className="group rounded-2xl p-6 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col items-center text-center aspect-square justify-center"
                   style={{
                     backgroundColor: 'var(--color-card-bg)',
                     borderColor: 'var(--color-border-light)',
-                    flexDirection: isEven ? undefined : undefined,
                   }}
                 >
                   <div
-                    className={`flex items-center gap-6 w-full ${
-                      isEven ? 'md:flex-row-reverse' : 'md:flex-row'
-                    }`}
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                    style={{ backgroundColor: 'var(--color-accent-light)' }}
                   >
-                    {/* Icon */}
-                    <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:scale-105"
-                      style={{
-                        backgroundColor: 'var(--color-accent-light)',
-                      }}
-                    >
-                      <Icon
-                        size={28}
-                        style={{ color: 'var(--color-primary)' }}
-                      />
-                    </div>
-
-                    {/* Text */}
-                    <div className={isEven ? 'md:text-right flex-1' : 'flex-1'}>
-                      <h3
-                        className="text-lg font-semibold mb-1.5"
-                        style={{ color: 'var(--color-text)' }}
-                      >
-                        {service.title}
-                      </h3>
-                      <p
-                        className="text-sm leading-relaxed"
-                        style={{ color: 'var(--color-text-muted)' }}
-                      >
-                        {service.description}
-                      </p>
-                    </div>
+                    <Icon size={26} style={{ color: 'var(--color-primary)' }} />
                   </div>
+                  <h3
+                    className="text-base font-semibold mb-2"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    {service.title}
+                  </h3>
+                  <p
+                    className="text-sm leading-relaxed"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    {service.description}
+                  </p>
                 </div>
               </ScrollReveal>
             )
           })}
         </div>
 
-        <ScrollReveal delay={500}>
+        <ScrollReveal delay={400}>
           <div className="text-center mt-12">
             <Link
               href="/services"

@@ -3,11 +3,34 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // If Supabase env vars are missing, redirect to setup page
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    // Allow static assets, setup page, and API routes
+    if (
+      pathname.startsWith('/_next') ||
+      pathname.startsWith('/images') ||
+      pathname === '/favicon.ico' ||
+      pathname === '/setup'
+    ) {
+      return NextResponse.next()
+    }
+
+    // Redirect everything else to setup
+    const url = request.nextUrl.clone()
+    url.pathname = '/setup'
+    return NextResponse.redirect(url)
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
@@ -28,8 +51,6 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { pathname } = request.nextUrl
-
   // Allow cron API routes (verified by CRON_SECRET)
   if (pathname.startsWith('/api/cron')) {
     return supabaseResponse
@@ -37,6 +58,11 @@ export async function middleware(request: NextRequest) {
 
   // Allow auth callback
   if (pathname.startsWith('/auth/callback')) {
+    return supabaseResponse
+  }
+
+  // Allow setup page (already configured, just let it through)
+  if (pathname === '/setup') {
     return supabaseResponse
   }
 

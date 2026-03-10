@@ -131,6 +131,36 @@ export const siteConfig = {
     reservationsUrl: '',
     featuredDishes: [] as { name: string; description: string; price: string; image: string }[],
   },
+  // -- 13. ARSI PLATFORM MODE --
+  arsiPlatform: {
+    // MODE: 'local-business' or 'developer'
+    // local-business: full monitoring, powered-by footer,
+    //   auto-registered in Command Center
+    // developer: no monitoring, no powered-by,
+    //   clean deployment for dev clients
+    mode: 'local-business' as 'local-business' | 'developer',
+
+    // Monitoring (auto-set based on mode, can override)
+    monitoringEnabled: true,
+
+    // Shows "Built by Arsi Technology Group" in footer
+    showPoweredBy: true,
+
+    // Your Command Center URL
+    commandCenterUrl: 'https://arsi-platform-dashboard.vercel.app',
+
+    // Developer mode extras
+    developer: {
+      // When mode = 'developer', these features are available:
+      // - No Command Center registration
+      // - No Arsi branding in footer
+      // - Raw access to all config without restrictions
+      // - README shows self-hosting instructions
+      selfHosted: false,
+      customBranding: true,
+      hideArsiFooter: true,
+    },
+  },
 } as const
 
 export type SiteConfig = typeof siteConfig
