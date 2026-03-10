@@ -1,18 +1,181 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { siteConfig } from '@config'
-import { Save, Plus, Trash2 } from 'lucide-react'
+import { Save, Plus, Trash2, Check, RotateCcw } from 'lucide-react'
 import { ImageUpload } from '@/components/admin/ImageUpload'
+import { themes, themeNames, type ThemeName } from '@/lib/theme'
+
+const themeLabels: Record<ThemeName, string> = {
+  warm: 'Warm',
+  corporate: 'Corporate',
+  bold: 'Bold',
+  nature: 'Nature',
+  luxury: 'Luxury',
+  ocean: 'Ocean',
+}
+
+const headingFonts = [
+  'Playfair Display',
+  'Plus Jakarta Sans',
+  'Space Grotesk',
+  'Merriweather',
+  'Poppins',
+  'Raleway',
+]
+
+const bodyFonts = [
+  'DM Sans',
+  'DM Mono',
+  'Inter',
+  'Nunito',
+  'Open Sans',
+  'Lato',
+]
+
+function MiniThemePreview({ themeName }: { themeName: ThemeName }) {
+  const t = themes[themeName]
+  return (
+    <div className="rounded overflow-hidden" style={{ background: t.background }}>
+      <div className="h-2" style={{ backgroundColor: t.primary }} />
+      <div className="p-2" style={{ background: t.heroGradient }}>
+        <div className="h-1.5 w-12 rounded mb-1" style={{ backgroundColor: t.text, opacity: 0.6 }} />
+        <div className="h-1 w-16 rounded mb-2" style={{ backgroundColor: t.textMuted, opacity: 0.4 }} />
+        <div className="flex gap-1">
+          <div className="h-2 w-8 rounded" style={{ backgroundColor: t.primary }} />
+          <div className="h-2 w-8 rounded border" style={{ borderColor: t.border }} />
+        </div>
+      </div>
+      <div className="p-2 grid grid-cols-2 gap-1">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-4 rounded" style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}` }} />
+        ))}
+      </div>
+      <div className="h-3" style={{ backgroundColor: t.surface }} />
+    </div>
+  )
+}
+
+async function saveSetting(key: string, value: string) {
+  await fetch('/api/admin/content', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ updates: [{ key, value }] }),
+  })
+}
+
+async function deleteSetting(key: string) {
+  await fetch('/api/admin/content', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ updates: [{ key, value: '' }] }),
+  })
+}
 
 export default function AdminSettingsPage() {
-  const [hours, setHours] = useState(
-    siteConfig.location.hours.map(h => ({ ...h }))
+  const [hours, setHours] = useState<{ day: string; hours: string }[]>(
+    siteConfig.location.hours.map(h => ({ day: h.day, hours: h.hours }))
   )
   const [mapsEmbedUrl, setMapsEmbedUrl] = useState(siteConfig.location.googleMapsEmbed || '')
   const [logoUrl, setLogoUrl] = useState('')
   const [heroUrl, setHeroUrl] = useState('')
   const [galleryUrls, setGalleryUrls] = useState<string[]>([])
+
+  // Appearance state
+  const [activeTheme, setActiveTheme] = useState<ThemeName>(siteConfig.branding.theme as ThemeName)
+  const [customPrimary, setCustomPrimary] = useState('')
+  const [customAccent, setCustomAccent] = useState('')
+  const [fontHeading, setFontHeading] = useState<string>(siteConfig.branding.fontHeading)
+  const [fontBody, setFontBody] = useState<string>(siteConfig.branding.fontBody)
+  const [toast, setToast] = useState('')
+
+  // Load current settings on mount
+  useEffect(() => {
+    fetch('/api/admin/content')
+      .then(r => r.json())
+      .then(data => {
+        if (data.active_theme) setActiveTheme(data.active_theme as ThemeName)
+        if (data.custom_primary_color) setCustomPrimary(data.custom_primary_color)
+        if (data.custom_accent_color) setCustomAccent(data.custom_accent_color)
+        if (data.font_heading) setFontHeading(data.font_heading)
+        if (data.font_body) setFontBody(data.font_body)
+      })
+      .catch(() => {})
+  }, [])
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
+
+  async function selectTheme(name: ThemeName) {
+    setActiveTheme(name)
+    setCustomPrimary('')
+    setCustomAccent('')
+    await Promise.all([
+      saveSetting('active_theme', name),
+      deleteSetting('custom_primary_color'),
+      deleteSetting('custom_accent_color'),
+    ])
+    applyThemeCSS(name)
+    showToast('Theme updated!')
+  }
+
+  function applyThemeCSS(name: ThemeName, overridePrimary?: string, overrideAccent?: string) {
+    const t = themes[name]
+    const root = document.documentElement
+    root.style.setProperty('--color-primary', overridePrimary || t.primary)
+    root.style.setProperty('--color-primary-hover', t.primaryHover)
+    root.style.setProperty('--color-secondary', t.secondary)
+    root.style.setProperty('--color-accent', overrideAccent || t.accent)
+    root.style.setProperty('--color-accent-light', t.accentLight)
+    root.style.setProperty('--color-background', t.background)
+    root.style.setProperty('--color-surface', t.surface)
+    root.style.setProperty('--color-surface-alt', t.surfaceAlt)
+    root.style.setProperty('--color-card-bg', t.cardBg)
+    root.style.setProperty('--color-text', t.text)
+    root.style.setProperty('--color-text-muted', t.textMuted)
+    root.style.setProperty('--color-text-light', t.textLight)
+    root.style.setProperty('--color-border', t.border)
+    root.style.setProperty('--color-border-light', t.borderLight)
+  }
+
+  async function handlePrimaryChange(color: string) {
+    setCustomPrimary(color)
+    applyThemeCSS(activeTheme, color, customAccent || undefined)
+    await saveSetting('custom_primary_color', color)
+  }
+
+  async function handleAccentChange(color: string) {
+    setCustomAccent(color)
+    applyThemeCSS(activeTheme, customPrimary || undefined, color)
+    await saveSetting('custom_accent_color', color)
+  }
+
+  async function resetCustomColors() {
+    setCustomPrimary('')
+    setCustomAccent('')
+    await Promise.all([
+      deleteSetting('custom_primary_color'),
+      deleteSetting('custom_accent_color'),
+    ])
+    applyThemeCSS(activeTheme)
+    showToast('Colors reset to theme defaults!')
+  }
+
+  async function handleFontHeadingChange(font: string) {
+    setFontHeading(font)
+    document.documentElement.style.setProperty('--font-heading', `'${font}', serif`)
+    await saveSetting('font_heading', font)
+    showToast('Heading font updated!')
+  }
+
+  async function handleFontBodyChange(font: string) {
+    setFontBody(font)
+    document.documentElement.style.setProperty('--font-body', `'${font}', sans-serif`)
+    await saveSetting('font_body', font)
+    showToast('Body font updated!')
+  }
 
   const addHoursRow = () => setHours([...hours, { day: '', hours: '' }])
   const removeHoursRow = (i: number) => setHours(hours.filter((_, idx) => idx !== i))
@@ -34,7 +197,123 @@ export default function AdminSettingsPage() {
         <p className="text-sm text-gray-500 mt-1">Manage your site configuration and preferences.</p>
       </div>
 
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 bg-gray-900 text-white text-sm px-4 py-2 rounded-lg shadow-lg animate-fade-in">
+          {toast}
+        </div>
+      )}
+
       <div className="space-y-6 max-w-2xl">
+        {/* ========== APPEARANCE ========== */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="font-semibold text-gray-900 mb-1">Appearance</h2>
+          <p className="text-sm text-gray-500 mb-5">Choose a theme, customize colors, and pick fonts.</p>
+
+          {/* Theme Selector */}
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Theme</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+            {themeNames.map(name => {
+              const t = themes[name]
+              const isActive = name === activeTheme
+              return (
+                <button
+                  key={name}
+                  onClick={() => selectTheme(name)}
+                  className={`relative rounded-xl border-2 p-3 text-left transition-all cursor-pointer ${
+                    isActive ? 'border-gray-900 shadow-md' : 'border-gray-200 hover:border-gray-400'
+                  }`}
+                >
+                  {isActive && (
+                    <div className="absolute top-2 right-2 w-5 h-5 bg-gray-900 text-white rounded-full flex items-center justify-center">
+                      <Check size={12} />
+                    </div>
+                  )}
+                  <div className="text-xs font-semibold text-gray-900 mb-2">{themeLabels[name]}</div>
+                  <div className="flex gap-1 mb-2">
+                    {[t.primary, t.accent, t.background, t.text].map((color, i) => (
+                      <div key={i} className="w-4 h-4 rounded-full border border-gray-300" style={{ backgroundColor: color }} />
+                    ))}
+                  </div>
+                  <MiniThemePreview themeName={name} />
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Custom Color Overrides */}
+          <h3 className="text-sm font-medium text-gray-700 mb-1">Customize Colors (optional)</h3>
+          <p className="text-xs text-gray-400 mb-3">Override the theme defaults with your brand colors.</p>
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Primary Color</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={customPrimary || themes[activeTheme].primary}
+                  onChange={e => handlePrimaryChange(e.target.value)}
+                  className="w-10 h-10 rounded cursor-pointer border border-gray-200"
+                />
+                <span className="text-xs text-gray-400 font-mono">{customPrimary || themes[activeTheme].primary}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1">Used for buttons, headings, and accents</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Accent Color</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={customAccent || themes[activeTheme].accent}
+                  onChange={e => handleAccentChange(e.target.value)}
+                  className="w-10 h-10 rounded cursor-pointer border border-gray-200"
+                />
+                <span className="text-xs text-gray-400 font-mono">{customAccent || themes[activeTheme].accent}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1">Used for highlights and hover states</p>
+            </div>
+          </div>
+          {(customPrimary || customAccent) && (
+            <button
+              onClick={resetCustomColors}
+              className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition-colors mb-4"
+            >
+              <RotateCcw size={12} />
+              Reset to theme defaults
+            </button>
+          )}
+
+          {/* Font Selector */}
+          <div className="border-t border-gray-100 pt-4 mt-2">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Fonts</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Heading Font</label>
+                <select
+                  value={fontHeading}
+                  onChange={e => handleFontHeadingChange(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  {headingFonts.map(f => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Body Font</label>
+                <select
+                  value={fontBody}
+                  onChange={e => handleFontBodyChange(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  {bodyFonts.map(f => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Business Info */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="font-semibold text-gray-900 mb-4">Business Information</h2>

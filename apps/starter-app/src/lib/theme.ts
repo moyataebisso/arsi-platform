@@ -1,6 +1,6 @@
 import { siteConfig } from '@config'
 
-const themes = {
+export const themes = {
   warm: {
     primary: '#c2410c',
     primaryHover: '#9a3412',
@@ -55,7 +55,63 @@ const themes = {
     heading: 'font-space',
     heroGradient: 'linear-gradient(135deg, #18181b 0%, #1e1b4b 50%, #18181b 100%)',
   },
+  nature: {
+    primary: '#166534',
+    primaryHover: '#14532d',
+    secondary: '#15803d',
+    accent: '#16a34a',
+    accentLight: '#dcfce7',
+    background: '#f0fdf4',
+    surface: '#dcfce7',
+    surfaceAlt: '#bbf7d0',
+    cardBg: '#ffffff',
+    text: '#14532d',
+    textMuted: '#166534',
+    textLight: '#15803d',
+    border: '#bbf7d0',
+    borderLight: '#dcfce7',
+    heading: 'font-playfair',
+    heroGradient: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%)',
+  },
+  luxury: {
+    primary: '#d4af37',
+    primaryHover: '#b8962e',
+    secondary: '#a07c1c',
+    accent: '#b8962e',
+    accentLight: '#fef9c3',
+    background: '#0a0a0a',
+    surface: '#111111',
+    surfaceAlt: '#1a1a1a',
+    cardBg: '#151515',
+    text: '#f5f5f5',
+    textMuted: '#a3a3a3',
+    textLight: '#737373',
+    border: '#2a2a2a',
+    borderLight: '#1f1f1f',
+    heading: 'font-playfair',
+    heroGradient: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #111111 100%)',
+  },
+  ocean: {
+    primary: '#0e7490',
+    primaryHover: '#0c6377',
+    secondary: '#0891b2',
+    accent: '#06b6d4',
+    accentLight: '#cffafe',
+    background: '#f0f9ff',
+    surface: '#e0f2fe',
+    surfaceAlt: '#bae6fd',
+    cardBg: '#ffffff',
+    text: '#0c4a6e',
+    textMuted: '#0369a1',
+    textLight: '#0284c7',
+    border: '#bae6fd',
+    borderLight: '#e0f2fe',
+    heading: 'font-jakarta',
+    heroGradient: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)',
+  },
 }
 
+export type ThemeName = keyof typeof themes
+export const themeNames = Object.keys(themes) as ThemeName[]
 export const theme = themes[siteConfig.branding.theme]
 export type Theme = typeof theme

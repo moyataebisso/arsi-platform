@@ -49,11 +49,14 @@ const fontVariables = [
   dmMono.variable,
 ].join(' ')
 
-const themeFontMap = {
-  warm: `${dmSans.className}`,
-  corporate: `${dmSans.className}`,
-  bold: `${dmMono.className}`,
-} as const
+const themeFontMap: Record<string, string> = {
+  warm: dmSans.className,
+  corporate: dmSans.className,
+  bold: dmMono.className,
+  nature: dmSans.className,
+  luxury: dmSans.className,
+  ocean: dmSans.className,
+}
 
 export const metadata: Metadata = {
   title: siteConfig.seo.defaultTitle,

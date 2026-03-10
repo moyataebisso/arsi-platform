@@ -75,7 +75,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/shop') ||
     pathname.startsWith('/book') ||
     pathname.startsWith('/blog') ||
-    pathname.startsWith('/api/contact')
+    pathname.startsWith('/api/contact') ||
+    pathname.startsWith('/theme-preview')
   ) {
     return supabaseResponse
   }
