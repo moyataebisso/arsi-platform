@@ -2,16 +2,42 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { siteConfig } from '@config'
 import { Menu, X } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
   const pathname = usePathname()
+  const router = useRouter()
   const pages = siteConfig.pages
   const modules = siteConfig.modules
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const userRole = user?.user_metadata?.role
+  const isAdmin = userRole === 'admin' || userRole === 'manager'
+  const dashboardHref = isAdmin ? '/admin' : '/dashboard'
+  const displayName = user?.user_metadata?.name || user?.email || ''
+  const truncatedName = displayName.length > 20 ? displayName.slice(0, 20) + '...' : displayName
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
 
   useEffect(() => {
     function handleScroll() {
@@ -117,6 +143,35 @@ export function Header() {
               >
                 Get In Touch
               </Link>
+              <div className="ml-3 pl-3 flex items-center gap-2" style={{ borderLeft: '1px solid var(--color-border)' }}>
+                {user ? (
+                  <>
+                    <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{truncatedName}</span>
+                    <Link
+                      href={dashboardHref}
+                      className="text-xs font-medium px-2 py-1 rounded-md transition-colors"
+                      style={{ color: 'var(--color-primary)' }}
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="text-xs px-2 py-1 rounded-md transition-colors cursor-pointer"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="text-xs font-medium px-2 py-1 rounded-md transition-colors"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    Sign In
+                  </Link>
+                )}
+              </div>
             </nav>
 
             {/* Mobile toggle */}
@@ -186,6 +241,37 @@ export function Header() {
             >
               Get In Touch
             </Link>
+          </div>
+          <div className="pt-3 mt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
+            {user ? (
+              <>
+                <span className="block px-4 py-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>{truncatedName}</span>
+                <Link
+                  href={dashboardHref}
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-4 py-3 rounded-xl text-sm font-medium"
+                  style={{ color: 'var(--color-primary)' }}
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => { setMobileOpen(false); handleSignOut() }}
+                  className="block w-full text-left px-4 py-3 rounded-xl text-sm cursor-pointer"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="block px-4 py-3 rounded-xl text-sm font-medium"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </nav>
       </div>
