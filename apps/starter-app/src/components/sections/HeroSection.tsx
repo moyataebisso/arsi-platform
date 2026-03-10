@@ -1,20 +1,29 @@
 import { siteConfig } from '@config'
 import Link from 'next/link'
 
-export function HeroSection() {
-  const { modules, business } = siteConfig
+interface HeroSectionProps {
+  headline?: string
+  subheadline?: string
+  ctaPrimary?: string
+  ctaSecondary?: string
+  heroImageUrl?: string
+}
 
-  const ctaText = modules.booking
-    ? 'Book Appointment'
-    : modules.ecommerce
-    ? 'Shop Now'
-    : 'Get In Touch'
+export function HeroSection({ headline, subheadline, ctaPrimary, ctaSecondary, heroImageUrl }: HeroSectionProps) {
+  const { modules, business } = siteConfig
 
   const ctaHref = modules.booking
     ? '/book'
     : modules.ecommerce
     ? '/shop'
     : '/contact'
+
+  const displayHeadline = headline || `Welcome to ${business.name}`
+  const displaySubheadline = subheadline || business.tagline || 'We provide exceptional services tailored to your needs. Let us help you achieve your goals with our dedicated team of professionals.'
+  const displayCtaPrimary = ctaPrimary || (modules.booking ? 'Book Appointment' : modules.ecommerce ? 'Shop Now' : 'Get In Touch')
+  const displayCtaSecondary = ctaSecondary || 'Our Services'
+
+  const imageUrl = heroImageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800'
 
   return (
     <section className="relative overflow-hidden min-h-screen flex items-center">
@@ -65,24 +74,17 @@ export function HeroSection() {
                 color: 'var(--color-text)',
                 fontFamily: 'var(--font-playfair)',
               }}
-            >
-              Welcome to{' '}
-              <span
-                style={{
-                  color: 'var(--color-primary)',
-                  fontStyle: 'italic',
-                }}
-              >
-                {business.name}
-              </span>
-            </h1>
+              dangerouslySetInnerHTML={{ __html: displayHeadline.replace(
+                business.name,
+                `<span style="color: var(--color-primary); font-style: italic;">${business.name}</span>`
+              )}}
+            />
 
             <p
               className="animate-fade-in-up delay-200 text-lg sm:text-xl leading-relaxed mb-10 max-w-lg"
               style={{ color: 'var(--color-text-muted)' }}
             >
-              {business.tagline ||
-                'We provide exceptional services tailored to your needs. Let us help you achieve your goals with our dedicated team of professionals.'}
+              {displaySubheadline}
             </p>
 
             <div className="animate-fade-in-up delay-300 flex flex-col sm:flex-row gap-4">
@@ -91,7 +93,7 @@ export function HeroSection() {
                 className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
                 style={{ backgroundColor: 'var(--color-primary)' }}
               >
-                {ctaText}
+                {displayCtaPrimary}
               </Link>
               <Link
                 href="/services"
@@ -101,41 +103,21 @@ export function HeroSection() {
                   borderColor: 'var(--color-primary)',
                 }}
               >
-                Our Services
+                {displayCtaSecondary}
               </Link>
             </div>
           </div>
 
-          {/* Right: Image placeholder */}
+          {/* Right: Image */}
           <div className="animate-fade-in-up delay-400 relative">
             <div
               className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl"
               style={{
-                backgroundImage:
-                  'url(https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800)',
+                backgroundImage: `url(${imageUrl})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}
             />
-            {/* Decorative accent card */}
-            <div
-              className="absolute -bottom-4 -left-4 px-5 py-3 rounded-xl shadow-lg animate-float"
-              style={{
-                backgroundColor: 'var(--color-card-bg)',
-                border: '1px solid var(--color-border-light)',
-              }}
-            >
-              <p
-                className="text-sm font-medium"
-                style={{
-                  fontFamily: 'var(--font-dancing)',
-                  color: 'var(--color-primary)',
-                  fontSize: '1.1rem',
-                }}
-              >
-                Made with love
-              </p>
-            </div>
           </div>
         </div>
       </div>

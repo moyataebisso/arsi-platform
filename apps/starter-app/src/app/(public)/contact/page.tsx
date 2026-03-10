@@ -2,15 +2,21 @@ import { siteConfig } from '@config'
 import { ContactForm } from '@/components/forms/ContactForm'
 import { Mail, Phone, MapPin, Clock, Navigation } from 'lucide-react'
 import { MapEmbed } from '@/components/shared/MapEmbed'
+import { getContentMany } from '@/lib/content/resolver'
 
-export const metadata = {
-  title: `${siteConfig.pages.contact.title} | ${siteConfig.business.name}`,
+export async function generateMetadata() {
+  const { meta_contact_title } = await getContentMany(['meta_contact_title'])
+  return { title: meta_contact_title }
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
   const { business, location } = siteConfig
   const fullAddress = `${location.address}, ${location.city}, ${location.state} ${location.zip}`
   const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`
+
+  const content = await getContentMany([
+    'contact_headline', 'contact_intro',
+  ])
 
   return (
     <>
@@ -31,14 +37,13 @@ export default function ContactPage() {
                 fontFamily: 'var(--font-playfair)',
               }}
             >
-              Let&apos;s Connect
+              {content.contact_headline}
             </h1>
             <p
               className="text-lg leading-relaxed"
               style={{ color: 'var(--color-text-muted)' }}
             >
-              We would love to hear from you. Fill out the form below or reach out directly —
-              we respond within one business day.
+              {content.contact_intro}
             </p>
           </div>
         </div>

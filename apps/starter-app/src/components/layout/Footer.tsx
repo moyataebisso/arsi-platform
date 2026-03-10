@@ -1,9 +1,12 @@
 import Link from 'next/link'
 import { siteConfig } from '@config'
 import { showPoweredBy } from '@/lib/platform'
+import { getContentMany } from '@/lib/content/resolver'
 
-export function Footer() {
+export async function Footer() {
   const { business, integrations, pages, modules, location } = siteConfig
+
+  const content = await getContentMany(['footer_tagline'])
 
   const navLinks = [
     pages.home.enabled && { href: '/', label: pages.home.title },
@@ -40,8 +43,7 @@ export function Footer() {
               {business.name}
             </h3>
             <p className="text-sm leading-relaxed mb-4" style={{ color: '#d4a574' }}>
-              {business.tagline}. Proudly serving {location.city}, {location.state} and
-              the surrounding community.
+              {content.footer_tagline}
             </p>
             {socialLinks.length > 0 && (
               <div className="flex gap-4 mt-4">

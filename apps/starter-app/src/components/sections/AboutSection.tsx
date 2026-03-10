@@ -4,7 +4,21 @@ import { siteConfig } from '@config'
 import Link from 'next/link'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
 
-export function AboutSection() {
+interface AboutSectionProps {
+  headline?: string
+  body?: string
+  quote?: string
+  ctaText?: string
+}
+
+export function AboutSection({ headline, body, quote, ctaText }: AboutSectionProps) {
+  const displayHeadline = headline || `About ${siteConfig.business.name}`
+  const displayBody = body || `Based in ${siteConfig.business.city}, ${siteConfig.business.state}, we have been serving our community with dedication and expertise. Our mission is to deliver outstanding results while building lasting relationships with every client.\n\nWhat sets us apart is our commitment to understanding your unique needs. We do not believe in one-size-fits-all solutions — every service is tailored to help you achieve your specific goals.`
+  const displayQuote = quote || 'Every person who walks through our doors becomes part of our story.'
+  const displayCtaText = ctaText || 'Our Story'
+
+  const bodyParagraphs = displayBody.split('\n').filter(p => p.trim())
+
   return (
     <section className="py-20 sm:py-28">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -19,36 +33,25 @@ export function AboutSection() {
                   fontFamily: 'var(--font-playfair)',
                 }}
               >
-                About {siteConfig.business.name}
+                {displayHeadline}
               </h2>
             </ScrollReveal>
 
-            <ScrollReveal delay={100}>
-              <p
-                className="text-base leading-relaxed mb-4"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                Based in {siteConfig.business.city}, {siteConfig.business.state}, we have been
-                serving our community with dedication and expertise. Our mission is to deliver
-                outstanding results while building lasting relationships with every client.
-              </p>
-            </ScrollReveal>
-
-            <ScrollReveal delay={200}>
-              <p
-                className="text-base leading-relaxed mb-8"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                What sets us apart is our commitment to understanding your unique needs. We do not
-                believe in one-size-fits-all solutions — every service is tailored to help you
-                achieve your specific goals.
-              </p>
-            </ScrollReveal>
+            {bodyParagraphs.map((paragraph, i) => (
+              <ScrollReveal key={i} delay={100 + i * 100}>
+                <p
+                  className="text-base leading-relaxed mb-4"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {paragraph}
+                </p>
+              </ScrollReveal>
+            ))}
 
             {/* Pull quote */}
             <ScrollReveal delay={300}>
               <blockquote
-                className="border-l-4 pl-6 py-2 mb-8"
+                className="border-l-4 pl-6 py-2 mb-8 mt-4"
                 style={{ borderColor: 'var(--color-accent)' }}
               >
                 <p
@@ -58,7 +61,7 @@ export function AboutSection() {
                     fontFamily: 'var(--font-playfair)',
                   }}
                 >
-                  &ldquo;Every person who walks through our doors becomes part of our story.&rdquo;
+                  &ldquo;{displayQuote}&rdquo;
                 </p>
               </blockquote>
             </ScrollReveal>
@@ -69,7 +72,7 @@ export function AboutSection() {
                 className="inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200 hover:gap-3"
                 style={{ color: 'var(--color-primary)' }}
               >
-                Our Story
+                {displayCtaText}
                 <span aria-hidden="true">&rarr;</span>
               </Link>
             </ScrollReveal>

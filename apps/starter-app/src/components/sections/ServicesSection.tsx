@@ -1,38 +1,47 @@
 'use client'
 
-import { siteConfig } from '@config'
-import { Briefcase, HeartHandshake, Lightbulb, Wrench } from 'lucide-react'
+import {
+  Briefcase, HeartHandshake, Lightbulb, Wrench, Heart, Star, Shield,
+  Zap, Globe, Users, Coffee, Scissors, Truck, Home,
+  Camera, Music, Book, Leaf, Award, Clock, Phone,
+} from 'lucide-react'
 import Link from 'next/link'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
 
-const placeholderServices = [
-  {
-    title: 'Consultation',
-    description:
-      'Personalized assessment and a clear action plan tailored to your needs.',
-    icon: Lightbulb,
-  },
-  {
-    title: 'Professional Services',
-    description:
-      'Expert solutions delivered with precision, care, and years of experience.',
-    icon: Briefcase,
-  },
-  {
-    title: 'Custom Solutions',
-    description:
-      'Bespoke approaches designed specifically for your unique challenges.',
-    icon: Wrench,
-  },
-  {
-    title: 'Ongoing Support',
-    description:
-      'Dedicated support and follow-up to ensure your continued satisfaction.',
-    icon: HeartHandshake,
-  },
+const ICON_MAP: Record<string, React.ComponentType<{ size?: number; style?: React.CSSProperties }>> = {
+  Lightbulb, Briefcase, Wrench, HeartHandshake, Heart, Star, Shield,
+  Zap, Globe, Users, Coffee, Scissors, Truck, Home,
+  Camera, Music, Book, Leaf, Award, Clock, Phone,
+}
+
+interface ServiceItem {
+  id: string
+  name: string
+  description: string
+  price?: string
+  icon: string
+}
+
+interface ServicesSectionProps {
+  title?: string
+  subtitle?: string
+  services?: ServiceItem[]
+}
+
+const defaultServices: ServiceItem[] = [
+  { id: '1', name: 'Consultation', description: 'Personalized assessment and a clear action plan tailored to your needs.', icon: 'Lightbulb' },
+  { id: '2', name: 'Professional Services', description: 'Expert solutions delivered with precision, care, and years of experience.', icon: 'Briefcase' },
+  { id: '3', name: 'Custom Solutions', description: 'Bespoke approaches designed specifically for your unique challenges.', icon: 'Wrench' },
+  { id: '4', name: 'Ongoing Support', description: 'Dedicated support and follow-up to ensure your continued satisfaction.', icon: 'HeartHandshake' },
 ]
 
-export function ServicesSection() {
+export function ServicesSection({
+  title = 'What We Do Best',
+  subtitle = 'From consultation to delivery, we provide comprehensive services',
+  services,
+}: ServicesSectionProps) {
+  const displayServices = services || defaultServices
+
   return (
     <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--color-surface)' }}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,28 +54,24 @@ export function ServicesSection() {
                 fontFamily: 'var(--font-playfair)',
               }}
             >
-              What We Do Best
+              {title}
             </h2>
             <p
               className="text-lg max-w-2xl mx-auto"
               style={{ color: 'var(--color-text-muted)' }}
             >
-              From consultation to delivery, we provide comprehensive services to help{' '}
-              {siteConfig.business.name.toLowerCase() === 'client business name'
-                ? 'your business'
-                : 'you'}{' '}
-              succeed.
+              {subtitle}
             </p>
           </div>
         </ScrollReveal>
 
-        {/* 2x2 / 4-column Grid */}
+        {/* Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {placeholderServices.map((service, index) => {
-            const Icon = service.icon
+          {displayServices.slice(0, 4).map((service, index) => {
+            const Icon = ICON_MAP[service.icon] || Lightbulb
 
             return (
-              <ScrollReveal key={service.title} delay={index * 80}>
+              <ScrollReveal key={service.id || index} delay={index * 80}>
                 <div
                   className="group rounded-2xl p-6 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col items-center text-center aspect-square justify-center"
                   style={{
@@ -84,7 +89,7 @@ export function ServicesSection() {
                     className="text-base font-semibold mb-2"
                     style={{ color: 'var(--color-text)' }}
                   >
-                    {service.title}
+                    {service.name}
                   </h3>
                   <p
                     className="text-sm leading-relaxed"
