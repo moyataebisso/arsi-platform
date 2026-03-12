@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from 'next/cache'
 import { themes, type ThemeName } from '@/lib/theme'
 import { siteConfig } from '@config'
 
@@ -32,7 +33,8 @@ export interface ResolvedTheme {
 }
 
 export async function getActiveTheme(): Promise<ResolvedTheme> {
-  // Dynamic import to avoid issues in client components
+  noStore() // Prevent Next.js from caching this — always read fresh from DB
+
   const { getSiteSettings } = await import('@/lib/settings')
 
   const settings = await getSiteSettings([
