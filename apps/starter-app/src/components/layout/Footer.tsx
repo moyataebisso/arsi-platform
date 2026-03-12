@@ -31,18 +31,22 @@ export async function Footer() {
   const fullAddress = `${location.address}, ${location.city}, ${location.state} ${location.zip}`
 
   return (
-    <footer style={{ backgroundColor: '#1c0a00', color: '#fef9f0' }}>
+    <footer style={{ backgroundColor: 'var(--color-footer-bg)', color: 'var(--color-footer-text)' }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .footer-link { color: var(--color-footer-muted); transition: color 0.2s; }
+        .footer-link:hover { color: var(--color-footer-heading); }
+      `}} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* About blurb */}
           <div>
             <h3
               className="text-xl font-bold mb-3"
-              style={{ fontFamily: 'var(--font-playfair)', color: '#fff7ed' }}
+              style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-footer-heading)' }}
             >
               {business.name}
             </h3>
-            <p className="text-sm leading-relaxed mb-4" style={{ color: '#d4a574' }}>
+            <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-footer-muted)' }}>
               {content.footer_tagline}
             </p>
             {socialLinks.length > 0 && (
@@ -53,8 +57,7 @@ export async function Footer() {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm transition-colors duration-200 hover:text-white"
-                    style={{ color: '#d4a574' }}
+                    className="footer-link text-sm"
                   >
                     {link.label}
                   </a>
@@ -67,18 +70,14 @@ export async function Footer() {
           <div>
             <h4
               className="text-sm font-semibold uppercase tracking-wider mb-4"
-              style={{ color: '#fed7aa' }}
+              style={{ color: 'var(--color-footer-heading)' }}
             >
               Quick Links
             </h4>
             <ul className="space-y-2.5">
               {navLinks.map(link => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm transition-colors duration-200 hover:text-white"
-                    style={{ color: '#d4a574' }}
-                  >
+                  <Link href={link.href} className="footer-link text-sm">
                     {link.label}
                   </Link>
                 </li>
@@ -90,27 +89,21 @@ export async function Footer() {
           <div>
             <h4
               className="text-sm font-semibold uppercase tracking-wider mb-4"
-              style={{ color: '#fed7aa' }}
+              style={{ color: 'var(--color-footer-heading)' }}
             >
               Contact & Hours
             </h4>
-            <ul className="space-y-2.5 text-sm" style={{ color: '#d4a574' }}>
+            <ul className="space-y-2.5 text-sm" style={{ color: 'var(--color-footer-muted)' }}>
               {business.email && (
                 <li>
-                  <a
-                    href={`mailto:${business.email}`}
-                    className="hover:text-white transition-colors duration-200"
-                  >
+                  <a href={`mailto:${business.email}`} className="footer-link">
                     {business.email}
                   </a>
                 </li>
               )}
               {business.phone && (
                 <li>
-                  <a
-                    href={`tel:${business.phone}`}
-                    className="hover:text-white transition-colors duration-200"
-                  >
+                  <a href={`tel:${business.phone}`} className="footer-link">
                     {business.phone}
                   </a>
                 </li>
@@ -121,7 +114,7 @@ export async function Footer() {
                     href={`https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-white transition-colors duration-200"
+                    className="footer-link"
                   >
                     {fullAddress}
                   </a>
@@ -132,8 +125,8 @@ export async function Footer() {
               <div className="mt-4 space-y-1.5 text-sm">
                 {location.hours.map(h => (
                   <div key={h.day} className="flex justify-between gap-4">
-                    <span style={{ color: '#d4a574' }}>{h.day}</span>
-                    <span style={{ color: '#fed7aa' }}>{h.hours}</span>
+                    <span style={{ color: 'var(--color-footer-muted)' }}>{h.day}</span>
+                    <span style={{ color: 'var(--color-footer-heading)' }}>{h.hours}</span>
                   </div>
                 ))}
               </div>
@@ -142,16 +135,16 @@ export async function Footer() {
         </div>
 
         {/* Separator */}
-        <div className="mt-12 pt-8 border-t" style={{ borderColor: '#3d1f0a' }}>
+        <div className="mt-12 pt-8 border-t" style={{ borderColor: 'var(--color-footer-border)' }}>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
-            <p style={{ color: '#8b6740' }}>
+            <p style={{ color: 'var(--color-footer-muted)', opacity: 0.7 }}>
               &copy; {new Date().getFullYear()} {business.name}. All rights reserved.
             </p>
             <div className="flex items-center gap-3">
               {showPoweredBy && (
-                <p style={{ color: '#6b4f30' }}>
+                <p style={{ color: 'var(--color-footer-muted)', opacity: 0.5 }}>
                   Built by{' '}
-                  <span className="font-medium" style={{ color: '#8b6740' }}>
+                  <span className="font-medium" style={{ opacity: 0.7 }}>
                     Arsi Technology Group
                   </span>
                 </p>
@@ -159,7 +152,7 @@ export async function Footer() {
               <Link
                 href="/login"
                 className="text-xs opacity-40 hover:opacity-100 transition-opacity duration-200"
-                style={{ color: '#8b6740' }}
+                style={{ color: 'var(--color-footer-muted)' }}
               >
                 Admin
               </Link>

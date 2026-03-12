@@ -80,6 +80,12 @@ export default function AdminSettingsPage() {
   const [fontBody, setFontBody] = useState<string>(siteConfig.branding.fontBody)
   const [toast, setToast] = useState('')
 
+  // Section color overrides
+  const [colorHeroBg, setColorHeroBg] = useState('')
+  const [colorFooterBg, setColorFooterBg] = useState('')
+  const [colorCtaBg, setColorCtaBg] = useState('')
+  const [colorSurface, setColorSurface] = useState('')
+
   // Load current settings on mount
   useEffect(() => {
     fetch('/api/admin/content')
@@ -90,6 +96,10 @@ export default function AdminSettingsPage() {
         if (data.custom_accent_color) setCustomAccent(data.custom_accent_color)
         if (data.font_heading) setFontHeading(data.font_heading)
         if (data.font_body) setFontBody(data.font_body)
+        if (data.color_hero_bg) setColorHeroBg(data.color_hero_bg)
+        if (data.color_footer_bg) setColorFooterBg(data.color_footer_bg)
+        if (data.color_cta_bg) setColorCtaBg(data.color_cta_bg)
+        if (data.color_surface) setColorSurface(data.color_surface)
       })
       .catch(() => {})
   }, [])
@@ -146,12 +156,26 @@ export default function AdminSettingsPage() {
   async function resetCustomColors() {
     setCustomPrimary('')
     setCustomAccent('')
+    setColorHeroBg('')
+    setColorFooterBg('')
+    setColorCtaBg('')
+    setColorSurface('')
     await Promise.all([
       deleteSetting('custom_primary_color'),
       deleteSetting('custom_accent_color'),
+      deleteSetting('color_hero_bg'),
+      deleteSetting('color_footer_bg'),
+      deleteSetting('color_cta_bg'),
+      deleteSetting('color_surface'),
     ])
     applyThemeCSS(activeTheme)
     showToast('Colors reset to theme defaults!')
+  }
+
+  async function handleSectionColor(key: string, value: string, setter: (v: string) => void, cssVar: string) {
+    setter(value)
+    document.documentElement.style.setProperty(cssVar, value)
+    await saveSetting(key, value)
   }
 
   async function handleFontHeadingChange(font: string) {
@@ -270,13 +294,69 @@ export default function AdminSettingsPage() {
               <p className="text-[10px] text-gray-400 mt-1">Used for highlights and hover states</p>
             </div>
           </div>
-          {(customPrimary || customAccent) && (
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Hero Background</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={colorHeroBg || themes[activeTheme].background}
+                  onChange={e => handleSectionColor('color_hero_bg', e.target.value, setColorHeroBg, '--color-hero-bg')}
+                  className="w-10 h-10 rounded cursor-pointer border border-gray-200"
+                />
+                <span className="text-xs text-gray-400 font-mono">{colorHeroBg || themes[activeTheme].background}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1">Background color of the hero section</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Footer Background</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={colorFooterBg || themes[activeTheme].text}
+                  onChange={e => handleSectionColor('color_footer_bg', e.target.value, setColorFooterBg, '--color-footer-bg')}
+                  className="w-10 h-10 rounded cursor-pointer border border-gray-200"
+                />
+                <span className="text-xs text-gray-400 font-mono">{colorFooterBg || themes[activeTheme].text}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1">Background color of the footer</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">CTA Section</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={colorCtaBg || themes[activeTheme].primary}
+                  onChange={e => handleSectionColor('color_cta_bg', e.target.value, setColorCtaBg, '--color-cta-bg')}
+                  className="w-10 h-10 rounded cursor-pointer border border-gray-200"
+                />
+                <span className="text-xs text-gray-400 font-mono">{colorCtaBg || themes[activeTheme].primary}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1">Background of call-to-action banners</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Card / Surface</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={colorSurface || themes[activeTheme].surface}
+                  onChange={e => handleSectionColor('color_surface', e.target.value, setColorSurface, '--color-surface')}
+                  className="w-10 h-10 rounded cursor-pointer border border-gray-200"
+                />
+                <span className="text-xs text-gray-400 font-mono">{colorSurface || themes[activeTheme].surface}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1">Background for cards and alternate sections</p>
+            </div>
+          </div>
+          {(customPrimary || customAccent || colorHeroBg || colorFooterBg || colorCtaBg || colorSurface) && (
             <button
               onClick={resetCustomColors}
               className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition-colors mb-4"
             >
               <RotateCcw size={12} />
-              Reset to theme defaults
+              Reset all to theme defaults
             </button>
           )}
 

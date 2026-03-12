@@ -31,8 +31,7 @@ export function HeroSection({ headline, subheadline, ctaPrimary, ctaSecondary, h
       <div
         className="absolute inset-0 animate-hero-gradient"
         style={{
-          background:
-            'linear-gradient(135deg, #fff7ed 0%, #fef3c7 25%, #fed7aa 50%, #fef3c7 75%, #fff7ed 100%)',
+          background: 'var(--color-hero-gradient)',
           backgroundSize: '200% 200%',
         }}
       />

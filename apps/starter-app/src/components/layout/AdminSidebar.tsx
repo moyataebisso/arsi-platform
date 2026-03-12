@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   ImageIcon,
   ExternalLink,
+  Palette,
 } from 'lucide-react'
 
 const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings, ImageIcon }
@@ -80,10 +81,21 @@ export function AdminSidebar() {
       <div className="p-3 border-t border-gray-200 space-y-2">
         <a
           href="/"
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-gray-900 transition-colors border border-gray-300 rounded-lg"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-900 hover:text-white transition-colors border-2 border-gray-300 rounded-lg"
         >
           <ExternalLink size={16} />
-          View Site
+          View Live Site
+        </a>
+        <a
+          href="/theme-preview"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 transition-colors rounded-lg"
+        >
+          <Palette size={16} />
+          Theme Preview
         </a>
       </div>
     </aside>
