@@ -56,6 +56,20 @@ const themeFontMap: Record<string, string> = {
   nature: dmSans.className,
   luxury: dmSans.className,
   ocean: dmSans.className,
+  sunset: dmSans.className,
+  midnight: dmSans.className,
+  rose: dmSans.className,
+  slate: dmSans.className,
+  forest: dmSans.className,
+  sand: dmSans.className,
+  arctic: dmSans.className,
+  grape: dmSans.className,
+  mint: dmSans.className,
+  fire: dmMono.className,
+  sage: dmSans.className,
+  navyGold: dmSans.className,
+  charcoal: dmSans.className,
+  crimson: dmSans.className,
 }
 
 export const metadata: Metadata = {

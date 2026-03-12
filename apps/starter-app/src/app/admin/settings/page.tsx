@@ -4,16 +4,7 @@ import { useState, useEffect } from 'react'
 import { siteConfig } from '@config'
 import { Save, Plus, Trash2, Check, RotateCcw } from 'lucide-react'
 import { ImageUpload } from '@/components/admin/ImageUpload'
-import { themes, themeNames, type ThemeName } from '@/lib/theme'
-
-const themeLabels: Record<ThemeName, string> = {
-  warm: 'Warm',
-  corporate: 'Corporate',
-  bold: 'Bold',
-  nature: 'Nature',
-  luxury: 'Luxury',
-  ocean: 'Ocean',
-}
+import { themes, themeNames, themeLabels, themeCategories, type ThemeName } from '@/lib/theme'
 
 const headingFonts = [
   'Playfair Display',
@@ -212,33 +203,40 @@ export default function AdminSettingsPage() {
 
           {/* Theme Selector */}
           <h3 className="text-sm font-medium text-gray-700 mb-3">Theme</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-            {themeNames.map(name => {
-              const t = themes[name]
-              const isActive = name === activeTheme
-              return (
-                <button
-                  key={name}
-                  onClick={() => selectTheme(name)}
-                  className={`relative rounded-xl border-2 p-3 text-left transition-all cursor-pointer ${
-                    isActive ? 'border-gray-900 shadow-md' : 'border-gray-200 hover:border-gray-400'
-                  }`}
-                >
-                  {isActive && (
-                    <div className="absolute top-2 right-2 w-5 h-5 bg-gray-900 text-white rounded-full flex items-center justify-center">
-                      <Check size={12} />
-                    </div>
-                  )}
-                  <div className="text-xs font-semibold text-gray-900 mb-2">{themeLabels[name]}</div>
-                  <div className="flex gap-1 mb-2">
-                    {[t.primary, t.accent, t.background, t.text].map((color, i) => (
-                      <div key={i} className="w-4 h-4 rounded-full border border-gray-300" style={{ backgroundColor: color }} />
-                    ))}
-                  </div>
-                  <MiniThemePreview themeName={name} />
-                </button>
-              )
-            })}
+          <div className="max-h-[480px] overflow-y-auto pr-1 mb-6 space-y-4">
+            {Object.entries(themeCategories).map(([category, names]) => (
+              <div key={category}>
+                <p className="text-xs font-medium text-gray-500 mb-2">{category}</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {names.map(name => {
+                    const t = themes[name]
+                    const isActive = name === activeTheme
+                    return (
+                      <button
+                        key={name}
+                        onClick={() => selectTheme(name)}
+                        className={`relative rounded-xl border-2 p-2.5 text-left transition-all cursor-pointer ${
+                          isActive ? 'border-gray-900 shadow-md' : 'border-gray-200 hover:border-gray-400'
+                        }`}
+                      >
+                        {isActive && (
+                          <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-gray-900 text-white rounded-full flex items-center justify-center">
+                            <Check size={10} />
+                          </div>
+                        )}
+                        <div className="text-[11px] font-semibold text-gray-900 mb-1.5">{themeLabels[name]}</div>
+                        <div className="flex gap-0.5 mb-1.5">
+                          {[t.primary, t.accent, t.background, t.text].map((color, i) => (
+                            <div key={i} className="w-3.5 h-3.5 rounded-full border border-gray-300" style={{ backgroundColor: color }} />
+                          ))}
+                        </div>
+                        <MiniThemePreview themeName={name} />
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Custom Color Overrides */}

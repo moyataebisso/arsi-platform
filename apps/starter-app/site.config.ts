@@ -20,7 +20,7 @@ export const siteConfig = {
 
   // -- 2. BRANDING & THEME --
   branding: {
-    theme: "warm" as "warm" | "corporate" | "bold" | "nature" | "luxury" | "ocean",
+    theme: "warm" as "warm" | "corporate" | "bold" | "nature" | "luxury" | "ocean" | "sunset" | "midnight" | "rose" | "slate" | "forest" | "sand" | "arctic" | "grape" | "mint" | "fire" | "sage" | "navyGold" | "charcoal" | "crimson",
     primaryColor: '#c2410c',
     accentColor: '#d97706',
     fontHeading: 'Playfair Display',
