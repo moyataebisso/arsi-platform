@@ -37,6 +37,14 @@ export const siteConfig = {
     ecommerce: false,     // Online store + cart + checkout
     blog: false,          // Blog with categories + tags
     leads: true,          // Contact forms + lead tracking
+    events: false,        // Events listing + registration
+    reviews: false,       // Customer reviews + testimonials
+    gallery: false,       // Image gallery with categories
+    faq: false,           // Frequently asked questions
+    members: false,       // Member profiles + directory
+    emailMarketing: false,// Email campaigns + subscribers
+    customForms: false,   // Custom form builder
+    payments: false,      // Stripe payments integration
   },
 
   // -- 4. AUTHENTICATION --
@@ -78,6 +86,10 @@ export const siteConfig = {
     shop: { enabled: false, title: "Shop" },      // auto-enabled with ecommerce
     book: { enabled: false, title: "Book Now" },  // auto-enabled with booking
     blog: { enabled: false, title: "Blog" },      // auto-enabled with blog module
+    events: { enabled: false, title: "Events" },
+    reviews: { enabled: false, title: "Reviews" },
+    gallery: { enabled: false, title: "Gallery" },
+    faq: { enabled: false, title: "FAQ" },
   },
 
   // -- 8. SEO & ANALYTICS --

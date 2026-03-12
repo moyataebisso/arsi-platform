@@ -1,27 +1,60 @@
 import { siteConfig } from '@config'
-import { Users, Mail, Calendar, DollarSign, TrendingUp, Clock } from 'lucide-react'
+import { getAdminClient } from '@/lib/supabase/admin'
+import { Users, Mail, Calendar, DollarSign, TrendingUp, Clock, Star, CalendarDays, Package } from 'lucide-react'
 
-const stats = [
-  { label: 'Total Users', value: '124', change: '+12%', icon: Users },
-  { label: 'New Leads', value: '38', change: '+8%', icon: Mail },
-  ...(siteConfig.modules.booking
-    ? [{ label: 'Upcoming Bookings', value: '15', change: '+5%', icon: Calendar }]
-    : []),
-  ...(siteConfig.modules.ecommerce
-    ? [{ label: 'Revenue (Month)', value: '$4,280', change: '+18%', icon: DollarSign }]
-    : []),
-]
+async function getStats() {
+  const supabase = getAdminClient()
+  const modules = siteConfig.modules as Record<string, boolean>
+  const stats: { label: string; value: string; icon: any }[] = []
 
-const recentActivity = [
-  { action: 'New lead from contact form', name: 'Sarah Johnson', time: '2 minutes ago' },
-  { action: 'User registered', name: 'Ahmed Mohamed', time: '15 minutes ago' },
-  { action: 'Lead marked as contacted', name: 'Maria Garcia', time: '1 hour ago' },
-  { action: 'Settings updated', name: 'Admin', time: '3 hours ago' },
-  { action: 'New lead from contact form', name: 'James Wilson', time: '5 hours ago' },
-  { action: 'User updated profile', name: 'Fatima Ali', time: '1 day ago' },
-]
+  // Always show users + leads
+  const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
+  stats.push({ label: 'Total Users', value: String(userCount || 0), icon: Users })
 
-export default function AdminDashboardPage() {
+  const { count: leadCount } = await supabase.from('leads').select('*', { count: 'exact', head: true })
+  stats.push({ label: 'Leads', value: String(leadCount || 0), icon: Mail })
+
+  if (modules.booking) {
+    const { count } = await supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'confirmed')
+    stats.push({ label: 'Active Bookings', value: String(count || 0), icon: Calendar })
+  }
+
+  if (modules.ecommerce) {
+    const { count } = await supabase.from('orders').select('*', { count: 'exact', head: true })
+    stats.push({ label: 'Orders', value: String(count || 0), icon: Package })
+  }
+
+  if (modules.events) {
+    const { count } = await supabase.from('events').select('*', { count: 'exact', head: true }).eq('is_published', true)
+    stats.push({ label: 'Active Events', value: String(count || 0), icon: CalendarDays })
+  }
+
+  if (modules.reviews) {
+    const { count } = await supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('is_approved', true)
+    stats.push({ label: 'Reviews', value: String(count || 0), icon: Star })
+  }
+
+  return stats
+}
+
+async function getRecentActivity() {
+  const supabase = getAdminClient()
+  const { data } = await supabase
+    .from('leads')
+    .select('name, email, created_at')
+    .order('created_at', { ascending: false })
+    .limit(6)
+
+  return (data || []).map(lead => ({
+    action: 'New lead from contact form',
+    name: lead.name || lead.email,
+    time: new Date(lead.created_at).toLocaleDateString(),
+  }))
+}
+
+export default async function AdminDashboardPage() {
+  const [stats, recentActivity] = await Promise.all([getStats(), getRecentActivity()])
+
   return (
     <div>
       <div className="mb-8">
@@ -42,10 +75,6 @@ export default function AdminDashboardPage() {
                 <Icon size={18} className="text-gray-400" />
               </div>
               <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-              <p className="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
-                <TrendingUp size={12} />
-                {stat.change} from last month
-              </p>
             </div>
           )
         })}
@@ -57,6 +86,9 @@ export default function AdminDashboardPage() {
           <h2 className="font-semibold text-gray-900">Recent Activity</h2>
         </div>
         <div className="divide-y divide-gray-100">
+          {recentActivity.length === 0 && (
+            <div className="px-5 py-8 text-center text-sm text-gray-400">No recent activity</div>
+          )}
           {recentActivity.map((item, i) => (
             <div key={i} className="px-5 py-3.5 flex items-center justify-between">
               <div>

@@ -13,13 +13,18 @@ import {
   FileText,
   Send,
   Settings,
-  ArrowLeft,
   ImageIcon,
   ExternalLink,
   Palette,
+  Star,
+  Image,
+  HelpCircle,
+  CreditCard,
+  CalendarDays,
+  UserCheck,
 } from 'lucide-react'
 
-const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings, ImageIcon }
+const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings, ImageIcon, Star, Image, HelpCircle, CreditCard, CalendarDays, UserCheck }
 
 const baseLinks = [
   { href: '/admin', label: 'Dashboard', icon: 'LayoutDashboard' },
@@ -29,10 +34,16 @@ const baseLinks = [
 ]
 
 const moduleLinks = [
-  { href: '/admin/bookings', label: 'Bookings', icon: 'Calendar', module: 'booking' as const },
-  { href: '/admin/products', label: 'Products', icon: 'Package', module: 'ecommerce' as const },
-  { href: '/admin/orders', label: 'Orders', icon: 'ShoppingCart', module: 'ecommerce' as const },
-  { href: '/admin/blog', label: 'Blog', icon: 'FileText', module: 'blog' as const },
+  { href: '/admin/bookings', label: 'Bookings', icon: 'Calendar', module: 'booking' },
+  { href: '/admin/products', label: 'Products', icon: 'Package', module: 'ecommerce' },
+  { href: '/admin/orders', label: 'Orders', icon: 'ShoppingCart', module: 'ecommerce' },
+  { href: '/admin/blog', label: 'Blog', icon: 'FileText', module: 'blog' },
+  { href: '/admin/events', label: 'Events', icon: 'CalendarDays', module: 'events' },
+  { href: '/admin/reviews', label: 'Reviews', icon: 'Star', module: 'reviews' },
+  { href: '/admin/gallery', label: 'Gallery', icon: 'Image', module: 'gallery' },
+  { href: '/admin/faq', label: 'FAQ', icon: 'HelpCircle', module: 'faq' },
+  { href: '/admin/members', label: 'Members', icon: 'UserCheck', module: 'members' },
+  { href: '/admin/payments', label: 'Payments', icon: 'CreditCard', module: 'payments' },
 ]
 
 const bottomLinks = [
@@ -45,7 +56,7 @@ export function AdminSidebar() {
   const pathname = usePathname()
 
   const activeModuleLinks = moduleLinks.filter(
-    link => siteConfig.modules[link.module]
+    link => (siteConfig.modules as Record<string, boolean>)[link.module]
   )
 
   const allLinks = [...baseLinks, ...activeModuleLinks, ...bottomLinks]

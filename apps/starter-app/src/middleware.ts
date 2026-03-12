@@ -75,7 +75,19 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/shop') ||
     pathname.startsWith('/book') ||
     pathname.startsWith('/blog') ||
+    pathname.startsWith('/events') ||
+    pathname.startsWith('/reviews') ||
+    pathname.startsWith('/gallery') ||
+    pathname.startsWith('/faq') ||
+    pathname.startsWith('/cart') ||
+    pathname.startsWith('/checkout') ||
     pathname.startsWith('/api/contact') ||
+    pathname.startsWith('/api/booking') ||
+    pathname.startsWith('/api/orders') ||
+    pathname.startsWith('/api/reviews') ||
+    pathname.startsWith('/api/email') ||
+    pathname.startsWith('/api/events') ||
+    pathname.startsWith('/api/stripe') ||
     pathname.startsWith('/theme-preview')
   ) {
     return supabaseResponse
