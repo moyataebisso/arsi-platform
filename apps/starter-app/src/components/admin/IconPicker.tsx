@@ -6,9 +6,10 @@ import {
   Zap, Globe, Users, Coffee, Scissors, Truck, Home,
   Camera, Music, Book, Leaf, Award, Clock, Phone,
   HeartHandshake,
+  type LucideIcon,
 } from 'lucide-react'
 
-const ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
+const ICONS: Record<string, LucideIcon> = {
   Lightbulb, Briefcase, Wrench, Heart, Star, Shield,
   Zap, Globe, Users, Coffee, Scissors, Truck, Home,
   Camera, Music, Book, Leaf, Award, Clock, Phone,

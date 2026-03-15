@@ -4,11 +4,12 @@ import {
   Briefcase, HeartHandshake, Lightbulb, Wrench, Heart, Star, Shield,
   Zap, Globe, Users, Coffee, Scissors, Truck, Home,
   Camera, Music, Book, Leaf, Award, Clock, Phone,
+  type LucideIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
 
-const ICON_MAP: Record<string, React.ComponentType<{ size?: number; style?: React.CSSProperties }>> = {
+const ICON_MAP: Record<string, LucideIcon> = {
   Lightbulb, Briefcase, Wrench, HeartHandshake, Heart, Star, Shield,
   Zap, Globe, Users, Coffee, Scissors, Truck, Home,
   Camera, Music, Book, Leaf, Award, Clock, Phone,
