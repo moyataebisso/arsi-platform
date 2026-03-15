@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Trash2, Copy, Check, Upload, FolderOpen, Image as ImageIcon } from 'lucide-react'
+import { Trash2, Copy, Check, Upload, FolderOpen, Image as ImageIcon, Search } from 'lucide-react'
 import { listImages, deleteImage, uploadImage, type StorageFolder } from '@/lib/storage/upload'
+import PhotoFinder from '@/components/admin/PhotoFinder'
 
 const FOLDERS: StorageFolder[] = ['hero', 'gallery', 'team', 'logo', 'products', 'blog', 'menu']
 
@@ -19,6 +20,8 @@ export default function AdminMediaPage() {
   const [activeFolder, setActiveFolder] = useState<StorageFolder>('gallery')
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [photoFinderOpen, setPhotoFinderOpen] = useState(false)
+  const [toast, setToast] = useState('')
 
   const loadImages = useCallback(async () => {
     setLoading(true)
@@ -87,18 +90,27 @@ export default function AdminMediaPage() {
           <h1 className="text-2xl font-bold text-gray-900">Media Library</h1>
           <p className="text-sm text-gray-500 mt-1">Upload and manage images for your site.</p>
         </div>
-        <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-800 transition-colors">
-          <Upload size={16} />
-          {uploading ? 'Uploading...' : 'Upload Images'}
-          <input
-            type="file"
-            accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-            multiple
-            className="hidden"
-            onChange={handleUpload}
-            disabled={uploading}
-          />
-        </label>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPhotoFinderOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+          >
+            <Search size={16} />
+            Find Free Photos
+          </button>
+          <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-800 transition-colors">
+            <Upload size={16} />
+            {uploading ? 'Uploading...' : 'Upload Images'}
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+              multiple
+              className="hidden"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+          </label>
+        </div>
       </div>
 
       {/* Folder tabs */}
@@ -171,6 +183,24 @@ export default function AdminMediaPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      <PhotoFinder
+        isOpen={photoFinderOpen}
+        onClose={() => setPhotoFinderOpen(false)}
+        onSelect={(url, alt) => {
+          setToast('Photo added to your media library!')
+          setPhotoFinderOpen(false)
+          loadImages()
+          setTimeout(() => setToast(''), 3000)
+        }}
+        context="general"
+      />
+
+      {toast && (
+        <div className="fixed bottom-6 right-6 bg-gray-900 text-white px-5 py-3 rounded-xl text-sm font-medium shadow-lg z-50 animate-fade-in-up">
+          {toast}
         </div>
       )}
     </div>

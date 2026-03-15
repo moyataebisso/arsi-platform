@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Save, Check, ChevronUp, ChevronDown, Plus, Trash2, AlertCircle } from 'lucide-react'
+import { Save, Check, ChevronUp, ChevronDown, Plus, Trash2, AlertCircle, Search } from 'lucide-react'
 import { CONTENT_KEYS } from '@/lib/content/keys'
 import { getDefault } from '@/lib/content/defaults'
 import { IconPicker, ICON_MAP } from '@/components/admin/IconPicker'
+import PhotoFinder from '@/components/admin/PhotoFinder'
 
 const TABS = ['Hero', 'Services', 'About', 'CTA', 'Contact', 'Footer', 'SEO'] as const
 type Tab = typeof TABS[number]
@@ -25,6 +26,7 @@ export default function AdminContentPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [photoFinder, setPhotoFinder] = useState<{ open: boolean; context: 'hero' | 'about' | 'services' | 'gallery' | 'general'; targetKey: string }>({ open: false, context: 'general', targetKey: '' })
 
   useEffect(() => {
     fetch('/api/admin/content')
@@ -148,6 +150,34 @@ export default function AdminContentPage() {
     </div>
   )
 
+  const imageField = (key: string, label: string, context: 'hero' | 'about' | 'services' | 'gallery' | 'general') => (
+    <div key={key}>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={getValue(key)}
+          onChange={e => setValue(key, e.target.value)}
+          placeholder="Image URL"
+          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+        />
+        <button
+          type="button"
+          onClick={() => setPhotoFinder({ open: true, context, targetKey: key })}
+          className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors whitespace-nowrap"
+        >
+          <Search size={14} />
+          Find Photo
+        </button>
+      </div>
+      {getValue(key) && (
+        <div className="mt-2 rounded-lg overflow-hidden border border-gray-200 max-w-xs">
+          <img src={getValue(key)} alt={label} className="w-full h-32 object-cover" />
+        </div>
+      )}
+    </div>
+  )
+
   const tabHasChanges = (keys: string[]) => keys.some(k => dirty.has(k))
 
   const renderSaveButton = (keys: string[]) => (
@@ -213,8 +243,9 @@ export default function AdminContentPage() {
               {field('hero_subheadline', 'Subheadline')}
               {field('hero_cta_primary', 'Primary Button Text')}
               {field('hero_cta_secondary', 'Secondary Button Text')}
+              {imageField('hero_image', 'Hero Image', 'hero')}
             </div>
-            {renderSaveButton(['hero_headline', 'hero_subheadline', 'hero_cta_primary', 'hero_cta_secondary'])}
+            {renderSaveButton(['hero_headline', 'hero_subheadline', 'hero_cta_primary', 'hero_cta_secondary', 'hero_image'])}
           </div>
         )}
 
@@ -315,8 +346,9 @@ export default function AdminContentPage() {
               {field('about_body', 'Body Text', { multiline: true })}
               {field('about_quote', 'Pull Quote')}
               {field('about_cta_text', 'CTA Link Text')}
+              {imageField('about_image', 'About Image', 'about')}
             </div>
-            {renderSaveButton(['about_headline', 'about_body', 'about_quote', 'about_cta_text'])}
+            {renderSaveButton(['about_headline', 'about_body', 'about_quote', 'about_cta_text', 'about_image'])}
           </div>
         )}
 
@@ -371,6 +403,16 @@ export default function AdminContentPage() {
           </div>
         )}
       </div>
+
+      <PhotoFinder
+        isOpen={photoFinder.open}
+        onClose={() => setPhotoFinder(prev => ({ ...prev, open: false }))}
+        onSelect={(url) => {
+          setValue(photoFinder.targetKey, url)
+          setPhotoFinder(prev => ({ ...prev, open: false }))
+        }}
+        context={photoFinder.context}
+      />
     </div>
   )
 }
