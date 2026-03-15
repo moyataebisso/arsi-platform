@@ -1,4 +1,4 @@
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { isAlreadyProcessed, markAsProcessed } from '@/lib/security/idempotency'
 import { getAdminClient } from '@/lib/supabase/admin'
 
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
 
   let event
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       body, signature, process.env.STRIPE_WEBHOOK_SECRET!
     )
   } catch {

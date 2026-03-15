@@ -1,7 +1,7 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { orderSchema } from '@/lib/security/validate'
 import { decrementInventory } from '@/lib/inventory'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
 import { siteConfig } from '@config'
 
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     subtotal += product.price * item.quantity
   }
 
-  const paymentIntent = await stripe.paymentIntents.create({
+  const paymentIntent = await getStripe().paymentIntents.create({
     amount: subtotal,
     currency: 'usd',
     automatic_payment_methods: { enabled: true },

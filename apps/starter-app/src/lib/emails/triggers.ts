@@ -1,7 +1,9 @@
 import { Resend } from 'resend'
 import { siteConfig } from '@config'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY || '')
+}
 
 const from = `${siteConfig.email.fromName} <${siteConfig.email.fromEmail}>`
 
@@ -18,7 +20,7 @@ function baseTemplate(title: string, body: string) {
 
 export async function sendBookingConfirmation(appt: { client_email: string; client_name: string; start_time: string }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from,
       to: appt.client_email,
       subject: 'Your appointment is confirmed',
@@ -33,7 +35,7 @@ export async function sendBookingConfirmation(appt: { client_email: string; clie
 
 export async function sendBookingReminder(appt: { client_email: string; client_name: string; start_time: string }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from,
       to: appt.client_email,
       subject: 'Reminder: Your appointment is tomorrow',
@@ -47,7 +49,7 @@ export async function sendBookingReminder(appt: { client_email: string; client_n
 
 export async function sendBookingCancellation(appt: { client_email: string; client_name: string }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from,
       to: appt.client_email,
       subject: 'Your appointment has been cancelled',
@@ -61,7 +63,7 @@ export async function sendBookingCancellation(appt: { client_email: string; clie
 
 export async function sendOrderConfirmation(order: { customer_email: string; customer_name: string; total: number }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from,
       to: order.customer_email,
       subject: 'Order confirmed!',
@@ -75,7 +77,7 @@ export async function sendOrderConfirmation(order: { customer_email: string; cus
 
 export async function sendOrderShipped(order: { customer_email: string; customer_name: string }, tracking: string) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from,
       to: order.customer_email,
       subject: 'Your order has shipped!',
@@ -89,7 +91,7 @@ export async function sendOrderShipped(order: { customer_email: string; customer
 
 export async function sendWelcomeEmail(user: { email: string; name: string }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from,
       to: user.email,
       subject: `Welcome to ${siteConfig.business.name}!`,
@@ -104,7 +106,7 @@ export async function sendWelcomeEmail(user: { email: string; name: string }) {
 export async function sendPasswordReset(email: string, token: string) {
   const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${token}`
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from,
       to: email,
       subject: 'Reset your password',
@@ -118,7 +120,7 @@ export async function sendPasswordReset(email: string, token: string) {
 
 export async function sendEventRegistration(reg: { email: string; name: string }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from,
       to: reg.email,
       subject: 'Event registration confirmed',
@@ -131,7 +133,7 @@ export async function sendEventRegistration(reg: { email: string; name: string }
 
 export async function sendReviewRequest(order: { customer_email: string; customer_name: string }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from,
       to: order.customer_email,
       subject: 'How was your experience?',
@@ -146,7 +148,7 @@ export async function sendReviewRequest(order: { customer_email: string; custome
 
 export async function sendNewsletterWelcome(subscriber: { email: string; name?: string }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from,
       to: subscriber.email,
       subject: 'Thanks for subscribing!',

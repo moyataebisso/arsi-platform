@@ -1,4 +1,4 @@
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
 import { siteConfig } from '@config'
 
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
   const { amount, currency = 'usd', description } = await request.json()
 
-  const paymentIntent = await stripe.paymentIntents.create({
+  const paymentIntent = await getStripe().paymentIntents.create({
     amount,
     currency,
     description,
