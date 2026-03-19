@@ -1,6 +1,7 @@
 import { siteConfig } from '@config'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { Users, Mail, Calendar, DollarSign, TrendingUp, Clock, Star, CalendarDays, Package } from 'lucide-react'
+import { RecentChangeRequests } from '@/components/admin/RecentChangeRequests'
 
 async function getStats() {
   const supabase = getAdminClient()
@@ -78,6 +79,11 @@ export default async function AdminDashboardPage() {
             </div>
           )
         })}
+      </div>
+
+      {/* Change Requests + Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <RecentChangeRequests />
       </div>
 
       {/* Recent Activity */}

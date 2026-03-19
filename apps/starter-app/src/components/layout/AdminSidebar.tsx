@@ -1,8 +1,10 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { siteConfig } from '@config'
+import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard,
   Users,
@@ -22,15 +24,17 @@ import {
   CreditCard,
   CalendarDays,
   UserCheck,
+  MessageSquare,
 } from 'lucide-react'
 
-const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings, ImageIcon, Star, Image, HelpCircle, CreditCard, CalendarDays, UserCheck }
+const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings, ImageIcon, Star, Image, HelpCircle, CreditCard, CalendarDays, UserCheck, MessageSquare }
 
 const baseLinks = [
   { href: '/admin', label: 'Dashboard', icon: 'LayoutDashboard' },
   { href: '/admin/content', label: 'Content', icon: 'FileText' },
   { href: '/admin/users', label: 'Users', icon: 'Users' },
   { href: '/admin/leads', label: 'Leads', icon: 'Mail' },
+  { href: '/admin/requests', label: 'Change Requests', icon: 'MessageSquare' },
 ]
 
 const moduleLinks = [
@@ -54,6 +58,25 @@ const bottomLinks = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const [pendingCount, setPendingCount] = useState(0)
+
+  useEffect(() => {
+    async function fetchPending() {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user?.email) return
+        const res = await fetch(`/api/change-requests/list?email=${encodeURIComponent(user.email)}`)
+        const json = await res.json()
+        if (json.requests) {
+          setPendingCount(json.requests.filter((r: { status: string }) => r.status === 'pending' || r.status === 'in_progress').length)
+        }
+      } catch {}
+    }
+    fetchPending()
+    const interval = setInterval(fetchPending, 60_000)
+    return () => clearInterval(interval)
+  }, [])
 
   const activeModuleLinks = moduleLinks.filter(
     link => (siteConfig.modules as Record<string, boolean>)[link.module]
@@ -85,6 +108,11 @@ export function AdminSidebar() {
             >
               {Icon && <Icon size={18} />}
               {link.label}
+              {link.href === '/admin/requests' && pendingCount > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                  {pendingCount}
+                </span>
+              )}
             </Link>
           )
         })}
