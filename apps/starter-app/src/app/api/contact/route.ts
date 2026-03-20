@@ -16,14 +16,13 @@ export async function POST(request: NextRequest) {
 
     const supabase = getAdminClient()
 
-    // Save form submission
+    // Save form submission and lead FIRST
     const { data: submission } = await supabase
       .from('form_submissions')
       .insert({ data_json: { name, email, phone, message }, source_page: sourcePage || '/contact' })
       .select()
       .single()
 
-    // Create lead
     await supabase
       .from('leads')
       .insert({
@@ -34,10 +33,15 @@ export async function POST(request: NextRequest) {
         status: 'new',
       })
 
-    // Send admin notification
+    // Send admin notification — don't fail the request if email fails
     if (siteConfig.notifications.notifyOnNewLead) {
-      const template = leadNotificationEmail({ name, email, phone, message, sourcePage: sourcePage || '/contact' })
-      await sendEmail({ to: siteConfig.notifications.adminEmail, ...template })
+      try {
+        const adminEmail = process.env.RESEND_FROM_EMAIL ? 'arsitechgroup@gmail.com' : siteConfig.notifications.adminEmail
+        const template = leadNotificationEmail({ name, email, phone, message, sourcePage: sourcePage || '/contact' })
+        await sendEmail({ to: adminEmail, ...template })
+      } catch (emailError) {
+        console.error('Failed to send lead notification email:', emailError)
+      }
     }
 
     return NextResponse.json({ success: true })

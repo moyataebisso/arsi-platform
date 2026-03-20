@@ -9,8 +9,10 @@ function getResend() {
 }
 
 export async function sendEmail(params: { to: string; subject: string; html: string }) {
+  const fromEmail = process.env.RESEND_FROM_EMAIL || siteConfig.email.fromEmail
+  const fromName = siteConfig.email.fromName
   const { data, error } = await getResend().emails.send({
-    from: `${siteConfig.email.fromName} <${siteConfig.email.fromEmail}>`,
+    from: `${fromName} <${fromEmail}>`,
     to: params.to,
     subject: params.subject,
     html: params.html,

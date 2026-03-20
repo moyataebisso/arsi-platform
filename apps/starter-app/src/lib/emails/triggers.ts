@@ -5,7 +5,7 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY || '')
 }
 
-const from = `${siteConfig.email.fromName} <${siteConfig.email.fromEmail}>`
+const from = `${siteConfig.email.fromName} <${process.env.RESEND_FROM_EMAIL || siteConfig.email.fromEmail}>`
 
 function baseTemplate(title: string, body: string) {
   return `
