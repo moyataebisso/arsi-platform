@@ -143,7 +143,12 @@ export const siteConfig = {
     reservationsUrl: '',
     featuredDishes: [] as { name: string; description: string; price: string; image: string }[],
   },
-  // -- 13. ARSI PLATFORM MODE --
+  // -- 13. DATABASE --
+  database: {
+    schema: process.env.SUPABASE_SCHEMA || 'public',
+  },
+
+  // -- 14. ARSI PLATFORM MODE --
   arsiPlatform: {
     // HOSTING MODE:
     // 'local-business' — Arsi managed hosting
