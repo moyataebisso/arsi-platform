@@ -20,7 +20,7 @@ export const siteConfig = {
 
   // -- 2. BRANDING & THEME --
   branding: {
-    theme: "warm" as "warm" | "corporate" | "bold" | "nature" | "luxury" | "ocean" | "sunset" | "midnight" | "rose" | "slate" | "forest" | "sand" | "arctic" | "grape" | "mint" | "fire" | "sage" | "navyGold" | "charcoal" | "crimson",
+    theme: "warm" as "warm" | "corporate" | "bold" | "nature" | "luxury" | "ocean" | "sunset" | "midnight" | "rose" | "slate" | "forest" | "sand" | "arctic" | "grape" | "mint" | "fire" | "sage" | "navyGold" | "charcoal" | "crimson" | "stripe" | "linear" | "vercel" | "notion" | "figma" | "loom" | "clinical" | "wellness" | "dental" | "therapy" | "law" | "bistro" | "bakery" | "vegan" | "cafe" | "foodtruck" | "boutique" | "sport" | "kids" | "studio" | "portfolio" | "photography" | "music" | "oromo" | "nonprofit" | "faith" | "edu" | "realty" | "modernRealty" | "transport",
     primaryColor: '#c2410c',
     accentColor: '#d97706',
     fontHeading: 'Playfair Display',
