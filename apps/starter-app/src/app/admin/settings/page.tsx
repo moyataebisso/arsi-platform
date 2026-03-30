@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { siteConfig } from '@config'
-import { Save, Plus, Trash2, Check, RotateCcw } from 'lucide-react'
+import { Save, Plus, Trash2, Check, RotateCcw, Dice5 } from 'lucide-react'
 import { ImageUpload } from '@/components/admin/ImageUpload'
 import { themes, themeNames, themeLabels, themeCategories, type ThemeName } from '@/lib/theme'
 
@@ -122,6 +122,25 @@ export default function AdminSettingsPage() {
     showToast('Theme updated!')
   }
 
+  async function randomTheme() {
+    const pick = themeNames[Math.floor(Math.random() * themeNames.length)]
+    setActiveTheme(pick)
+    setCustomPrimary('')
+    setCustomAccent('')
+    await Promise.all([
+      saveSetting('active_theme', pick),
+      deleteSetting('custom_primary_color'),
+      deleteSetting('custom_accent_color'),
+    ])
+    applyThemeCSS(pick)
+    showToast(`Random theme applied: ${themeLabels[pick]}!`)
+    // Scroll the selected card into view
+    setTimeout(() => {
+      const el = document.querySelector(`[data-theme-card="${pick}"]`)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+  }
+
   function applyThemeCSS(name: ThemeName, overridePrimary?: string, overrideAccent?: string) {
     const t = themes[name]
     const root = document.documentElement
@@ -227,6 +246,13 @@ export default function AdminSettingsPage() {
 
           {/* Theme Selector */}
           <h3 className="text-sm font-medium text-gray-700 mb-3">Theme</h3>
+          <button
+            onClick={randomTheme}
+            className="mb-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl border-2 border-dashed border-gray-300 text-gray-600 hover:border-gray-900 hover:text-gray-900 hover:bg-gray-50 transition-all"
+          >
+            <Dice5 size={16} />
+            Pick a Random Theme
+          </button>
           <div className="max-h-[480px] overflow-y-auto pr-1 mb-6 space-y-4">
             {Object.entries(themeCategories).map(([category, names]) => (
               <div key={category}>
@@ -238,9 +264,10 @@ export default function AdminSettingsPage() {
                     return (
                       <button
                         key={name}
+                        data-theme-card={name}
                         onClick={() => selectTheme(name)}
                         className={`relative rounded-xl border-2 p-2.5 text-left transition-all cursor-pointer ${
-                          isActive ? 'border-gray-900 shadow-md' : 'border-gray-200 hover:border-gray-400'
+                          isActive ? 'border-gray-900 shadow-md scale-[1.02]' : 'border-gray-200 hover:border-gray-400'
                         }`}
                       >
                         {isActive && (

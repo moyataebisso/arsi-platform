@@ -1,6 +1,7 @@
 'use client'
 
 import { themes, themeCategories, themeLabels, themeStyles, defaultThemeStyle, type ThemeName } from '@/lib/theme'
+import { MiniThemeAnim } from '@/components/ThemeBackground'
 import { useState } from 'react'
 
 function MiniPreview({ themeName }: { themeName: ThemeName }) {
@@ -12,6 +13,9 @@ function MiniPreview({ themeName }: { themeName: ThemeName }) {
       className="w-full h-[200px] rounded-lg overflow-hidden relative"
       style={{ background: t.background }}
     >
+      {/* Animated background layer */}
+      <MiniThemeAnim themeName={themeName} />
+
       {/* Hero area */}
       <div className="relative h-[90px] overflow-hidden" style={{ background: t.heroGradient !== 'none' ? t.heroGradient : t.background }}>
         {s.accentShape !== 'none' && (

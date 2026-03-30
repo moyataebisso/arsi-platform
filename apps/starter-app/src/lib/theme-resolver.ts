@@ -19,6 +19,7 @@ function lightenHex(hex: string, amount = 40): string {
 }
 
 export interface ResolvedTheme {
+  themeName: string
   primary: string
   primaryHover: string
   secondary: string
@@ -75,6 +76,7 @@ export async function getActiveTheme(): Promise<ResolvedTheme> {
 
   const resolved: ResolvedTheme = {
     ...baseTheme,
+    themeName,
     themeStyle,
     fontHeading: settings.font_heading || siteConfig.branding.fontHeading,
     fontBody: settings.font_body || siteConfig.branding.fontBody,
