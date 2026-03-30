@@ -25,9 +25,10 @@ import {
   CalendarDays,
   UserCheck,
   MessageSquare,
+  TrendingUp,
 } from 'lucide-react'
 
-const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings, ImageIcon, Star, Image, HelpCircle, CreditCard, CalendarDays, UserCheck, MessageSquare }
+const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings, ImageIcon, Star, Image, HelpCircle, CreditCard, CalendarDays, UserCheck, MessageSquare, TrendingUp }
 
 const baseLinks = [
   { href: '/admin', label: 'Dashboard', icon: 'LayoutDashboard' },
@@ -53,6 +54,7 @@ const moduleLinks = [
 const bottomLinks = [
   { href: '/admin/media', label: 'Media Library', icon: 'ImageIcon' },
   { href: '/admin/emails', label: 'Emails', icon: 'Send' },
+  { href: '/admin/marketing', label: 'Marketing', icon: 'TrendingUp' },
   { href: '/admin/settings', label: 'Settings', icon: 'Settings' },
 ]
 

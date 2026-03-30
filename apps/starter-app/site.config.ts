@@ -4,9 +4,13 @@
 // ============================================================
 
 export const siteConfig = {
+  // -- 0. SITE URL --
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com',
+
   // -- 1. BUSINESS IDENTITY --
   business: {
     name: "Client Business Name",
+    type: "LocalBusiness",  // Schema.org type: Restaurant, HealthBusiness, etc.
     tagline: "Your tagline here",
     email: "hello@clientdomain.com",
     phone: "(612) 555-0100",
@@ -98,8 +102,15 @@ export const siteConfig = {
     titleTemplate: "%s | Client Business Name",
     defaultDescription: "Your business description here",
     ogImage: "/images/og-image.png",
+    keywords: [] as string[],
+    googleVerification: "",
     googleAnalyticsId: "",
     facebookPixelId: "",
+    localBusiness: {
+      category: "LocalBusiness",   // Schema.org: Restaurant, HealthBusiness, etc.
+      priceRange: "$$",            // $, $$, $$$, $$$$
+      areaServed: "Minneapolis, MN",
+    },
   },
 
   // -- 9. INTEGRATIONS --
