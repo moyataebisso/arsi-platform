@@ -36,6 +36,18 @@ export function HeroSection({ headline, subheadline, ctaPrimary, ctaSecondary, h
         }}
       />
 
+      {/* Decorative accent shapes */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <div
+          style={{ background: 'var(--theme-accent-shape)' }}
+          className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-60 blur-3xl"
+        />
+        <div
+          style={{ background: 'var(--color-hero-gradient)' }}
+          className="absolute top-20 right-0 w-[800px] h-[600px] opacity-40 blur-2xl"
+        />
+      </div>
+
       {/* Subtle texture overlay */}
       <div
         className="absolute inset-0 opacity-[0.03]"

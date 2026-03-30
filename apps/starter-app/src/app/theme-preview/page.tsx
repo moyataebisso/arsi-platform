@@ -1,19 +1,62 @@
 'use client'
 
-import { themes, themeCategories, themeLabels, type ThemeName } from '@/lib/theme'
+import { themes, themeCategories, themeLabels, themeStyles, defaultThemeStyle, type ThemeName } from '@/lib/theme'
 import { useState } from 'react'
+
+function MiniPreview({ themeName }: { themeName: ThemeName }) {
+  const t = themes[themeName]
+  const s = { ...defaultThemeStyle, ...(themeStyles[themeName] || {}) }
+
+  return (
+    <div
+      className="w-full h-[200px] rounded-lg overflow-hidden relative"
+      style={{ background: t.background }}
+    >
+      {/* Hero area */}
+      <div className="relative h-[90px] overflow-hidden" style={{ background: t.heroGradient !== 'none' ? t.heroGradient : t.background }}>
+        {s.accentShape !== 'none' && (
+          <div
+            className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-50 blur-xl"
+            style={{ background: s.accentShape }}
+          />
+        )}
+        <div className="relative p-3">
+          <div className={`${s.badgeStyle} text-[7px] inline-block mb-1`} style={{ transform: 'scale(0.8)', transformOrigin: 'left' }}>
+            Badge
+          </div>
+          <div className={`text-[10px] ${t.heading} leading-tight`} style={{ color: t.text }}>
+            Heading Preview
+          </div>
+          <div className="text-[7px] mt-0.5" style={{ color: t.textMuted }}>
+            Subheading text here
+          </div>
+        </div>
+      </div>
+
+      {/* Card + Button area */}
+      <div className="p-2 flex gap-1.5">
+        <div className={`${s.cardStyle} flex-1 !p-2 text-[7px]`} style={{ color: t.text }}>
+          Card
+        </div>
+        <div className={`${s.cardStyle} flex-1 !p-2 text-[7px]`} style={{ color: t.text }}>
+          Card
+        </div>
+      </div>
+      <div className="px-2">
+        <div className={`${s.buttonStyle} text-[7px] text-center !px-2 !py-1`}>
+          Button
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function ThemeCard({ themeName }: { themeName: ThemeName }) {
   const t = themes[themeName]
   const [showSnippet, setShowSnippet] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const snippet = `// site.config.ts
-branding: {
-  theme: "${themeName}",
-  primaryColor: '${t.primary}',
-  accentColor: '${t.accent}',
-}`
+  const snippet = `// site.config.ts\nbranding: {\n  theme: "${themeName}",\n}`
 
   function handleCopy() {
     navigator.clipboard.writeText(snippet)
@@ -22,57 +65,47 @@ branding: {
   }
 
   return (
-    <div className="flex flex-col rounded-lg border border-gray-200 p-3 bg-white">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-bold text-gray-900">{themeLabels[themeName]}</h3>
-        <button
-          onClick={() => setShowSnippet(!showSnippet)}
-          className="px-2 py-1 text-[10px] font-medium bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
-        >
-          {showSnippet ? 'Hide' : 'Use This'}
-        </button>
-      </div>
+    <div className="flex flex-col rounded-lg border border-gray-200 bg-white overflow-hidden">
+      <MiniPreview themeName={themeName} />
 
-      {showSnippet && (
-        <div className="mb-2 relative">
-          <pre className="bg-gray-900 text-green-400 text-[10px] p-2 rounded-lg overflow-x-auto">{snippet}</pre>
+      <div className="p-3">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-bold text-gray-900">{themeLabels[themeName]}</h3>
           <button
-            onClick={handleCopy}
-            className="absolute top-1 right-1 px-1.5 py-0.5 text-[9px] bg-gray-700 text-gray-200 rounded hover:bg-gray-600"
+            onClick={() => setShowSnippet(!showSnippet)}
+            className="px-2 py-1 text-[10px] font-medium bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
           >
-            {copied ? 'Copied!' : 'Copy'}
+            {showSnippet ? 'Hide' : 'Use This'}
           </button>
         </div>
-      )}
 
-      {/* Color swatches */}
-      <div className="flex gap-1.5 mb-2">
-        {[
-          { color: t.primary, label: 'Primary' },
-          { color: t.accent, label: 'Accent' },
-          { color: t.background, label: 'Bg' },
-        ].map(({ color, label }) => (
-          <div key={label} className="flex items-center gap-1">
-            <div
-              className="w-5 h-5 rounded-full border border-gray-300 shrink-0"
-              style={{ backgroundColor: color }}
-            />
-            <span className="text-[10px] text-gray-500">{label}</span>
+        {showSnippet && (
+          <div className="mb-2 relative">
+            <pre className="bg-gray-900 text-green-400 text-[10px] p-2 rounded-lg overflow-x-auto">{snippet}</pre>
+            <button
+              onClick={handleCopy}
+              className="absolute top-1 right-1 px-1.5 py-0.5 text-[9px] bg-gray-700 text-gray-200 rounded hover:bg-gray-600"
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Heading font preview */}
-      <div
-        className="rounded-md px-3 py-2"
-        style={{ backgroundColor: t.background, border: `1px solid ${t.border}` }}
-      >
-        <p className={`text-sm ${t.heading}`} style={{ color: t.text }}>
-          Heading Preview
-        </p>
-        <p className="text-[10px] mt-0.5" style={{ color: t.textMuted }}>
-          Body text sample
-        </p>
+        <div className="flex gap-1.5">
+          {[
+            { color: t.primary, label: 'Primary' },
+            { color: t.accent, label: 'Accent' },
+            { color: t.background, label: 'Bg' },
+          ].map(({ color, label }) => (
+            <div key={label} className="flex items-center gap-1">
+              <div
+                className="w-4 h-4 rounded-full border border-gray-300 shrink-0"
+                style={{ backgroundColor: color }}
+              />
+              <span className="text-[9px] text-gray-500">{label}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

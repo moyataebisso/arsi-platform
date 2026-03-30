@@ -1,5 +1,5 @@
 import { unstable_noStore as noStore } from 'next/cache'
-import { themes, type ThemeName } from '@/lib/theme'
+import { themes, type ThemeName, getThemeStyle, type ThemeStyle } from '@/lib/theme'
 import { siteConfig } from '@config'
 
 function darkenHex(hex: string, amount = 20): string {
@@ -37,6 +37,8 @@ export interface ResolvedTheme {
   heroGradient: string
   fontHeading: string
   fontBody: string
+  // Structural style fields
+  themeStyle: ThemeStyle
   // Section overrides
   footerBg: string
   footerText: string
@@ -69,8 +71,11 @@ export async function getActiveTheme(): Promise<ResolvedTheme> {
   const customPrimary = settings.custom_primary_color || null
   const customAccent = settings.custom_accent_color || null
 
+  const themeStyle = getThemeStyle(themeName)
+
   const resolved: ResolvedTheme = {
     ...baseTheme,
+    themeStyle,
     fontHeading: settings.font_heading || siteConfig.branding.fontHeading,
     fontBody: settings.font_body || siteConfig.branding.fontBody,
     footerBg: settings.color_footer_bg || baseTheme.text,
@@ -119,6 +124,7 @@ export function themeToCSS(t: ResolvedTheme): string {
       --font-body: '${t.fontBody}', sans-serif;
 
       --color-hero-gradient: ${t.heroGradient};
+      --theme-accent-shape: ${t.themeStyle.accentShape};
       --color-hero-bg: ${t.heroBg};
       --color-cta-bg: ${t.ctaBg};
       --color-footer-bg: ${t.footerBg};

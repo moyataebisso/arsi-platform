@@ -11,6 +11,11 @@ export default async function PublicLayout({ children }: { children: React.React
     <>
       {fontsUrl && <link rel="stylesheet" href={fontsUrl} />}
       <style dangerouslySetInnerHTML={{ __html: css }} />
+      <script
+        id="__theme_styles__"
+        type="application/json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(theme.themeStyle) }}
+      />
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1">{children}</main>
