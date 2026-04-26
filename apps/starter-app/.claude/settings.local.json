@@ -12,7 +12,10 @@
       "Bash(git commit:*)",
       "Bash(npm install:*)",
       "Bash(ls \"src/app/\\(public\\)/events/[slug]/\" 2>/dev/null)",
-      "Bash(ls \"src/app/\\(public\\)/reviews/\" 2>/dev/null)"
+      "Bash(ls \"src/app/\\(public\\)/reviews/\" 2>/dev/null)",
+      "Bash(find:*)",
+      "Bash(2)",
+      "Bash(node:*)"
     ]
   }
 }

@@ -26,6 +26,29 @@ export const DEFAULTS: Record<string, string> = {
   meta_about_description: `Learn about ${siteConfig.business.name}`,
   meta_services_title: `Services | ${siteConfig.business.name}`,
   meta_contact_title: `Contact | ${siteConfig.business.name}`,
+
+  // How It Works (fleet)
+  how_it_works_headline: 'Booking your service is easy',
+  how_it_works_subtitle: 'Four simple steps from first click to wheels-up.',
+
+  // Menu Preview (restaurant)
+  menu_preview_headline: 'Tastes worth coming back for',
+  menu_preview_subtitle: 'A handful of guest favorites — the full menu changes with the season.',
+
+  // Services Price List (salon)
+  services_price_list_headline: 'Look your best',
+  services_price_list_subtitle: 'Transparent pricing for every service we offer.',
+
+  // Providers (healthcare)
+  providers_headline: 'Care from people who listen',
+  providers_subtitle: 'Meet the providers behind every visit.',
+
+  // Mission & Impact (community)
+  mission_impact_headline: 'Building stronger communities together',
+  mission_impact_subtitle: 'A snapshot of what your support makes possible.',
+  mission_impact_body: 'For over a decade we have worked alongside neighbors to build a stronger, more connected community. Every program, every meal served, every hour donated comes back to the people who call this place home — and there is always more to do.',
+  mission_impact_donate_href: '/donate',
+  mission_impact_volunteer_href: '/volunteer',
 }
 
 export function getDefault(key: string): string {

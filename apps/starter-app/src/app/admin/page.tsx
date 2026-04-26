@@ -1,6 +1,7 @@
+import Link from 'next/link'
 import { siteConfig } from '@config'
 import { getAdminClient } from '@/lib/supabase/admin'
-import { Users, Mail, Calendar, DollarSign, TrendingUp, Clock, Star, CalendarDays, Package } from 'lucide-react'
+import { Users, Mail, Calendar, DollarSign, TrendingUp, Clock, Star, CalendarDays, Package, LayoutGrid, ArrowRight } from 'lucide-react'
 import { RecentChangeRequests } from '@/components/admin/RecentChangeRequests'
 
 async function getStats() {
@@ -63,6 +64,25 @@ export default async function AdminDashboardPage() {
         <p className="text-sm text-gray-500 mt-1">
           Welcome back. Here is what is happening with {siteConfig.business.name}.
         </p>
+      </div>
+
+      {/* Quick links */}
+      <div className="mb-6">
+        <Link
+          href="/layout-preview"
+          className="flex items-center justify-between bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 transition-colors group"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center text-white">
+              <LayoutGrid size={18} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Layout Preview</h3>
+              <p className="text-sm text-gray-500">Compare all 5 industry layouts and pick the active one.</p>
+            </div>
+          </div>
+          <ArrowRight size={18} className="text-gray-400 group-hover:text-gray-700 transition-colors" />
+        </Link>
       </div>
 
       {/* Stats */}

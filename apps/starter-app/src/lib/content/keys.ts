@@ -41,6 +41,34 @@ export const CONTENT_KEYS = {
   META_ABOUT_DESCRIPTION: 'meta_about_description',
   META_SERVICES_TITLE: 'meta_services_title',
   META_CONTACT_TITLE: 'meta_contact_title',
+
+  // How It Works (fleet layout)
+  HOW_IT_WORKS_HEADLINE: 'how_it_works_headline',
+  HOW_IT_WORKS_SUBTITLE: 'how_it_works_subtitle',
+  HOW_IT_WORKS_STEPS: 'how_it_works_steps',
+
+  // Menu Preview (restaurant layout)
+  MENU_PREVIEW_HEADLINE: 'menu_preview_headline',
+  MENU_PREVIEW_SUBTITLE: 'menu_preview_subtitle',
+  MENU_PREVIEW_DISHES: 'menu_preview_dishes',
+
+  // Services Price List (salon layout)
+  SERVICES_PRICE_LIST_HEADLINE: 'services_price_list_headline',
+  SERVICES_PRICE_LIST_SUBTITLE: 'services_price_list_subtitle',
+  SERVICES_PRICE_LIST_ITEMS: 'services_price_list_items',
+
+  // Providers (healthcare layout)
+  PROVIDERS_HEADLINE: 'providers_headline',
+  PROVIDERS_SUBTITLE: 'providers_subtitle',
+  PROVIDERS_ITEMS: 'providers_items',
+
+  // Mission & Impact (community layout)
+  MISSION_IMPACT_HEADLINE: 'mission_impact_headline',
+  MISSION_IMPACT_SUBTITLE: 'mission_impact_subtitle',
+  MISSION_IMPACT_STATS: 'mission_impact_stats',
+  MISSION_IMPACT_BODY: 'mission_impact_body',
+  MISSION_IMPACT_DONATE_HREF: 'mission_impact_donate_href',
+  MISSION_IMPACT_VOLUNTEER_HREF: 'mission_impact_volunteer_href',
 } as const
 
 export type ContentKey = typeof CONTENT_KEYS[keyof typeof CONTENT_KEYS]
