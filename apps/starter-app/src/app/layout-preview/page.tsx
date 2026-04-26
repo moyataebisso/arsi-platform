@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ExternalLink, Check, Copy, X } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Check, X, RotateCcw } from 'lucide-react'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type HeroVariant } from '@/lib/layouts'
 import { themeNames, themeLabels, type ThemeName } from '@/lib/theme'
+import { validateSelection, type ActiveSelection } from '@/lib/content/activeSelection'
 
 const HERO_VARIANTS: { id: HeroVariant; label: string }[] = [
   { id: 'solid_color', label: 'Solid color' },
@@ -22,50 +23,116 @@ function previewUrl(id: LayoutId, theme: ThemeName, hero: HeroVariant): string {
   return `/?${params.toString()}`
 }
 
-function buildConfigDiff(id: LayoutId, theme: ThemeName, hero: HeroVariant): string {
-  return `// site.config.ts → siteConfig.branding
-branding: {
-  theme: "${theme}",
-  layout: "${id}",
-  heroVariant: "${hero}",
-  // ...keep other fields as-is
-}`
+function defaultChoices(): Record<LayoutId, LayoutChoice> {
+  const init = {} as Record<LayoutId, LayoutChoice>
+  for (const id of LAYOUT_IDS) {
+    init[id] = {
+      theme: LAYOUT_META[id].defaultTheme as ThemeName,
+      hero: LAYOUT_META[id].defaultHeroVariant,
+    }
+  }
+  return init
 }
 
 export default function LayoutPreviewPage() {
-  const [choices, setChoices] = useState<Record<LayoutId, LayoutChoice>>(() => {
-    const init = {} as Record<LayoutId, LayoutChoice>
-    for (const id of LAYOUT_IDS) {
-      init[id] = {
-        theme: LAYOUT_META[id].defaultTheme as ThemeName,
-        hero: LAYOUT_META[id].defaultHeroVariant,
-      }
-    }
-    return init
-  })
+  const [choices, setChoices] = useState<Record<LayoutId, LayoutChoice>>(defaultChoices)
+  const [active, setActive] = useState<ActiveSelection | null>(null)
+  const [activeIsCustom, setActiveIsCustom] = useState(false)
 
-  const [diffModal, setDiffModal] = useState<{ open: boolean; layoutId: LayoutId | null }>({ open: false, layoutId: null })
-  const [copied, setCopied] = useState(false)
+  const [applyModal, setApplyModal] = useState<{ open: boolean; layoutId: LayoutId | null }>({ open: false, layoutId: null })
+  const [applying, setApplying] = useState(false)
+  const [applied, setApplied] = useState(false)
+  const [resetting, setResetting] = useState(false)
+
+  const fetchActive = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/content', { cache: 'no-store' })
+      if (!res.ok) return
+      const data = await res.json() as Record<string, string>
+      const sel = validateSelection({
+        active_layout: data.active_layout,
+        active_theme: data.active_theme,
+        active_hero_variant: data.active_hero_variant,
+      })
+      setActive(sel)
+      // "Custom" = at least one of the three settings has been explicitly persisted.
+      setActiveIsCustom(Boolean(data.active_layout || data.active_theme || data.active_hero_variant))
+
+      // Pre-select the live values on the matching card so re-applying is a one-click op.
+      setChoices(prev => ({
+        ...prev,
+        [sel.layout]: { theme: sel.theme, hero: sel.heroVariant },
+      }))
+    } catch { /* leave defaults */ }
+  }, [])
+
+  useEffect(() => { void fetchActive() }, [fetchActive])
 
   const updateChoice = (id: LayoutId, patch: Partial<LayoutChoice>) => {
     setChoices(prev => ({ ...prev, [id]: { ...prev[id], ...patch } }))
   }
 
-  const openDiff = (id: LayoutId) => {
-    setDiffModal({ open: true, layoutId: id })
-    setCopied(false)
+  const openApply = (id: LayoutId) => {
+    setApplyModal({ open: true, layoutId: id })
+    setApplied(false)
   }
 
-  const copyDiff = async () => {
-    if (!diffModal.layoutId) return
-    const c = choices[diffModal.layoutId]
-    const text = buildConfigDiff(diffModal.layoutId, c.theme, c.hero)
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch { /* ignore */ }
+  const closeModal = () => {
+    setApplyModal({ open: false, layoutId: null })
+    setApplied(false)
   }
+
+  const applyChoice = async () => {
+    if (!applyModal.layoutId) return
+    const id = applyModal.layoutId
+    const c = choices[id]
+    setApplying(true)
+    try {
+      const res = await fetch('/api/admin/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          updates: [
+            { key: 'active_layout', value: id },
+            { key: 'active_theme', value: c.theme },
+            { key: 'active_hero_variant', value: c.hero },
+          ],
+        }),
+      })
+      if (res.ok) {
+        setActive({ layout: id, theme: c.theme, heroVariant: c.hero })
+        setActiveIsCustom(true)
+        setApplied(true)
+        setTimeout(() => { closeModal() }, 1500)
+      }
+    } catch { /* no-op */ }
+    setApplying(false)
+  }
+
+  const resetToDefault = async () => {
+    setResetting(true)
+    try {
+      const res = await fetch('/api/admin/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          updates: [
+            { key: 'active_layout', value: '' },
+            { key: 'active_theme', value: '' },
+            { key: 'active_hero_variant', value: '' },
+          ],
+        }),
+      })
+      if (res.ok) {
+        await fetchActive()
+        setActiveIsCustom(false)
+      }
+    } catch { /* no-op */ }
+    setResetting(false)
+  }
+
+  const themeLabel = (name: ThemeName) => themeLabels[name] || name
+  const heroLabel = (id: HeroVariant) => HERO_VARIANTS.find(v => v.id === id)?.label ?? id
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
@@ -77,17 +144,42 @@ export default function LayoutPreviewPage() {
           </Link>
           <h1 className="text-3xl font-bold">Layout Preview</h1>
           <p className="text-sm text-gray-500 mt-1 max-w-2xl">
-            Compare all five industry layouts side-by-side. Pick a theme and hero variant per layout, preview it live, then copy the config snippet to make it the active layout.
+            Compare all five industry layouts side-by-side. Pick a theme and hero variant per layout, preview it live, then apply it directly to the live site.
           </p>
         </div>
+
+        {active && activeIsCustom && (
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3">
+            <div className="text-sm text-emerald-900">
+              <span className="font-semibold">Live site is set to:</span>{' '}
+              {LAYOUT_META[active.layout].name} · {themeLabel(active.theme)} · {heroLabel(active.heroVariant)} hero
+            </div>
+            <button
+              type="button"
+              onClick={resetToDefault}
+              disabled={resetting}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800 hover:text-emerald-950 disabled:opacity-50"
+            >
+              <RotateCcw size={12} />
+              {resetting ? 'Resetting...' : 'Reset to site.config.ts default'}
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
           {LAYOUT_IDS.map(id => {
             const meta = LAYOUT_META[id]
             const choice = choices[id]
+            const isActive = active?.layout === id
             return (
-              <div key={id} className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col">
-                <div className="mb-4">
+              <div key={id} className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col relative">
+                {isActive && (
+                  <span className="absolute top-4 right-4 inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-semibold px-2 py-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Active
+                  </span>
+                )}
+                <div className="mb-4 pr-16">
                   <h3 className="font-semibold text-gray-900">{meta.name}</h3>
                   <span className="inline-block mt-1 text-[11px] uppercase tracking-wider text-gray-500 font-medium">
                     {meta.industry}
@@ -105,7 +197,7 @@ export default function LayoutPreviewPage() {
                     >
                       {themeNames.map(name => (
                         <option key={name} value={name}>
-                          {themeLabels[name] || name}
+                          {themeLabel(name)}
                         </option>
                       ))}
                     </select>
@@ -143,7 +235,7 @@ export default function LayoutPreviewPage() {
                   </a>
                   <button
                     type="button"
-                    onClick={() => openDiff(id)}
+                    onClick={() => openApply(id)}
                     className="inline-flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
                   >
                     Use this layout
@@ -169,7 +261,7 @@ export default function LayoutPreviewPage() {
                   <div>
                     <h3 className="font-semibold text-gray-900">{meta.name}</h3>
                     <p className="text-xs text-gray-500">
-                      Theme: {themeLabels[meta.defaultTheme as ThemeName] || meta.defaultTheme} · Hero: {meta.defaultHeroVariant}
+                      Theme: {themeLabel(meta.defaultTheme as ThemeName)} · Hero: {meta.defaultHeroVariant}
                     </p>
                   </div>
                   <a
@@ -194,18 +286,13 @@ export default function LayoutPreviewPage() {
         </div>
       </div>
 
-      {diffModal.open && diffModal.layoutId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDiffModal({ open: false, layoutId: null })}>
-          <div className="bg-white rounded-xl border border-gray-200 p-6 max-w-2xl w-full" onClick={e => e.stopPropagation()}>
+      {applyModal.open && applyModal.layoutId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeModal}>
+          <div className="bg-white rounded-xl border border-gray-200 p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="font-semibold text-gray-900">Use this layout</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Paste this into <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">site.config.ts</code> under <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">branding</code>, then redeploy.
-                </p>
-              </div>
+              <h3 className="font-semibold text-gray-900">Apply this layout?</h3>
               <button
-                onClick={() => setDiffModal({ open: false, layoutId: null })}
+                onClick={closeModal}
                 className="p-1 text-gray-400 hover:text-gray-700 transition-colors"
                 aria-label="Close"
               >
@@ -213,17 +300,28 @@ export default function LayoutPreviewPage() {
               </button>
             </div>
 
-            <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs overflow-x-auto mb-4 font-mono">
-              {buildConfigDiff(diffModal.layoutId, choices[diffModal.layoutId].theme, choices[diffModal.layoutId].hero)}
-            </pre>
+            <p className="text-sm text-gray-600 mb-6">
+              Your live site will switch to <span className="font-semibold text-gray-900">{LAYOUT_META[applyModal.layoutId].name}</span> with the{' '}
+              <span className="font-semibold text-gray-900">{themeLabel(choices[applyModal.layoutId].theme)}</span> theme and{' '}
+              <span className="font-semibold text-gray-900">{heroLabel(choices[applyModal.layoutId].hero)}</span> hero. This takes effect immediately on the next page load.
+            </p>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
               <button
                 type="button"
-                onClick={copyDiff}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                onClick={closeModal}
+                disabled={applying}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
-                {copied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy snippet</>}
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={applyChoice}
+                disabled={applying || applied}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
+              >
+                {applied ? <><Check size={14} /> Applied</> : applying ? 'Applying...' : 'Apply to live site'}
               </button>
             </div>
           </div>

@@ -15,7 +15,9 @@
       "Bash(ls \"src/app/\\(public\\)/reviews/\" 2>/dev/null)",
       "Bash(find:*)",
       "Bash(2)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(wait %1)",
+      "Read(//c/Users/ebiss/AppData/Local/Temp/claude/C--Users-ebiss-Projects-arsi-platform-apps-starter-app/c8fbb050-0d5c-4488-a1e1-5872aeb7a3b1/tasks/**)"
     ]
   }
 }

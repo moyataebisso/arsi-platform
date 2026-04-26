@@ -69,6 +69,12 @@ export const CONTENT_KEYS = {
   MISSION_IMPACT_BODY: 'mission_impact_body',
   MISSION_IMPACT_DONATE_HREF: 'mission_impact_donate_href',
   MISSION_IMPACT_VOLUNTEER_HREF: 'mission_impact_volunteer_href',
+
+  // Internal / system selections — set via /layout-preview, NOT exposed in /admin/content tabs.
+  // Empty/unset means "use siteConfig.branding". See src/lib/content/activeSelection.ts.
+  ACTIVE_LAYOUT: 'active_layout',
+  ACTIVE_THEME: 'active_theme',
+  ACTIVE_HERO_VARIANT: 'active_hero_variant',
 } as const
 
 export type ContentKey = typeof CONTENT_KEYS[keyof typeof CONTENT_KEYS]

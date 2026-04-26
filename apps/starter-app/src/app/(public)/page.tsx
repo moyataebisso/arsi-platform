@@ -22,6 +22,7 @@ import { getSiteSetting } from '@/lib/settings'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
 import { themeToCSS, type ResolvedTheme } from '@/lib/theme-resolver'
+import { getActiveSelection } from '@/lib/content/activeSelection'
 
 const HERO_VARIANTS: HeroVariant[] = ['solid_color', 'image_overlay', 'split']
 
@@ -60,16 +61,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const themeParam = typeof searchParams.theme === 'string' ? searchParams.theme : undefined
   const heroParam = typeof searchParams.hero === 'string' ? searchParams.hero : undefined
 
+  // Precedence: URL preview params > DB active selection > siteConfig.branding
+  const active = await getActiveSelection()
+
   const layout: LayoutId =
     layoutParam && (LAYOUT_IDS as readonly string[]).includes(layoutParam)
       ? (layoutParam as LayoutId)
-      : siteConfig.branding.layout
+      : active.layout
 
+  // Theme: the (public) layout already reads `active_theme` via getActiveTheme and emits
+  // the matching CSS, so we only need to emit a page-level override when the URL forces
+  // a different theme than the active one.
   const themeOverride: ThemeName | null =
     themeParam && themeParam in themes ? (themeParam as ThemeName) : null
 
-  const heroOverride: HeroVariant | null =
-    heroParam && (HERO_VARIANTS as string[]).includes(heroParam) ? (heroParam as HeroVariant) : null
+  const heroVariant: HeroVariant =
+    heroParam && (HERO_VARIANTS as string[]).includes(heroParam)
+      ? (heroParam as HeroVariant)
+      : active.heroVariant
 
   const content = await getContentMany([
     'hero_headline', 'hero_subheadline',
@@ -106,7 +115,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         ctaPrimary={content.hero_cta_primary}
         ctaSecondary={content.hero_cta_secondary}
         heroImageUrl={heroImage || undefined}
-        variant={heroOverride ?? undefined}
+        variant={heroVariant}
       />
     ),
     services: (
