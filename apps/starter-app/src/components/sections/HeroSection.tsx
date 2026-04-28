@@ -1,8 +1,7 @@
 import { siteConfig } from '@config'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-
-type HeroVariant = 'solid_color' | 'image_overlay' | 'split'
+import type { HeroVariant } from '@/lib/layouts'
 
 interface HeroSectionProps {
   headline?: string
@@ -380,6 +379,429 @@ function SplitHero({ headline, subheadline, ctaPrimary, ctaSecondary, heroImageU
 }
 
 // ============================================================
+// CENTERED_MINIMAL — Pure white, type-driven, no photo (modern_minimal)
+// ============================================================
+function CenteredMinimalHero(props: VariantProps) {
+  const display = getDisplayValues(props)
+  const ctaHref = getCtaHref()
+  const eyebrow = siteConfig.business.tagline || 'Built for modern teams'
+
+  return (
+    <section
+      className="relative w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-32 sm:py-40 lg:py-48 min-h-[600px]"
+      style={{ backgroundColor: 'var(--color-background)' }}
+    >
+      <div className="relative w-full max-w-[820px] mx-auto flex flex-col items-center text-center">
+        <span
+          className="inline-block mb-6 text-xs font-semibold uppercase tracking-[0.22em]"
+          style={{ color: 'var(--color-primary)' }}
+        >
+          {eyebrow}
+        </span>
+
+        <h1
+          className="mb-6"
+          style={{
+            color: 'var(--color-text)',
+            fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+            fontWeight: 700,
+            lineHeight: 1.05,
+            letterSpacing: '-0.035em',
+          }}
+        >
+          {display.headline}
+        </h1>
+
+        <p
+          className="text-lg sm:text-xl max-w-xl mx-auto mb-10"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {display.subheadline}
+        </p>
+
+        <Link
+          href={ctaHref}
+          className="inline-flex items-center gap-2 rounded-md transition-opacity hover:opacity-90"
+          style={{
+            backgroundColor: 'var(--color-primary)',
+            color: '#ffffff',
+            padding: '14px 28px',
+            fontSize: '15px',
+            fontWeight: 600,
+          }}
+        >
+          {display.ctaPrimary}
+          <ArrowRight size={16} strokeWidth={2.5} />
+        </Link>
+      </div>
+    </section>
+  )
+}
+
+// ============================================================
+// EDITORIAL_SPLIT — Ivory, serif, magazine feel (editorial_premium)
+// ============================================================
+function EditorialSplitHero(props: VariantProps) {
+  const display = getDisplayValues(props)
+  const ctaHref = getCtaHref()
+  const imageUrl =
+    props.heroImageUrl || 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1200&q=80'
+  const eyebrow = siteConfig.business.tagline || 'Established practice'
+
+  return (
+    <section
+      className="relative w-full px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-28"
+      style={{ backgroundColor: 'var(--color-background)' }}
+    >
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div>
+          <span
+            className="block mb-6 text-xs uppercase tracking-[0.3em] font-semibold"
+            style={{ color: 'var(--color-primary)' }}
+          >
+            {eyebrow}
+          </span>
+          <h1
+            className="mb-10"
+            style={{
+              fontFamily: 'var(--font-serif), Georgia, serif',
+              color: 'var(--color-text)',
+              fontSize: 'clamp(2.5rem, 5.5vw, 4.5rem)',
+              fontWeight: 500,
+              lineHeight: 1.05,
+              letterSpacing: '-0.018em',
+            }}
+          >
+            {display.headline}
+          </h1>
+          <p
+            className="text-lg leading-relaxed mb-10 max-w-md"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            {display.subheadline}
+          </p>
+          <Link
+            href={ctaHref}
+            className="inline-block transition-opacity hover:opacity-70"
+            style={{
+              fontFamily: 'var(--font-serif), Georgia, serif',
+              fontSize: '17px',
+              color: 'var(--color-text)',
+              borderBottom: '1px solid var(--color-primary)',
+              paddingBottom: '4px',
+              letterSpacing: '0.02em',
+            }}
+          >
+            {display.ctaPrimary} →
+          </Link>
+        </div>
+
+        <div
+          className="aspect-[4/5]"
+          style={{
+            backgroundImage: `url(${imageUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+      </div>
+    </section>
+  )
+}
+
+// ============================================================
+// BLOCK_HERO — Solid orange, oversized type, no photo (bold_block)
+// ============================================================
+function BlockHero(props: VariantProps) {
+  const display = getDisplayValues(props)
+  const ctaHref = getCtaHref()
+
+  return (
+    <section
+      className="relative w-full px-4 sm:px-6 lg:px-8 py-28 sm:py-36 lg:py-44 flex items-center"
+      style={{ backgroundColor: '#ff5722', minHeight: '80vh' }}
+    >
+      <div className="max-w-6xl mx-auto w-full">
+        <h1
+          className="uppercase mb-8 text-white"
+          style={{
+            fontFamily: 'var(--font-jakarta), system-ui, sans-serif',
+            fontSize: 'clamp(3rem, 9vw, 8rem)',
+            lineHeight: 0.9,
+            fontWeight: 900,
+            letterSpacing: '-0.04em',
+          }}
+        >
+          {display.headline}
+        </h1>
+        <p
+          className="text-white max-w-2xl mb-12"
+          style={{
+            fontSize: 'clamp(1.25rem, 2vw, 1.5rem)',
+            lineHeight: 1.4,
+            fontWeight: 600,
+          }}
+        >
+          {display.subheadline}
+        </p>
+        <Link
+          href={ctaHref}
+          className="inline-block transition-transform hover:-translate-y-1 hover:translate-x-1"
+          style={{
+            backgroundColor: 'transparent',
+            color: '#ffffff',
+            border: '3px solid #ffffff',
+            padding: '18px 40px',
+            fontSize: '16px',
+            fontWeight: 900,
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+            fontFamily: 'var(--font-jakarta), system-ui, sans-serif',
+          }}
+        >
+          {display.ctaPrimary} →
+        </Link>
+      </div>
+    </section>
+  )
+}
+
+// ============================================================
+// ROUNDED_CARD_HERO — Lavender bg, single rounded card (friendly_soft)
+// ============================================================
+function RoundedCardHero(props: VariantProps) {
+  const display = getDisplayValues(props)
+  const ctaHref = getCtaHref()
+  const imageUrl =
+    props.heroImageUrl || 'https://images.unsplash.com/photo-1517022812141-23620dba5c23?w=1200&q=80'
+
+  return (
+    <section
+      className="relative w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20"
+      style={{ backgroundColor: '#f5f3ff' }}
+    >
+      <div className="max-w-6xl mx-auto">
+        <div
+          className="rounded-[40px] sm:rounded-[48px] overflow-hidden p-8 sm:p-12 lg:p-16"
+          style={{
+            backgroundColor: '#ffffff',
+            boxShadow: '0 20px 60px rgba(102, 51, 153, 0.12)',
+          }}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+            <div>
+              <span
+                className="inline-block mb-5 px-4 py-1.5 rounded-full text-sm font-semibold"
+                style={{ backgroundColor: '#fff1f3', color: '#be185d' }}
+              >
+                {siteConfig.business.tagline || 'Built with love'}
+              </span>
+              <h1
+                className="mb-5"
+                style={{
+                  color: '#334155',
+                  fontSize: 'clamp(2.25rem, 5vw, 3.75rem)',
+                  fontWeight: 700,
+                  lineHeight: 1.1,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {display.headline}
+              </h1>
+              <p className="text-base sm:text-lg leading-relaxed mb-8" style={{ color: '#64748b' }}>
+                {display.subheadline}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href={ctaHref}
+                  className="inline-flex items-center justify-center transition-transform hover:-translate-y-0.5"
+                  style={{
+                    backgroundColor: '#fb7185',
+                    color: '#ffffff',
+                    borderRadius: '9999px',
+                    padding: '14px 32px',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    boxShadow: '0 8px 20px rgba(251, 113, 133, 0.35)',
+                  }}
+                >
+                  {display.ctaPrimary}
+                </Link>
+                <Link
+                  href="/services"
+                  className="inline-flex items-center justify-center transition-colors"
+                  style={{
+                    backgroundColor: '#ecfdf5',
+                    color: '#047857',
+                    borderRadius: '9999px',
+                    padding: '14px 32px',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                  }}
+                >
+                  {display.ctaSecondary}
+                </Link>
+              </div>
+            </div>
+
+            <div
+              className="aspect-square rounded-[32px] overflow-hidden"
+              style={{
+                backgroundImage: `url(${imageUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ============================================================
+// TERMINAL_HERO — Dark grid, neon, monospace (tech_forward)
+// ============================================================
+function TerminalHero(props: VariantProps) {
+  const display = getDisplayValues(props)
+  const ctaHref = getCtaHref()
+
+  return (
+    <section
+      className="relative w-full px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-32 overflow-hidden"
+      style={{
+        backgroundColor: '#0a0a0f',
+        backgroundImage:
+          'linear-gradient(rgba(0,240,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.04) 1px, transparent 1px)',
+        backgroundSize: '48px 48px',
+      }}
+    >
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,240,255,0.12) 0%, transparent 60%)',
+        }}
+        aria-hidden="true"
+      />
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center relative">
+        <div>
+          <span
+            className="block mb-5 text-xs uppercase tracking-widest"
+            style={{ color: '#00f0ff', fontFamily: 'var(--font-mono), ui-monospace, monospace' }}
+          >
+            // system_online
+          </span>
+          <h1
+            className="mb-6"
+            style={{
+              color: '#e5e7eb',
+              fontSize: 'clamp(2.25rem, 5.5vw, 4.5rem)',
+              fontWeight: 700,
+              lineHeight: 1.05,
+              letterSpacing: '-0.025em',
+            }}
+          >
+            {display.headline}
+          </h1>
+          <p
+            className="text-base sm:text-lg leading-relaxed mb-10 max-w-md"
+            style={{ color: '#94a3b8' }}
+          >
+            {display.subheadline}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link
+              href={ctaHref}
+              className="inline-flex items-center justify-center gap-2 rounded-md transition-opacity hover:opacity-90"
+              style={{
+                backgroundColor: '#00f0ff',
+                color: '#0a0a0f',
+                padding: '14px 28px',
+                fontSize: '14px',
+                fontWeight: 700,
+                boxShadow: '0 0 32px rgba(0, 240, 255, 0.4)',
+              }}
+            >
+              {display.ctaPrimary}
+              <ArrowRight size={16} strokeWidth={2.5} />
+            </Link>
+            <Link
+              href="/services"
+              className="inline-flex items-center justify-center rounded-md"
+              style={{
+                backgroundColor: 'transparent',
+                color: '#e5e7eb',
+                border: '1px solid #2a2a3a',
+                padding: '14px 28px',
+                fontSize: '14px',
+                fontWeight: 600,
+                fontFamily: 'var(--font-mono), ui-monospace, monospace',
+              }}
+            >
+              {display.ctaSecondary}
+            </Link>
+          </div>
+        </div>
+
+        <div
+          className="rounded-xl overflow-hidden"
+          style={{
+            backgroundColor: '#0e0e16',
+            border: '1px solid #1e1e2a',
+            boxShadow: '0 24px 64px rgba(0, 240, 255, 0.12)',
+          }}
+        >
+          <div
+            className="flex items-center gap-1.5 px-4 py-3 border-b"
+            style={{ borderColor: '#1e1e2a' }}
+          >
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#ff5555' }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#facc15' }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
+            <span
+              className="ml-3 text-[11px]"
+              style={{ color: '#64748b', fontFamily: 'var(--font-mono), ui-monospace, monospace' }}
+            >
+              ~ / dashboard
+            </span>
+          </div>
+          <div
+            className="p-5 sm:p-6 text-sm space-y-3"
+            style={{ fontFamily: 'var(--font-mono), ui-monospace, monospace' }}
+          >
+            <div className="flex justify-between" style={{ color: '#94a3b8' }}>
+              <span>requests / sec</span>
+              <span style={{ color: '#00f0ff' }}>14,892</span>
+            </div>
+            <div className="flex justify-between" style={{ color: '#94a3b8' }}>
+              <span>p50 latency</span>
+              <span style={{ color: '#00f0ff' }}>14ms</span>
+            </div>
+            <div className="flex justify-between" style={{ color: '#94a3b8' }}>
+              <span>error rate</span>
+              <span style={{ color: '#4ade80' }}>0.001%</span>
+            </div>
+            <div className="flex justify-between" style={{ color: '#94a3b8' }}>
+              <span>active regions</span>
+              <span style={{ color: '#ff00aa' }}>14</span>
+            </div>
+            <div
+              className="h-20 rounded mt-4"
+              style={{
+                background:
+                  'linear-gradient(90deg, transparent 0%, rgba(0,240,255,0.18) 30%, rgba(255,0,170,0.18) 70%, transparent 100%)',
+                border: '1px solid #1e1e2a',
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ============================================================
 // HeroSection — variant dispatcher
 // ============================================================
 export function HeroSection(props: HeroSectionProps) {
@@ -397,6 +819,16 @@ export function HeroSection(props: HeroSectionProps) {
       return <SolidColorHero {...variantProps} />
     case 'image_overlay':
       return <ImageOverlayHero {...variantProps} />
+    case 'centered_minimal':
+      return <CenteredMinimalHero {...variantProps} />
+    case 'editorial_split':
+      return <EditorialSplitHero {...variantProps} />
+    case 'block_hero':
+      return <BlockHero {...variantProps} />
+    case 'rounded_card_hero':
+      return <RoundedCardHero {...variantProps} />
+    case 'terminal_hero':
+      return <TerminalHero {...variantProps} />
     case 'split':
     default:
       return <SplitHero {...variantProps} />

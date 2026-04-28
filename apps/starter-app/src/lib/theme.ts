@@ -1627,6 +1627,52 @@ export const themes = {
     heroGradient: 'linear-gradient(135deg, #000000 0%, #0a0000 100%)',
   },
 
+  // ── EDITORIAL CREAM + GREEN ──
+  evergreen: {
+    primary: '#2d5a3d', primaryHover: '#1f4530', secondary: '#1f4530', accent: '#c5e8a0',
+    accentLight: '#e8f5d8', background: '#f5efdb', surface: '#ebe4cc', surfaceAlt: '#dfd6b8',
+    cardBg: '#ebe4cc', text: '#1a3a2a', textMuted: '#6b6451', textLight: '#8a8470',
+    border: '#d4cdaf', borderLight: '#e0dac0', heading: 'font-serif font-normal',
+    heroGradient: 'linear-gradient(180deg, #1a3a2a 0%, #2d5a3d 100%)',
+  },
+
+  // ── LAYOUT-PAIRED ──
+  arcticMin: {
+    primary: '#0066ff', primaryHover: '#0052cc', secondary: '#0052cc', accent: '#0066ff',
+    accentLight: '#e6efff', background: '#ffffff', surface: '#fafafa', surfaceAlt: '#f5f5f5',
+    cardBg: '#ffffff', text: '#0a0a0a', textMuted: '#525252', textLight: '#737373',
+    border: '#e5e5e5', borderLight: '#f0f0f0', heading: 'font-sans font-bold tracking-tight',
+    heroGradient: 'none',
+  },
+  editorial: {
+    primary: '#b8860b', primaryHover: '#9a720a', secondary: '#2a1a0e', accent: '#b8860b',
+    accentLight: '#f3eddb', background: '#faf7f2', surface: '#f3ecdf', surfaceAlt: '#ebe2cf',
+    cardBg: '#ffffff', text: '#2a1a0e', textMuted: '#6b5a48', textLight: '#8a7a68',
+    border: '#e0d6c0', borderLight: '#ece4d2', heading: 'font-serif font-normal tracking-tight',
+    heroGradient: 'none',
+  },
+  vivid: {
+    primary: '#ff5722', primaryHover: '#e84a18', secondary: '#6b21a8', accent: '#fbbf24',
+    accentLight: '#fff5d6', background: '#ffffff', surface: '#fafafa', surfaceAlt: '#f4f4f5',
+    cardBg: '#ffffff', text: '#0a0a0a', textMuted: '#404040', textLight: '#737373',
+    border: '#000000', borderLight: '#e5e5e5', heading: 'font-sans font-black uppercase tracking-tight',
+    heroGradient: 'none',
+  },
+  pastel: {
+    primary: '#fb7185', primaryHover: '#f43f5e', secondary: '#10b981', accent: '#fb7185',
+    accentLight: '#fff1f3', background: '#f5f3ff', surface: '#ffffff', surfaceAlt: '#ede9fe',
+    cardBg: '#ffffff', text: '#334155', textMuted: '#64748b', textLight: '#94a3b8',
+    border: '#e9d5ff', borderLight: '#f3e8ff', heading: 'font-sans font-bold tracking-tight',
+    heroGradient: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #fce7f3 100%)',
+  },
+  nightshift: {
+    primary: '#00f0ff', primaryHover: '#00d6e3', secondary: '#ff00aa', accent: '#00f0ff',
+    accentLight: '#001a1c', background: '#0a0a0f', surface: '#11111a', surfaceAlt: '#16161f',
+    cardBg: '#0e0e16', text: '#e5e7eb', textMuted: '#94a3b8', textLight: '#64748b',
+    border: '#1e1e2a', borderLight: '#16161f', heading: 'font-sans font-bold tracking-tight',
+    heroGradient: 'linear-gradient(180deg, #0a0a0f 0%, #0a0a14 100%)',
+  },
+
 }
 
 export type ThemeName = keyof typeof themes
@@ -2105,6 +2151,51 @@ export const themeStyles: Partial<Record<ThemeName, ThemeStyle>> = {
     badgeStyle: 'bg-blue-900/40 text-blue-300 border border-blue-700/50 rounded px-3 py-1 text-sm',
     accentShape: 'radial-gradient(ellipse at 70% 10%, rgba(29,78,216,0.2) 0%, rgba(147,197,253,0.08) 60%, transparent 80%)',
   },
+  arcticMin: {
+    heroShape: 'none',
+    cardStyle: 'bg-white p-6',
+    cardHover: 'transition-colors duration-200',
+    buttonStyle: 'bg-[#0066ff] text-white rounded-md px-7 py-3 font-semibold hover:bg-[#0052cc]',
+    sectionDivider: 'none',
+    badgeStyle: 'text-[#0066ff] uppercase tracking-widest text-xs font-semibold',
+    accentShape: 'none',
+  },
+  editorial: {
+    heroShape: 'none',
+    cardStyle: 'bg-[#faf7f2] p-6',
+    cardHover: 'transition-opacity duration-200',
+    buttonStyle: 'border-b border-[#b8860b] text-[#2a1a0e] pb-1 font-serif tracking-wide',
+    sectionDivider: 'none',
+    badgeStyle: 'text-[#b8860b] uppercase tracking-[0.2em] text-[11px] font-semibold',
+    accentShape: 'none',
+  },
+  vivid: {
+    heroShape: 'none',
+    cardStyle: 'bg-white border-2 border-black p-6 rounded-none',
+    cardHover: 'hover:translate-x-1 hover:-translate-y-1 transition-transform duration-150',
+    buttonStyle: 'bg-black text-white rounded-none px-8 py-4 font-black uppercase tracking-wide border-2 border-black',
+    sectionDivider: 'none',
+    badgeStyle: 'bg-black text-white uppercase tracking-wide text-xs font-black px-3 py-1',
+    accentShape: 'none',
+  },
+  pastel: {
+    heroShape: 'none',
+    cardStyle: 'rounded-3xl bg-white shadow-[0_4px_24px_rgba(251,113,133,0.08)] border border-pink-100 p-6',
+    cardHover: 'hover:shadow-[0_8px_32px_rgba(251,113,133,0.16)] hover:-translate-y-1 transition-all duration-200',
+    buttonStyle: 'bg-[#fb7185] text-white rounded-full px-8 py-3 font-semibold hover:bg-[#f43f5e] shadow-md shadow-pink-200',
+    sectionDivider: 'none',
+    badgeStyle: 'bg-pink-100 text-pink-700 rounded-full px-4 py-1.5 text-sm font-semibold',
+    accentShape: 'none',
+  },
+  nightshift: {
+    heroShape: 'none',
+    cardStyle: 'rounded-lg bg-[#0e0e16] border border-[#1e1e2a] p-6',
+    cardHover: 'hover:border-cyan-400/60 hover:shadow-[0_0_24px_rgba(0,240,255,0.15)] transition-all duration-200',
+    buttonStyle: 'bg-[#00f0ff] text-[#0a0a0f] rounded-md px-7 py-3 font-bold shadow-[0_0_24px_rgba(0,240,255,0.4)]',
+    sectionDivider: 'none',
+    badgeStyle: 'text-[#00f0ff] font-mono uppercase tracking-wide text-xs',
+    accentShape: 'none',
+  },
 }
 
 export function getThemeStyle(name: ThemeName): ThemeStyle {
@@ -2131,6 +2222,9 @@ export const themeCategories = {
     'transport',
     // New 25
     'cobalt', 'terracotta', 'sageLight', 'plum', 'copper', 'glacierBlue', 'mahogany', 'limePunch', 'dustyRose', 'steelBlue', 'tangerine', 'midnightGreen', 'lavenderMist', 'rust', 'pearl', 'indigoLight', 'olive', 'blush', 'charcoalGold', 'navyCoral', 'forestCream', 'blackRed', 'skyWhite', 'grapeMint', 'bronzeDark',
+    'evergreen',
+    // Layout-paired
+    'arcticMin', 'editorial', 'vivid', 'pastel', 'nightshift',
   ] as ThemeName[],
   '🔧 Local Business': [
     'linkAuto', 'fleetDark', 'tradesRed', 'construction', 'hvacBlue', 'landscaping', 'roofing', 'electrical', 'autoRepair', 'plumbing', 'cleaning', 'securityDark', 'pestControl', 'medicalPro', 'restaurantDark', 'salonPink', 'fitness', 'lawFirm', 'accounting', 'photographyStudio', 'daycare', 'insurance', 'movingCompany', 'techRepair', 'tattooStudio',
@@ -2180,6 +2274,10 @@ export const themeLabels: Record<ThemeName, string> = {
   salonPink: 'Salon Pink', fitness: 'Fitness', lawFirm: 'Law Firm Pro', accounting: 'Accounting',
   photographyStudio: 'Photography Studio', daycare: 'Daycare', insurance: 'Insurance',
   movingCompany: 'Moving Company', techRepair: 'Tech Repair', tattooStudio: 'Tattoo Studio',
+  // Editorial
+  evergreen: 'Evergreen',
+  // Layout-paired
+  arcticMin: 'Arctic Minimal', editorial: 'Editorial', vivid: 'Vivid', pastel: 'Pastel', nightshift: 'Nightshift',
 }
 
 export const theme = themes[siteConfig.branding.theme]

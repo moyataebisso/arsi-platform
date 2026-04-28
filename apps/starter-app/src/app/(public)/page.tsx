@@ -9,6 +9,31 @@ import { MenuPreviewSection } from '@/components/sections/MenuPreviewSection'
 import { ServicesPriceListSection } from '@/components/sections/ServicesPriceListSection'
 import { ProvidersSection } from '@/components/sections/ProvidersSection'
 import { MissionImpactSection } from '@/components/sections/MissionImpactSection'
+import { ServiceAreaSection } from '@/components/sections/ServiceAreaSection'
+import { TrustStatsSection } from '@/components/sections/TrustStatsSection'
+import { BeforeAfterSection } from '@/components/sections/BeforeAfterSection'
+import { EditorialProcessSection } from '@/components/sections/EditorialProcessSection'
+import { CallCTASection } from '@/components/sections/CallCTASection'
+import { ThreeUpBenefitsSection } from '@/components/sections/ThreeUpBenefitsSection'
+import { LargeFeatureSection } from '@/components/sections/LargeFeatureSection'
+import { MetricsStripSection } from '@/components/sections/MetricsStripSection'
+import { SimpleCallCTASection } from '@/components/sections/SimpleCallCTASection'
+import { PullQuoteSection } from '@/components/sections/PullQuoteSection'
+import { EditorialFeatureSection } from '@/components/sections/EditorialFeatureSection'
+import { PortfolioGridSection } from '@/components/sections/PortfolioGridSection'
+import { EditorialFooterCTASection } from '@/components/sections/EditorialFooterCTASection'
+import { AlternatingColorBlockSection } from '@/components/sections/AlternatingColorBlockSection'
+import { NumberedListSection } from '@/components/sections/NumberedListSection'
+import { BigPhotoStripSection } from '@/components/sections/BigPhotoStripSection'
+import { BoldFinalCTASection } from '@/components/sections/BoldFinalCTASection'
+import { SoftBenefitCardsSection } from '@/components/sections/SoftBenefitCardsSection'
+import { TestimonialBubbleSection } from '@/components/sections/TestimonialBubbleSection'
+import { SoftStatsRowSection } from '@/components/sections/SoftStatsRowSection'
+import { FriendlyFinalCTASection } from '@/components/sections/FriendlyFinalCTASection'
+import { GlowingFeatureGridSection } from '@/components/sections/GlowingFeatureGridSection'
+import { CodeStripSection } from '@/components/sections/CodeStripSection'
+import { NeonStatsSection } from '@/components/sections/NeonStatsSection'
+import { TerminalFinalCTASection } from '@/components/sections/TerminalFinalCTASection'
 import {
   getContentMany,
   getServicesContent,
@@ -17,6 +42,10 @@ import {
   getServicesPriceListItems,
   getProvidersItems,
   getMissionImpactStats,
+  getServiceAreaCities,
+  getTrustStatsItems,
+  getEditorialProcessSteps,
+  getCallCTABullets,
 } from '@/lib/content/resolver'
 import { getSiteSetting } from '@/lib/settings'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
@@ -24,7 +53,16 @@ import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
 import { themeToCSS, type ResolvedTheme } from '@/lib/theme-resolver'
 import { getActiveSelection } from '@/lib/content/activeSelection'
 
-const HERO_VARIANTS: HeroVariant[] = ['solid_color', 'image_overlay', 'split']
+const HERO_VARIANTS: HeroVariant[] = [
+  'solid_color',
+  'image_overlay',
+  'split',
+  'centered_minimal',
+  'editorial_split',
+  'block_hero',
+  'rounded_card_hero',
+  'terminal_hero',
+]
 
 function buildPreviewThemeCSS(themeName: ThemeName): string {
   const base = themes[themeName]
@@ -92,16 +130,29 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     'providers_headline', 'providers_subtitle',
     'mission_impact_headline', 'mission_impact_subtitle',
     'mission_impact_body', 'mission_impact_donate_href', 'mission_impact_volunteer_href',
+    'service_area_pill', 'service_area_subtitle',
+    'trust_stats_pill',
+    'before_after_pill', 'before_after_headline', 'before_after_subtitle', 'before_after_caption',
+    'before_image', 'after_image',
+    'editorial_process_pill', 'editorial_process_headline', 'editorial_process_subtitle',
+    'call_cta_pill', 'call_cta_headline',
   ])
   const services = await getServicesContent()
   const heroImage = await getSiteSetting('hero_image_url')
 
-  const [steps, dishes, priceListItems, providersItems, stats] = await Promise.all([
+  const [
+    steps, dishes, priceListItems, providersItems, stats,
+    serviceAreaCities, trustStatsItems, editorialProcessSteps, callCTABullets,
+  ] = await Promise.all([
     getHowItWorksSteps(),
     getMenuPreviewDishes(),
     getServicesPriceListItems(),
     getProvidersItems(),
     getMissionImpactStats(),
+    getServiceAreaCities(),
+    getTrustStatsItems(),
+    getEditorialProcessSteps(),
+    getCallCTABullets(),
   ])
 
   const sectionOrder = LAYOUT_META[layout].sectionOrder
@@ -178,6 +229,70 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         volunteerHref={content.mission_impact_volunteer_href}
       />
     ),
+    service_area: (
+      <ServiceAreaSection
+        pill={content.service_area_pill}
+        subtitle={content.service_area_subtitle}
+        cities={serviceAreaCities}
+      />
+    ),
+    trust_stats: (
+      <TrustStatsSection
+        pill={content.trust_stats_pill}
+        stats={trustStatsItems}
+      />
+    ),
+    before_after: (
+      <BeforeAfterSection
+        pill={content.before_after_pill}
+        headline={content.before_after_headline}
+        subtitle={content.before_after_subtitle}
+        caption={content.before_after_caption}
+        beforeImage={content.before_image || undefined}
+        afterImage={content.after_image || undefined}
+      />
+    ),
+    editorial_process: (
+      <EditorialProcessSection
+        pill={content.editorial_process_pill}
+        headline={content.editorial_process_headline}
+        subtitle={content.editorial_process_subtitle}
+        steps={editorialProcessSteps}
+      />
+    ),
+    call_cta: (
+      <CallCTASection
+        pill={content.call_cta_pill}
+        headline={content.call_cta_headline}
+        bullets={callCTABullets}
+      />
+    ),
+    // modern_minimal
+    three_up_benefits: <ThreeUpBenefitsSection />,
+    large_feature_left: <LargeFeatureSection imageSide="left" />,
+    large_feature_right: <LargeFeatureSection imageSide="right" />,
+    metrics_strip: <MetricsStripSection />,
+    simple_call_cta: <SimpleCallCTASection />,
+    // editorial_premium
+    pull_quote: <PullQuoteSection />,
+    editorial_feature: <EditorialFeatureSection />,
+    portfolio_grid: <PortfolioGridSection />,
+    editorial_footer_cta: <EditorialFooterCTASection />,
+    // bold_block
+    alternating_blocks: <AlternatingColorBlockSection />,
+    numbered_list: <NumberedListSection />,
+    big_photo_strip: <BigPhotoStripSection />,
+    bold_final_cta: <BoldFinalCTASection />,
+    // friendly_soft
+    soft_benefit_cards: <SoftBenefitCardsSection />,
+    testimonial_bubbles: <TestimonialBubbleSection />,
+    soft_stats_row: <SoftStatsRowSection />,
+    friendly_final_cta: <FriendlyFinalCTASection />,
+    // tech_forward
+    glowing_feature_grid: <GlowingFeatureGridSection />,
+    code_strip: <CodeStripSection />,
+    neon_stats: <NeonStatsSection />,
+    terminal_final_cta: <TerminalFinalCTASection />,
   }
 
   return (

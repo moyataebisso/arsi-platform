@@ -7,11 +7,31 @@
 // site.config.ts > branding.
 // ============================================================
 
-export const LAYOUT_IDS = ['fleet', 'restaurant', 'salon', 'healthcare', 'community'] as const
+export const LAYOUT_IDS = [
+  'fleet',
+  'restaurant',
+  'salon',
+  'healthcare',
+  'community',
+  'home_services',
+  'modern_minimal',
+  'editorial_premium',
+  'bold_block',
+  'friendly_soft',
+  'tech_forward',
+] as const
 
 export type LayoutId = (typeof LAYOUT_IDS)[number]
 
-export type HeroVariant = 'solid_color' | 'image_overlay' | 'split'
+export type HeroVariant =
+  | 'solid_color'
+  | 'image_overlay'
+  | 'split'
+  | 'centered_minimal'
+  | 'editorial_split'
+  | 'block_hero'
+  | 'rounded_card_hero'
+  | 'terminal_hero'
 
 export type SectionId =
   | 'hero'
@@ -24,6 +44,37 @@ export type SectionId =
   | 'services_price_list'
   | 'providers'
   | 'mission_impact'
+  | 'service_area'
+  | 'trust_stats'
+  | 'before_after'
+  | 'editorial_process'
+  | 'call_cta'
+  // modern_minimal
+  | 'three_up_benefits'
+  | 'large_feature_left'
+  | 'large_feature_right'
+  | 'metrics_strip'
+  | 'simple_call_cta'
+  // editorial_premium
+  | 'pull_quote'
+  | 'editorial_feature'
+  | 'portfolio_grid'
+  | 'editorial_footer_cta'
+  // bold_block
+  | 'alternating_blocks'
+  | 'numbered_list'
+  | 'big_photo_strip'
+  | 'bold_final_cta'
+  // friendly_soft
+  | 'soft_benefit_cards'
+  | 'testimonial_bubbles'
+  | 'soft_stats_row'
+  | 'friendly_final_cta'
+  // tech_forward
+  | 'glowing_feature_grid'
+  | 'code_strip'
+  | 'neon_stats'
+  | 'terminal_final_cta'
 
 export interface LayoutMeta {
   name: string
@@ -74,5 +125,53 @@ export const LAYOUT_META: Record<LayoutId, LayoutMeta> = {
     defaultTheme: 'nonprofit',
     defaultHeroVariant: 'image_overlay',
     sectionOrder: ['hero', 'mission_impact', 'about', 'services', 'contact'],
+  },
+  home_services: {
+    name: 'Home Services',
+    industry: 'home_services',
+    description: 'Lawn care, landscaping, cleaning, HVAC, plumbing, and other home service businesses. Editorial cream + green aesthetic with trust-forward content.',
+    defaultTheme: 'evergreen',
+    defaultHeroVariant: 'image_overlay',
+    sectionOrder: ['hero', 'service_area', 'trust_stats', 'before_after', 'about', 'services', 'editorial_process', 'call_cta', 'location', 'contact'],
+  },
+  modern_minimal: {
+    name: 'Modern Minimal',
+    industry: 'catch-all',
+    description: 'Whitespace-led, type-driven layout with a single bold accent. Built for businesses that want clean, current, and no-nonsense.',
+    defaultTheme: 'arcticMin',
+    defaultHeroVariant: 'centered_minimal',
+    sectionOrder: ['hero', 'three_up_benefits', 'large_feature_left', 'large_feature_right', 'metrics_strip', 'simple_call_cta'],
+  },
+  editorial_premium: {
+    name: 'Editorial Premium',
+    industry: 'premium',
+    description: 'Magazine-style serif typography with ivory + gold for high-end consultants, boutiques, and design studios.',
+    defaultTheme: 'editorial',
+    defaultHeroVariant: 'editorial_split',
+    sectionOrder: ['hero', 'pull_quote', 'editorial_feature', 'portfolio_grid', 'editorial_footer_cta'],
+  },
+  bold_block: {
+    name: 'Bold Block',
+    industry: 'energetic',
+    description: 'Solid color blocks and oversized type. Built for fitness studios, food trucks, indie shops, and creative agencies.',
+    defaultTheme: 'vivid',
+    defaultHeroVariant: 'block_hero',
+    sectionOrder: ['hero', 'alternating_blocks', 'numbered_list', 'big_photo_strip', 'bold_final_cta'],
+  },
+  friendly_soft: {
+    name: 'Friendly Soft',
+    industry: 'approachable',
+    description: 'Pastel palette with rounded everything. Built for childcare, pet services, family-run shops, and community-facing nonprofits.',
+    defaultTheme: 'pastel',
+    defaultHeroVariant: 'rounded_card_hero',
+    sectionOrder: ['hero', 'soft_benefit_cards', 'testimonial_bubbles', 'soft_stats_row', 'friendly_final_cta'],
+  },
+  tech_forward: {
+    name: 'Tech Forward',
+    industry: 'tech',
+    description: 'Dark mode with neon accents and monospace details. Built for software consultants, IT services, and modern marketing agencies.',
+    defaultTheme: 'nightshift',
+    defaultHeroVariant: 'terminal_hero',
+    sectionOrder: ['hero', 'glowing_feature_grid', 'code_strip', 'neon_stats', 'terminal_final_cta'],
   },
 }

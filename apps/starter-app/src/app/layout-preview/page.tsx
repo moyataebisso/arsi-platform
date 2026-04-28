@@ -11,6 +11,11 @@ const HERO_VARIANTS: { id: HeroVariant; label: string }[] = [
   { id: 'solid_color', label: 'Solid color' },
   { id: 'image_overlay', label: 'Image overlay' },
   { id: 'split', label: 'Split (2-col)' },
+  { id: 'centered_minimal', label: 'Centered minimal' },
+  { id: 'editorial_split', label: 'Editorial split' },
+  { id: 'block_hero', label: 'Block hero' },
+  { id: 'rounded_card_hero', label: 'Rounded card' },
+  { id: 'terminal_hero', label: 'Terminal' },
 ]
 
 interface LayoutChoice {
@@ -144,7 +149,7 @@ export default function LayoutPreviewPage() {
           </Link>
           <h1 className="text-3xl font-bold">Layout Preview</h1>
           <p className="text-sm text-gray-500 mt-1 max-w-2xl">
-            Compare all five industry layouts side-by-side. Pick a theme and hero variant per layout, preview it live, then apply it directly to the live site.
+            Compare all eleven layouts side-by-side. Pick a theme and hero variant per layout, preview it live, then apply it directly to the live site.
           </p>
         </div>
 

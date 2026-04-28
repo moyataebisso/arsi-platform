@@ -2,11 +2,27 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { siteConfig } from '@config'
 import { JsonLd } from '@/components/seo/JsonLd'
-import { Playfair_Display, DM_Sans, Dancing_Script, Plus_Jakarta_Sans, Space_Grotesk, DM_Mono } from 'next/font/google'
+import { Playfair_Display, DM_Sans, Dancing_Script, Plus_Jakarta_Sans, Space_Grotesk, DM_Mono, JetBrains_Mono } from 'next/font/google'
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
   variable: '--font-playfair',
+  display: 'swap',
+})
+
+// Layout-specific: editorial_premium uses Playfair as the serif voice.
+const playfairSerif = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-serif',
+  display: 'swap',
+})
+
+// Layout-specific: tech_forward uses JetBrains Mono for monospace details.
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-mono',
   display: 'swap',
 })
 
@@ -43,11 +59,13 @@ const dmMono = DM_Mono({
 
 const fontVariables = [
   playfair.variable,
+  playfairSerif.variable,
   dmSans.variable,
   dancingScript.variable,
   jakarta.variable,
   spaceGrotesk.variable,
   dmMono.variable,
+  jetbrainsMono.variable,
 ].join(' ')
 
 const themeFontMap: Record<string, string> = {
