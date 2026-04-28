@@ -49,6 +49,28 @@ export const DEFAULTS: Record<string, string> = {
   mission_impact_body: 'For over a decade we have worked alongside neighbors to build a stronger, more connected community. Every program, every meal served, every hour donated comes back to the people who call this place home — and there is always more to do.',
   mission_impact_donate_href: '/donate',
   mission_impact_volunteer_href: '/volunteer',
+
+  // Service Area
+  service_area_pill: 'Where we work',
+  service_area_subtitle: '',
+
+  // Trust Stats
+  trust_stats_pill: '',
+
+  // Before / After
+  before_after_pill: 'Real results',
+  before_after_headline: 'See the difference',
+  before_after_subtitle: '',
+  before_after_caption: 'Drag to compare — real results, real lawn',
+
+  // Editorial Process
+  editorial_process_pill: 'Simple process',
+  editorial_process_headline: 'Three steps to a great lawn',
+  editorial_process_subtitle: '',
+
+  // Call CTA
+  call_cta_pill: 'Ready to get started?',
+  call_cta_headline: 'Let’s make your lawn the best on the block',
 }
 
 export function getDefault(key: string): string {

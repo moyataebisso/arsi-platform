@@ -70,6 +70,34 @@ export const CONTENT_KEYS = {
   MISSION_IMPACT_DONATE_HREF: 'mission_impact_donate_href',
   MISSION_IMPACT_VOLUNTEER_HREF: 'mission_impact_volunteer_href',
 
+  // Service Area (home_services and reusable)
+  SERVICE_AREA_PILL: 'service_area_pill',
+  SERVICE_AREA_SUBTITLE: 'service_area_subtitle',
+  SERVICE_AREA_CITIES: 'service_area_cities',
+
+  // Trust Stats
+  TRUST_STATS_PILL: 'trust_stats_pill',
+  TRUST_STATS_ITEMS: 'trust_stats_items',
+
+  // Before / After comparison
+  BEFORE_AFTER_PILL: 'before_after_pill',
+  BEFORE_AFTER_HEADLINE: 'before_after_headline',
+  BEFORE_AFTER_SUBTITLE: 'before_after_subtitle',
+  BEFORE_AFTER_CAPTION: 'before_after_caption',
+  BEFORE_IMAGE: 'before_image',
+  AFTER_IMAGE: 'after_image',
+
+  // Editorial Process
+  EDITORIAL_PROCESS_PILL: 'editorial_process_pill',
+  EDITORIAL_PROCESS_HEADLINE: 'editorial_process_headline',
+  EDITORIAL_PROCESS_SUBTITLE: 'editorial_process_subtitle',
+  EDITORIAL_PROCESS_STEPS: 'editorial_process_steps',
+
+  // Call CTA
+  CALL_CTA_PILL: 'call_cta_pill',
+  CALL_CTA_HEADLINE: 'call_cta_headline',
+  CALL_CTA_BULLETS: 'call_cta_bullets',
+
   // Internal / system selections — set via /layout-preview, NOT exposed in /admin/content tabs.
   // Empty/unset means "use siteConfig.branding". See src/lib/content/activeSelection.ts.
   ACTIVE_LAYOUT: 'active_layout',

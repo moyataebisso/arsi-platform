@@ -118,3 +118,59 @@ export async function getMissionImpactStats(): Promise<{ number: string; label: 
     { number: '12', label: 'Years in the community' },
   ]
 }
+
+export async function getServiceAreaCities(): Promise<string[]> {
+  try {
+    const dbValue = await getSiteSetting('service_area_cities')
+    if (dbValue) {
+      try { return JSON.parse(dbValue) } catch { /* fall through */ }
+    }
+  } catch { /* fall through */ }
+  return [
+    'Apple Valley', 'Eagan', 'Burnsville', 'Lakeville', 'Rosemount',
+    'Cottage Grove', 'Woodbury', 'St. Paul Park', 'Newport',
+  ]
+}
+
+export async function getTrustStatsItems(): Promise<{ number: string; label: string; caption?: string }[]> {
+  try {
+    const dbValue = await getSiteSetting('trust_stats_items')
+    if (dbValue) {
+      try { return JSON.parse(dbValue) } catch { /* fall through */ }
+    }
+  } catch { /* fall through */ }
+  return [
+    { number: '5.0 ★', label: 'Google Rating', caption: '100% 5-star reviews' },
+    { number: '100+', label: 'Lawns Maintained', caption: 'and growing every week' },
+    { number: 'Same Week', label: 'Service Available', caption: 'fast response guaranteed' },
+  ]
+}
+
+export async function getEditorialProcessSteps(): Promise<{ number: string; title: string; body: string }[]> {
+  try {
+    const dbValue = await getSiteSetting('editorial_process_steps')
+    if (dbValue) {
+      try { return JSON.parse(dbValue) } catch { /* fall through */ }
+    }
+  } catch { /* fall through */ }
+  return [
+    { number: '01', title: 'Request a quote', body: 'Call, text, or fill out the short form below. We respond within a few hours — no phone tag, no waiting.' },
+    { number: '02', title: 'Get your price', body: 'Free, no-obligation estimate based on your lawn size. Transparent flat-rate pricing, no surprise fees.' },
+    { number: '03', title: 'Sit back, enjoy your lawn', body: 'We show up on schedule, do the work, and leave your lawn looking better every week.' },
+  ]
+}
+
+export async function getCallCTABullets(): Promise<string[]> {
+  try {
+    const dbValue = await getSiteSetting('call_cta_bullets')
+    if (dbValue) {
+      try { return JSON.parse(dbValue) } catch { /* fall through */ }
+    }
+  } catch { /* fall through */ }
+  return [
+    'Fully licensed & insured',
+    'Same-week service',
+    'No contracts required',
+    'Free, no-obligation estimate',
+  ]
+}

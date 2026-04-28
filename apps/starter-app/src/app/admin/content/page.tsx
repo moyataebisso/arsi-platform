@@ -7,7 +7,7 @@ import { getDefault } from '@/lib/content/defaults'
 import { IconPicker, ICON_MAP } from '@/components/admin/IconPicker'
 import PhotoFinder from '@/components/admin/PhotoFinder'
 
-const TABS = ['Hero', 'Services', 'About', 'CTA', 'Contact', 'Footer', 'SEO', 'How It Works', 'Menu', 'Pricing List', 'Providers', 'Mission'] as const
+const TABS = ['Hero', 'Services', 'About', 'CTA', 'Contact', 'Footer', 'SEO', 'How It Works', 'Menu', 'Pricing List', 'Providers', 'Mission', 'Service Area', 'Trust Stats', 'Before/After', 'Editorial Process', 'Call CTA'] as const
 type Tab = typeof TABS[number]
 
 interface ServiceItem {
@@ -23,6 +23,8 @@ interface Dish { name: string; description: string; price: string; image: string
 interface PriceRow { name: string; price: string; duration?: string }
 interface Provider { name: string; credentials: string; specialty: string; photo: string }
 interface Stat { number: string; label: string }
+interface TrustStatItem { number: string; label: string; caption?: string }
+interface ProcessStep { number: string; title: string; body: string }
 
 const DEFAULT_STEPS: Step[] = [
   { title: 'Book online', description: 'Pick a time that works and request your service in under 60 seconds.' },
@@ -59,6 +61,30 @@ const DEFAULT_STATS: Stat[] = [
   { number: '12', label: 'Years in the community' },
 ]
 
+const DEFAULT_CITIES: string[] = [
+  'Apple Valley', 'Eagan', 'Burnsville', 'Lakeville', 'Rosemount',
+  'Cottage Grove', 'Woodbury', 'St. Paul Park', 'Newport',
+]
+
+const DEFAULT_TRUST_STATS: TrustStatItem[] = [
+  { number: '5.0 ★', label: 'Google Rating', caption: '100% 5-star reviews' },
+  { number: '100+', label: 'Lawns Maintained', caption: 'and growing every week' },
+  { number: 'Same Week', label: 'Service Available', caption: 'fast response guaranteed' },
+]
+
+const DEFAULT_PROCESS_STEPS: ProcessStep[] = [
+  { number: '01', title: 'Request a quote', body: 'Call, text, or fill out the short form below. We respond within a few hours — no phone tag, no waiting.' },
+  { number: '02', title: 'Get your price', body: 'Free, no-obligation estimate based on your lawn size. Transparent flat-rate pricing, no surprise fees.' },
+  { number: '03', title: 'Sit back, enjoy your lawn', body: 'We show up on schedule, do the work, and leave your lawn looking better every week.' },
+]
+
+const DEFAULT_BULLETS: string[] = [
+  'Fully licensed & insured',
+  'Same-week service',
+  'No contracts required',
+  'Free, no-obligation estimate',
+]
+
 const LIST_KEYS = new Set([
   'services_items',
   'how_it_works_steps',
@@ -66,6 +92,10 @@ const LIST_KEYS = new Set([
   'services_price_list_items',
   'providers_items',
   'mission_impact_stats',
+  'service_area_cities',
+  'trust_stats_items',
+  'editorial_process_steps',
+  'call_cta_bullets',
 ])
 
 export default function AdminContentPage() {
@@ -77,6 +107,10 @@ export default function AdminContentPage() {
   const [priceList, setPriceList] = useState<PriceRow[]>([])
   const [providers, setProviders] = useState<Provider[]>([])
   const [stats, setStats] = useState<Stat[]>([])
+  const [cities, setCities] = useState<string[]>([])
+  const [trustStats, setTrustStats] = useState<TrustStatItem[]>([])
+  const [processSteps, setProcessSteps] = useState<ProcessStep[]>([])
+  const [bullets, setBullets] = useState<string[]>([])
   const [dirty, setDirty] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -126,6 +160,26 @@ export default function AdminContentPage() {
         if (data.mission_impact_stats) {
           try { setStats(JSON.parse(data.mission_impact_stats)) } catch { setStats(DEFAULT_STATS) }
         } else { setStats(DEFAULT_STATS) }
+
+        // service area cities
+        if (data.service_area_cities) {
+          try { setCities(JSON.parse(data.service_area_cities)) } catch { setCities(DEFAULT_CITIES) }
+        } else { setCities(DEFAULT_CITIES) }
+
+        // trust stats
+        if (data.trust_stats_items) {
+          try { setTrustStats(JSON.parse(data.trust_stats_items)) } catch { setTrustStats(DEFAULT_TRUST_STATS) }
+        } else { setTrustStats(DEFAULT_TRUST_STATS) }
+
+        // editorial process steps
+        if (data.editorial_process_steps) {
+          try { setProcessSteps(JSON.parse(data.editorial_process_steps)) } catch { setProcessSteps(DEFAULT_PROCESS_STEPS) }
+        } else { setProcessSteps(DEFAULT_PROCESS_STEPS) }
+
+        // call cta bullets
+        if (data.call_cta_bullets) {
+          try { setBullets(JSON.parse(data.call_cta_bullets)) } catch { setBullets(DEFAULT_BULLETS) }
+        } else { setBullets(DEFAULT_BULLETS) }
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -173,6 +227,11 @@ export default function AdminContentPage() {
     markListDirty(key)
   }
 
+  function listUpdateString(setter: React.Dispatch<React.SetStateAction<string[]>>, key: string, i: number, value: string) {
+    setter(prev => prev.map((item, idx) => idx === i ? value : item))
+    markListDirty(key)
+  }
+
   const saveTab = async (keys: string[]) => {
     setSaving(true)
     try {
@@ -187,6 +246,10 @@ export default function AdminContentPage() {
             case 'services_price_list_items': value = JSON.stringify(priceList); break
             case 'providers_items': value = JSON.stringify(providers); break
             case 'mission_impact_stats': value = JSON.stringify(stats); break
+            case 'service_area_cities': value = JSON.stringify(cities); break
+            case 'trust_stats_items': value = JSON.stringify(trustStats); break
+            case 'editorial_process_steps': value = JSON.stringify(processSteps); break
+            case 'call_cta_bullets': value = JSON.stringify(bullets); break
             default: value = values[k] ?? getDefault(k)
           }
           return { key: k, value }
@@ -861,6 +924,272 @@ export default function AdminContentPage() {
               </div>
             </div>
             {renderSaveButton(['mission_impact_headline', 'mission_impact_subtitle', 'mission_impact_body', 'mission_impact_donate_href', 'mission_impact_volunteer_href', 'mission_impact_stats'])}
+          </div>
+        )}
+
+        {activeTab === 'Service Area' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <h2 className="font-semibold text-gray-900">Service Area</h2>
+              {field('service_area_pill', 'Pill Label')}
+              {field('service_area_subtitle', 'Subtitle (optional)')}
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold text-gray-900">Cities & Areas</h2>
+                {cities.length < 20 && (
+                  <button
+                    onClick={() => listAdd<string>(setCities, 'service_area_cities', 20, '')}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    <Plus size={14} /> Add City
+                  </button>
+                )}
+              </div>
+              <div className="space-y-2">
+                {cities.map((city, i) => (
+                  <div key={i} className="border border-gray-200 rounded-xl p-3 flex items-center gap-3">
+                    <div className="flex flex-col gap-1">
+                      <button onClick={() => listMove<string>(setCities, 'service_area_cities', i, 'up')} disabled={i === 0} className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors"><ChevronUp size={14} /></button>
+                      <button onClick={() => listMove<string>(setCities, 'service_area_cities', i, 'down')} disabled={i === cities.length - 1} className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors"><ChevronDown size={14} /></button>
+                    </div>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={e => listUpdateString(setCities, 'service_area_cities', i, e.target.value)}
+                      placeholder="City or area name"
+                      className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
+                    <button onClick={() => listRemove<string>(setCities, 'service_area_cities', i)} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {renderSaveButton(['service_area_pill', 'service_area_subtitle', 'service_area_cities'])}
+          </div>
+        )}
+
+        {activeTab === 'Trust Stats' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <h2 className="font-semibold text-gray-900">Trust Stats</h2>
+              {field('trust_stats_pill', 'Pill Label (optional)')}
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold text-gray-900">Stat Items</h2>
+                {trustStats.length < 4 && (
+                  <button
+                    onClick={() => listAdd<TrustStatItem>(setTrustStats, 'trust_stats_items', 4, { number: '', label: '', caption: '' })}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    <Plus size={14} /> Add Stat
+                  </button>
+                )}
+              </div>
+              <div className="space-y-3">
+                {trustStats.map((s, i) => (
+                  <div key={i} className="border border-gray-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex flex-col gap-1 mt-1">
+                        <button onClick={() => listMove<TrustStatItem>(setTrustStats, 'trust_stats_items', i, 'up')} disabled={i === 0} className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors"><ChevronUp size={14} /></button>
+                        <button onClick={() => listMove<TrustStatItem>(setTrustStats, 'trust_stats_items', i, 'down')} disabled={i === trustStats.length - 1} className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors"><ChevronDown size={14} /></button>
+                      </div>
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input
+                          type="text"
+                          value={s.number}
+                          onChange={e => listUpdate<TrustStatItem, 'number'>(setTrustStats, 'trust_stats_items', i, 'number', e.target.value)}
+                          placeholder="100+ or 5.0 ★"
+                          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        />
+                        <input
+                          type="text"
+                          value={s.label}
+                          onChange={e => listUpdate<TrustStatItem, 'label'>(setTrustStats, 'trust_stats_items', i, 'label', e.target.value)}
+                          placeholder="Lawns Maintained"
+                          className="sm:col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        />
+                        <input
+                          type="text"
+                          value={s.caption ?? ''}
+                          onChange={e => listUpdate<TrustStatItem, 'caption'>(setTrustStats, 'trust_stats_items', i, 'caption', e.target.value)}
+                          placeholder="Caption (optional)"
+                          className="sm:col-span-3 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        />
+                      </div>
+                      <button onClick={() => listRemove<TrustStatItem>(setTrustStats, 'trust_stats_items', i)} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {renderSaveButton(['trust_stats_pill', 'trust_stats_items'])}
+          </div>
+        )}
+
+        {activeTab === 'Before/After' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <h2 className="font-semibold text-gray-900">Before / After</h2>
+              {field('before_after_pill', 'Pill Label')}
+              {field('before_after_headline', 'Headline')}
+              {field('before_after_subtitle', 'Subtitle (optional)')}
+              {field('before_after_caption', 'Caption (under image)')}
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <h2 className="font-semibold text-gray-900">Comparison Images</h2>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Before Image URL</label>
+                <input
+                  type="text"
+                  value={getValue('before_image')}
+                  onChange={e => setValue('before_image', e.target.value)}
+                  placeholder="https://..."
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+                {getValue('before_image') && (
+                  <div className="mt-2 rounded-lg overflow-hidden border border-gray-200 max-w-xs">
+                    <img src={getValue('before_image')} alt="Before" className="w-full h-32 object-cover" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">After Image URL</label>
+                <input
+                  type="text"
+                  value={getValue('after_image')}
+                  onChange={e => setValue('after_image', e.target.value)}
+                  placeholder="https://..."
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+                {getValue('after_image') && (
+                  <div className="mt-2 rounded-lg overflow-hidden border border-gray-200 max-w-xs">
+                    <img src={getValue('after_image')} alt="After" className="w-full h-32 object-cover" />
+                  </div>
+                )}
+              </div>
+            </div>
+            {renderSaveButton(['before_after_pill', 'before_after_headline', 'before_after_subtitle', 'before_after_caption', 'before_image', 'after_image'])}
+          </div>
+        )}
+
+        {activeTab === 'Editorial Process' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <h2 className="font-semibold text-gray-900">Editorial Process</h2>
+              {field('editorial_process_pill', 'Pill Label')}
+              {field('editorial_process_headline', 'Headline')}
+              {field('editorial_process_subtitle', 'Subtitle (optional)')}
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold text-gray-900">Process Steps</h2>
+                {processSteps.length < 5 && (
+                  <button
+                    onClick={() => listAdd<ProcessStep>(setProcessSteps, 'editorial_process_steps', 5, { number: '', title: '', body: '' })}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    <Plus size={14} /> Add Step
+                  </button>
+                )}
+              </div>
+              <div className="space-y-4">
+                {processSteps.map((step, i) => (
+                  <div key={i} className="border border-gray-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex flex-col gap-1 mt-1">
+                        <button onClick={() => listMove<ProcessStep>(setProcessSteps, 'editorial_process_steps', i, 'up')} disabled={i === 0} className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors"><ChevronUp size={14} /></button>
+                        <button onClick={() => listMove<ProcessStep>(setProcessSteps, 'editorial_process_steps', i, 'down')} disabled={i === processSteps.length - 1} className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors"><ChevronDown size={14} /></button>
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <div className="flex gap-3">
+                          <input
+                            type="text"
+                            value={step.number}
+                            onChange={e => listUpdate<ProcessStep, 'number'>(setProcessSteps, 'editorial_process_steps', i, 'number', e.target.value)}
+                            placeholder="01"
+                            className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                          />
+                          <input
+                            type="text"
+                            value={step.title}
+                            onChange={e => listUpdate<ProcessStep, 'title'>(setProcessSteps, 'editorial_process_steps', i, 'title', e.target.value)}
+                            placeholder="Step title"
+                            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                          />
+                        </div>
+                        <textarea
+                          value={step.body}
+                          onChange={e => listUpdate<ProcessStep, 'body'>(setProcessSteps, 'editorial_process_steps', i, 'body', e.target.value)}
+                          placeholder="Body paragraph"
+                          rows={3}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        />
+                      </div>
+                      <button onClick={() => listRemove<ProcessStep>(setProcessSteps, 'editorial_process_steps', i)} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {renderSaveButton(['editorial_process_pill', 'editorial_process_headline', 'editorial_process_subtitle', 'editorial_process_steps'])}
+          </div>
+        )}
+
+        {activeTab === 'Call CTA' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <h2 className="font-semibold text-gray-900">Call CTA</h2>
+              {field('call_cta_pill', 'Pill Label')}
+              {field('call_cta_headline', 'Headline')}
+              <p className="text-xs text-gray-500">Phone number is pulled from <code className="bg-gray-100 px-1 py-0.5 rounded">site.config.ts</code> &gt; <code className="bg-gray-100 px-1 py-0.5 rounded">business.phone</code>.</p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold text-gray-900">Bullet Points</h2>
+                {bullets.length < 6 && (
+                  <button
+                    onClick={() => listAdd<string>(setBullets, 'call_cta_bullets', 6, '')}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    <Plus size={14} /> Add Bullet
+                  </button>
+                )}
+              </div>
+              <div className="space-y-2">
+                {bullets.map((b, i) => (
+                  <div key={i} className="border border-gray-200 rounded-xl p-3 flex items-center gap-3">
+                    <div className="flex flex-col gap-1">
+                      <button onClick={() => listMove<string>(setBullets, 'call_cta_bullets', i, 'up')} disabled={i === 0} className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors"><ChevronUp size={14} /></button>
+                      <button onClick={() => listMove<string>(setBullets, 'call_cta_bullets', i, 'down')} disabled={i === bullets.length - 1} className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors"><ChevronDown size={14} /></button>
+                    </div>
+                    <input
+                      type="text"
+                      value={b}
+                      onChange={e => listUpdateString(setBullets, 'call_cta_bullets', i, e.target.value)}
+                      placeholder="Trust point or feature"
+                      className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
+                    <button onClick={() => listRemove<string>(setBullets, 'call_cta_bullets', i)} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {renderSaveButton(['call_cta_pill', 'call_cta_headline', 'call_cta_bullets'])}
           </div>
         )}
       </div>
