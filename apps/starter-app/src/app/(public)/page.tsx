@@ -14,6 +14,7 @@ import { TrustStatsSection } from '@/components/sections/TrustStatsSection'
 import { BeforeAfterSection } from '@/components/sections/BeforeAfterSection'
 import { EditorialProcessSection } from '@/components/sections/EditorialProcessSection'
 import { CallCTASection } from '@/components/sections/CallCTASection'
+import { LocationStripSection } from '@/components/sections/LocationStripSection'
 import { ThreeUpBenefitsSection } from '@/components/sections/ThreeUpBenefitsSection'
 import { LargeFeatureSection } from '@/components/sections/LargeFeatureSection'
 import { MetricsStripSection } from '@/components/sections/MetricsStripSection'
@@ -267,6 +268,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         bullets={callCTABullets}
       />
     ),
+    location_strip: <LocationStripSection />,
     // modern_minimal
     three_up_benefits: <ThreeUpBenefitsSection />,
     large_feature_left: <LargeFeatureSection imageSide="left" />,

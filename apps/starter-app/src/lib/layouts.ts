@@ -49,6 +49,7 @@ export type SectionId =
   | 'before_after'
   | 'editorial_process'
   | 'call_cta'
+  | 'location_strip'
   // modern_minimal
   | 'three_up_benefits'
   | 'large_feature_left'
@@ -100,7 +101,7 @@ export const LAYOUT_META: Record<LayoutId, LayoutMeta> = {
     description: 'Image-led layout for restaurants and food service brands.',
     defaultTheme: 'bistro',
     defaultHeroVariant: 'image_overlay',
-    sectionOrder: ['hero', 'menu_preview', 'about', 'services', 'location', 'contact'],
+    sectionOrder: ['hero', 'location_strip', 'menu_preview', 'about', 'services', 'location', 'contact'],
   },
   salon: {
     name: 'Salon & Beauty',
