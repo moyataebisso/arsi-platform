@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { siteConfig } from '@config'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { getSiteSettings } from '@/lib/settings'
 import { Playfair_Display, DM_Sans, Dancing_Script, Plus_Jakarta_Sans, Space_Grotesk, DM_Mono, JetBrains_Mono } from 'next/font/google'
 
 const playfair = Playfair_Display({
@@ -93,52 +94,71 @@ const themeFontMap: Record<string, string> = {
 
 const siteUrl = siteConfig.siteUrl
 
-export const metadata: Metadata = {
-  title: {
-    default: siteConfig.business.name,
-    template: `%s | ${siteConfig.business.name}`,
-  },
-  description: siteConfig.seo.defaultDescription,
-  keywords: siteConfig.seo.keywords,
-  authors: [{ name: siteConfig.business.name }],
-  creator: siteConfig.business.name,
-  metadataBase: new URL(siteUrl),
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: siteUrl,
-    siteName: siteConfig.business.name,
-    title: siteConfig.business.name,
-    description: siteConfig.seo.defaultDescription,
-    images: [
-      {
-        url: siteConfig.seo.ogImage || '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: siteConfig.business.name,
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: siteConfig.business.name,
-    description: siteConfig.seo.defaultDescription,
-    images: [siteConfig.seo.ogImage || '/og-image.jpg'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings(['business_name', 'tagline', 'meta_description'])
+  const fallbackName =
+    siteConfig.business.name === 'Client Business Name' ? 'Waji Site' : siteConfig.business.name
+  const businessName = settings.business_name || fallbackName
+  const description =
+    settings.meta_description ||
+    settings.tagline ||
+    (siteConfig.seo.defaultDescription === 'Your business description here'
+      ? ''
+      : siteConfig.seo.defaultDescription)
+  const logoUrl = settings.logo_url
+
+  return {
+    title: {
+      default: businessName,
+      template: `%s | ${businessName}`,
+    },
+    description,
+    keywords: siteConfig.seo.keywords,
+    authors: [{ name: businessName }],
+    creator: businessName,
+    metadataBase: new URL(siteUrl),
+    // When a customer has logo_url set, use it as the favicon. Otherwise
+    // Next.js auto-serves /app/icon.svg (Waji default) from the file convention.
+    ...(logoUrl
+      ? { icons: { icon: logoUrl, apple: logoUrl } }
+      : {}),
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: siteUrl,
+      siteName: businessName,
+      title: businessName,
+      description,
+      images: [
+        {
+          url: siteConfig.seo.ogImage || '/og-image.jpg',
+          width: 1200,
+          height: 630,
+          alt: businessName,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: businessName,
+      description,
+      images: [siteConfig.seo.ogImage || '/og-image.jpg'],
+    },
+    robots: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
     },
-  },
-  verification: {
-    google: siteConfig.seo.googleVerification || undefined,
-  },
+    verification: {
+      google: siteConfig.seo.googleVerification || undefined,
+    },
+  }
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

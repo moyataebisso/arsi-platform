@@ -8,7 +8,12 @@ import { Menu, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 
-export function Header() {
+interface HeaderProps {
+  businessName?: string
+  tagline?: string
+}
+
+export function Header({ businessName, tagline }: HeaderProps = {}) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<User | null>(null)
@@ -16,6 +21,11 @@ export function Header() {
   const router = useRouter()
   const pages = siteConfig.pages
   const modules = siteConfig.modules
+  const displayBusinessName =
+    businessName ||
+    (siteConfig.business.name === 'Client Business Name' ? 'Welcome' : siteConfig.business.name)
+  const displayTagline =
+    tagline ?? (siteConfig.business.tagline === 'Your tagline here' ? '' : siteConfig.business.tagline)
 
   useEffect(() => {
     const supabase = createClient()
@@ -90,14 +100,14 @@ export function Header() {
                   fontFamily: 'var(--font-playfair)',
                 }}
               >
-                {siteConfig.business.name}
+                {displayBusinessName}
               </span>
-              {siteConfig.business.tagline && (
+              {displayTagline && (
                 <span
                   className="text-[10px] tracking-wide uppercase"
                   style={{ color: 'var(--color-text-muted)' }}
                 >
-                  {siteConfig.business.tagline}
+                  {displayTagline}
                 </span>
               )}
             </Link>
@@ -206,7 +216,7 @@ export function Header() {
             className="text-lg font-bold"
             style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-playfair)' }}
           >
-            {siteConfig.business.name}
+            {displayBusinessName}
           </span>
           <button
             onClick={() => setMobileOpen(false)}

@@ -1,15 +1,27 @@
 import { siteConfig } from '@config'
+import { getSiteSettings } from '@/lib/settings'
 
-export function JsonLd() {
+export async function JsonLd() {
   const lb = siteConfig.seo.localBusiness
+  const settings = await getSiteSettings(['business_name', 'tagline', 'meta_description', 'phone'])
+  const fallbackName =
+    siteConfig.business.name === 'Client Business Name' ? 'Waji Site' : siteConfig.business.name
+  const businessName = settings.business_name || fallbackName
+  const description =
+    settings.meta_description ||
+    settings.tagline ||
+    (siteConfig.seo.defaultDescription === 'Your business description here'
+      ? ''
+      : siteConfig.seo.defaultDescription)
+  const phone = settings.phone || siteConfig.business.phone
 
   const schema = {
     '@context': 'https://schema.org',
     '@type': lb.category || 'LocalBusiness',
-    name: siteConfig.business.name,
-    description: siteConfig.seo.defaultDescription,
+    name: businessName,
+    description,
     url: siteConfig.siteUrl,
-    telephone: siteConfig.business.phone,
+    telephone: phone,
     priceRange: lb.priceRange,
     areaServed: lb.areaServed,
     address: {
@@ -24,7 +36,7 @@ export function JsonLd() {
       : undefined,
     brand: {
       '@type': 'Brand',
-      name: siteConfig.business.name,
+      name: businessName,
       color: siteConfig.branding.primaryColor,
     },
   }

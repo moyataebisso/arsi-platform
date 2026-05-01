@@ -2,11 +2,13 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { ThemeBackground } from '@/components/ThemeBackground'
 import { getActiveTheme, themeToCSS, getGoogleFontsUrl } from '@/lib/theme-resolver'
+import { getSiteSettings } from '@/lib/settings'
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const theme = await getActiveTheme()
   const css = themeToCSS(theme)
   const fontsUrl = getGoogleFontsUrl(theme)
+  const settings = await getSiteSettings(['business_name', 'tagline'])
 
   return (
     <>
@@ -19,9 +21,9 @@ export default async function PublicLayout({ children }: { children: React.React
       />
       <ThemeBackground />
       <div className="min-h-screen flex flex-col">
-        <Header />
+        <Header businessName={settings.business_name} tagline={settings.tagline} />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <Footer businessName={settings.business_name} />
       </div>
     </>
   )

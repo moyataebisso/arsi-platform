@@ -2,11 +2,20 @@ import Link from 'next/link'
 import { siteConfig } from '@config'
 import { showPoweredBy } from '@/lib/platform'
 import { getContentMany } from '@/lib/content/resolver'
+import { getSiteSetting } from '@/lib/settings'
 
-export async function Footer() {
+interface FooterProps {
+  businessName?: string
+}
+
+export async function Footer({ businessName }: FooterProps = {}) {
   const { business, integrations, pages, modules, location } = siteConfig
 
   const content = await getContentMany(['footer_tagline'])
+  const resolvedName =
+    businessName ||
+    (await getSiteSetting('business_name')) ||
+    (business.name === 'Client Business Name' ? 'Welcome' : business.name)
 
   const navLinks = [
     pages.home.enabled && { href: '/', label: pages.home.title },
@@ -44,7 +53,7 @@ export async function Footer() {
               className="text-xl font-bold mb-3"
               style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-footer-heading)' }}
             >
-              {business.name}
+              {resolvedName}
             </h3>
             <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-footer-muted)' }}>
               {content.footer_tagline}
@@ -138,7 +147,7 @@ export async function Footer() {
         <div className="mt-12 pt-8 border-t" style={{ borderColor: 'var(--color-footer-border)' }}>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
             <p style={{ color: 'var(--color-footer-muted)', opacity: 0.7 }}>
-              &copy; {new Date().getFullYear()} {business.name}. All rights reserved.
+              &copy; {new Date().getFullYear()} {resolvedName}. All rights reserved.
             </p>
             <div className="flex items-center gap-3">
               {showPoweredBy && (

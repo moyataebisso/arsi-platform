@@ -1,4 +1,5 @@
 import { getSiteSetting, getSiteSettings } from '@/lib/settings'
+import { getAdminClient } from '@/lib/supabase/admin'
 import { DEFAULTS } from './defaults'
 
 export { getDefault } from './defaults'
@@ -29,18 +30,51 @@ export async function getContentMany(keys: string[]): Promise<Record<string, str
   }
 }
 
-export async function getServicesContent() {
+interface ServiceItem {
+  id: string
+  name: string
+  description: string
+  price?: string
+  icon: string
+}
+
+const DEFAULT_SERVICE_ICONS = ['Lightbulb', 'Briefcase', 'Wrench', 'HeartHandshake', 'Star', 'Shield']
+
+export async function getServicesContent(): Promise<ServiceItem[]> {
+  try {
+    const supabase = getAdminClient()
+    const { data, error } = await supabase
+      .from('services')
+      .select('id, name, description, price, is_active')
+      .eq('is_active', true)
+      .order('name')
+      .limit(4)
+    if (!error && data && data.length > 0) {
+      return data.map((row, i) => ({
+        id: String(row.id),
+        name: row.name ?? 'Service',
+        description: row.description ?? '',
+        price: row.price != null ? String(row.price) : '',
+        icon: DEFAULT_SERVICE_ICONS[i % DEFAULT_SERVICE_ICONS.length],
+      }))
+    }
+  } catch { /* fall through to JSON setting then defaults */ }
+
   try {
     const dbValue = await getSiteSetting('services_items')
     if (dbValue) {
-      try { return JSON.parse(dbValue) } catch { /* fall through */ }
+      try {
+        const parsed = JSON.parse(dbValue)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      } catch { /* fall through */ }
     }
   } catch { /* fall through */ }
+
   return [
-    { id: '1', name: 'Consultation', description: 'Personalized assessment and a clear action plan tailored to your needs.', price: '', icon: 'Lightbulb' },
-    { id: '2', name: 'Professional Services', description: 'Expert solutions delivered with precision, care, and years of experience.', price: '', icon: 'Briefcase' },
-    { id: '3', name: 'Custom Solutions', description: 'Bespoke approaches designed specifically for your unique challenges.', price: '', icon: 'Wrench' },
-    { id: '4', name: 'Ongoing Support', description: 'Dedicated support and follow-up to ensure your continued satisfaction.', price: '', icon: 'HeartHandshake' },
+    { id: '1', name: 'Service 1', description: 'Description coming soon.', price: '', icon: 'Lightbulb' },
+    { id: '2', name: 'Service 2', description: 'Description coming soon.', price: '', icon: 'Briefcase' },
+    { id: '3', name: 'Service 3', description: 'Description coming soon.', price: '', icon: 'Wrench' },
+    { id: '4', name: 'Service 4', description: 'Description coming soon.', price: '', icon: 'HeartHandshake' },
   ]
 }
 
