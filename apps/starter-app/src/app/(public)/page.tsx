@@ -54,6 +54,8 @@ import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
 import { themeToCSS, type ResolvedTheme } from '@/lib/theme-resolver'
 import { getActiveSelection } from '@/lib/content/activeSelection'
 
+export const dynamic = 'force-dynamic'
+
 const HERO_VARIANTS: HeroVariant[] = [
   'solid_color',
   'image_overlay',

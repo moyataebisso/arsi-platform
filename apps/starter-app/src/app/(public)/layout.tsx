@@ -4,6 +4,8 @@ import { ThemeBackground } from '@/components/ThemeBackground'
 import { getActiveTheme, themeToCSS, getGoogleFontsUrl } from '@/lib/theme-resolver'
 import { getSiteSettings } from '@/lib/settings'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const theme = await getActiveTheme()
   const css = themeToCSS(theme)

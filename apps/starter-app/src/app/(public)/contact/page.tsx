@@ -4,6 +4,8 @@ import { Mail, Phone, MapPin, Clock, Navigation } from 'lucide-react'
 import { MapEmbed } from '@/components/shared/MapEmbed'
 import { getContentMany } from '@/lib/content/resolver'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata() {
   const { meta_contact_title } = await getContentMany(['meta_contact_title'])
   return { title: meta_contact_title }

@@ -1,6 +1,8 @@
 import { siteConfig } from '@config'
 import { Users, Target, Heart } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: `${siteConfig.pages.about.title} | ${siteConfig.business.name}`,
 }

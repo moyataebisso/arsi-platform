@@ -5,6 +5,8 @@ import { JsonLd } from '@/components/seo/JsonLd'
 import { getSiteSettings } from '@/lib/settings'
 import { Playfair_Display, DM_Sans, Dancing_Script, Plus_Jakarta_Sans, Space_Grotesk, DM_Mono, JetBrains_Mono } from 'next/font/google'
 
+export const dynamic = 'force-dynamic'
+
 const playfair = Playfair_Display({
   subsets: ['latin'],
   variable: '--font-playfair',
