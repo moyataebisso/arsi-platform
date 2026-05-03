@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
       try {
         const adminEmail = process.env.RESEND_FROM_EMAIL ? 'arsitechgroup@gmail.com' : siteConfig.notifications.adminEmail
         const template = leadNotificationEmail({ name, email, phone, message, sourcePage: sourcePage || '/contact' })
-        await sendEmail({ to: adminEmail, ...template })
+        // replyTo override: admin's reply goes straight to the lead.
+        await sendEmail({ to: adminEmail, replyTo: email, ...template })
       } catch (emailError) {
         console.error('Failed to send lead notification email:', emailError)
       }

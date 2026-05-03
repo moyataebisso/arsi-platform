@@ -1,4 +1,13 @@
 import { siteConfig } from '@config'
+import {
+  buildShell,
+  paragraph,
+  infoTable,
+  callout,
+  textFooter,
+  escapeHtml,
+  nl2br,
+} from '../shell'
 
 export function leadNotificationEmail(params: {
   name: string
@@ -6,24 +15,51 @@ export function leadNotificationEmail(params: {
   phone?: string
   message: string
   sourcePage: string
-}): { subject: string; html: string } {
+}): { subject: string; html: string; text: string } {
+  const business = siteConfig.business.name
+  const subject = `New Lead: ${params.name}`
+
+  const rows: { label: string; value: string }[] = [
+    { label: 'Name', value: escapeHtml(params.name) },
+    {
+      label: 'Email',
+      value: `<a href="mailto:${escapeHtml(params.email)}" style="color:#1a1a1a">${escapeHtml(params.email)}</a>`,
+    },
+  ]
+  if (params.phone) {
+    rows.push({
+      label: 'Phone',
+      value: `<a href="tel:${escapeHtml(params.phone)}" style="color:#1a1a1a">${escapeHtml(params.phone)}</a>`,
+    })
+  }
+  rows.push({ label: 'Source', value: escapeHtml(params.sourcePage) })
+
+  const bodyHtml = `
+${paragraph(`A new lead just came in on <strong>${escapeHtml(business)}</strong>.`)}
+${infoTable(rows)}
+${callout('Message', nl2br(params.message))}
+${paragraph(
+  `Reply to this email to respond directly to <strong>${escapeHtml(params.name)}</strong> — we set Reply-To so it goes to them.`,
+  16
+)}
+`
+
+  const text = `New lead on ${business}:
+
+Name:    ${params.name}
+Email:   ${params.email}${params.phone ? `\nPhone:   ${params.phone}` : ''}
+Source:  ${params.sourcePage}
+
+Message:
+${params.message}${textFooter()}`
+
   return {
-    subject: `New Lead: ${params.name}`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1>New Contact Form Submission</h1>
-        <p>A new lead has been submitted on ${siteConfig.business.name}:</p>
-        <ul>
-          <li><strong>Name:</strong> ${params.name}</li>
-          <li><strong>Email:</strong> ${params.email}</li>
-          ${params.phone ? `<li><strong>Phone:</strong> ${params.phone}</li>` : ''}
-          <li><strong>Source:</strong> ${params.sourcePage}</li>
-        </ul>
-        <p><strong>Message:</strong></p>
-        <blockquote style="border-left: 3px solid #ccc; padding-left: 12px; color: #555;">
-          ${params.message}
-        </blockquote>
-      </div>
-    `,
+    subject,
+    html: buildShell({
+      preheader: `${params.name} · ${params.sourcePage}`,
+      headerTitle: 'New lead',
+      bodyHtml,
+    }),
+    text,
   }
 }
