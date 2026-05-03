@@ -103,6 +103,12 @@ export const CONTENT_KEYS = {
   ACTIVE_LAYOUT: 'active_layout',
   ACTIVE_THEME: 'active_theme',
   ACTIVE_HERO_VARIANT: 'active_hero_variant',
+
+  // Alias support — written by provisioning seed for new tenants.
+  // Read alongside ACTIVE_* in getActiveSelection(); ACTIVE_* takes precedence per field.
+  SELECTED_LAYOUT: 'selected_layout',
+  SELECTED_THEME: 'selected_theme',
+  SELECTED_HERO_VARIANT: 'selected_hero_variant',
 } as const
 
 export type ContentKey = typeof CONTENT_KEYS[keyof typeof CONTENT_KEYS]
