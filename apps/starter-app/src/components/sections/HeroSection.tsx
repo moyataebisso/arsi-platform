@@ -3,6 +3,16 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import type { HeroVariant } from '@/lib/layouts'
 
+// Treat the site.config.ts placeholder values as empty so they never render.
+function safeTagline(): string {
+  const t = siteConfig.business.tagline
+  return t && t !== 'Your tagline here' ? t : ''
+}
+function safeBusinessName(): string {
+  const n = siteConfig.business.name
+  return n && n !== 'Client Business Name' ? n : ''
+}
+
 interface HeroSectionProps {
   headline?: string
   subheadline?: string
@@ -20,12 +30,13 @@ function getCtaHref() {
 }
 
 function getDisplayValues({ headline, subheadline, ctaPrimary, ctaSecondary }: VariantProps) {
-  const { modules, business } = siteConfig
+  const { modules } = siteConfig
+  const name = safeBusinessName()
   return {
-    headline: headline || `Welcome to ${business.name}`,
+    headline: headline || (name ? `Welcome to ${name}` : 'Welcome'),
     subheadline:
       subheadline ||
-      business.tagline ||
+      safeTagline() ||
       'We provide exceptional services tailored to your needs. Let us help you achieve your goals with our dedicated team of professionals.',
     ctaPrimary:
       ctaPrimary || (modules.booking ? 'Book Appointment' : modules.ecommerce ? 'Shop Now' : 'Get In Touch'),
@@ -151,7 +162,7 @@ function ImageOverlayHero(props: VariantProps) {
     props.heroImageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1600'
 
   const locationLabel = getLocationLabel()
-  const pillLabel = locationLabel || siteConfig.business.tagline || null
+  const pillLabel = locationLabel || safeTagline() || null
 
   return (
     <section
@@ -252,7 +263,8 @@ function ImageOverlayHero(props: VariantProps) {
 // SPLIT — Original 2-column hero. PRESERVED EXACTLY.
 // ============================================================
 function SplitHero({ headline, subheadline, ctaPrimary, ctaSecondary, heroImageUrl }: VariantProps) {
-  const { modules, business } = siteConfig
+  const { modules } = siteConfig
+  const name = safeBusinessName()
 
   const ctaHref = modules.booking
     ? '/book'
@@ -260,8 +272,8 @@ function SplitHero({ headline, subheadline, ctaPrimary, ctaSecondary, heroImageU
     ? '/shop'
     : '/contact'
 
-  const displayHeadline = headline || `Welcome to ${business.name}`
-  const displaySubheadline = subheadline || business.tagline || 'We provide exceptional services tailored to your needs. Let us help you achieve your goals with our dedicated team of professionals.'
+  const displayHeadline = headline || (name ? `Welcome to ${name}` : 'Welcome')
+  const displaySubheadline = subheadline || safeTagline() || 'We provide exceptional services tailored to your needs. Let us help you achieve your goals with our dedicated team of professionals.'
   const displayCtaPrimary = ctaPrimary || (modules.booking ? 'Book Appointment' : modules.ecommerce ? 'Shop Now' : 'Get In Touch')
   const displayCtaSecondary = ctaSecondary || 'Our Services'
 
@@ -327,10 +339,13 @@ function SplitHero({ headline, subheadline, ctaPrimary, ctaSecondary, heroImageU
                 color: 'var(--color-text)',
                 fontFamily: 'var(--font-playfair)',
               }}
-              dangerouslySetInnerHTML={{ __html: displayHeadline.replace(
-                business.name,
-                `<span style="color: var(--color-primary); font-style: italic;">${business.name}</span>`
-              )}}
+              dangerouslySetInnerHTML={{ __html: name
+                ? displayHeadline.replace(
+                    name,
+                    `<span style="color: var(--color-primary); font-style: italic;">${name}</span>`
+                  )
+                : displayHeadline
+              }}
             />
 
             <p
@@ -384,7 +399,7 @@ function SplitHero({ headline, subheadline, ctaPrimary, ctaSecondary, heroImageU
 function CenteredMinimalHero(props: VariantProps) {
   const display = getDisplayValues(props)
   const ctaHref = getCtaHref()
-  const eyebrow = siteConfig.business.tagline || 'Built for modern teams'
+  const eyebrow = safeTagline() || 'Built for modern teams'
 
   return (
     <section
@@ -446,7 +461,7 @@ function EditorialSplitHero(props: VariantProps) {
   const ctaHref = getCtaHref()
   const imageUrl =
     props.heroImageUrl || 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1200&q=80'
-  const eyebrow = siteConfig.business.tagline || 'Established practice'
+  const eyebrow = safeTagline() || 'Established practice'
 
   return (
     <section
@@ -594,7 +609,7 @@ function RoundedCardHero(props: VariantProps) {
                 className="inline-block mb-5 px-4 py-1.5 rounded-full text-sm font-semibold"
                 style={{ backgroundColor: '#fff1f3', color: '#be185d' }}
               >
-                {siteConfig.business.tagline || 'Built with love'}
+                {safeTagline() || 'Built with love'}
               </span>
               <h1
                 className="mb-5"

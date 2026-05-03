@@ -12,8 +12,18 @@ interface AboutSectionProps {
 }
 
 export function AboutSection({ headline, body, quote, ctaText }: AboutSectionProps) {
-  const displayHeadline = headline || `About ${siteConfig.business.name}`
-  const displayBody = body || `Based in ${siteConfig.business.city}, ${siteConfig.business.state}, we have been serving our community with dedication and expertise. Our mission is to deliver outstanding results while building lasting relationships with every client.\n\nWhat sets us apart is our commitment to understanding your unique needs. We do not believe in one-size-fits-all solutions — every service is tailored to help you achieve your specific goals.`
+  const safeName =
+    siteConfig.business.name && siteConfig.business.name !== 'Client Business Name'
+      ? siteConfig.business.name
+      : ''
+  const displayHeadline = headline || (safeName ? `About ${safeName}` : 'About us')
+  const cityStatePrefix =
+    siteConfig.business.city && siteConfig.business.state
+      ? `Based in ${siteConfig.business.city}, ${siteConfig.business.state}, we`
+      : 'We'
+  const displayBody =
+    body ||
+    `${cityStatePrefix} have been serving our community with dedication and expertise. Our mission is to deliver outstanding results while building lasting relationships with every client.\n\nWhat sets us apart is our commitment to understanding your unique needs. We do not believe in one-size-fits-all solutions — every service is tailored to help you achieve your specific goals.`
   const displayQuote = quote || 'Every person who walks through our doors becomes part of our story.'
   const displayCtaText = ctaText || 'Our Story'
 

@@ -1,6 +1,7 @@
 import { getSiteSetting, getSiteSettings } from '@/lib/settings'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { DEFAULTS } from './defaults'
+import type { LayoutId } from '@/lib/layouts'
 
 export { getDefault } from './defaults'
 
@@ -78,19 +79,69 @@ export async function getServicesContent(): Promise<ServiceItem[]> {
   ]
 }
 
-export async function getHowItWorksSteps(): Promise<{ title: string; description: string }[]> {
+type HowItWorksStep = { title: string; description: string }
+type HowItWorksDefaults = { headline: string; subtitle: string; steps: HowItWorksStep[] }
+
+const HOW_IT_WORKS_BY_LAYOUT: Record<string, HowItWorksDefaults> = {
+  restaurant: {
+    headline: 'Ordering is easy',
+    subtitle: 'Four simple steps from craving to clean plate.',
+    steps: [
+      { title: 'Browse the menu', description: 'Pick what you would like, online or by phone.' },
+      { title: 'Place your order', description: 'We will prep it fresh, just for you.' },
+      { title: 'Dine or pickup', description: 'Enjoy in our space, take it home, or have it delivered.' },
+      { title: 'Come back', description: 'Build a tradition with friends and family.' },
+    ],
+  },
+  salon: {
+    headline: 'Booking is easy',
+    subtitle: 'Four simple steps from request to refresh.',
+    steps: [
+      { title: 'Book online', description: 'Pick a time and stylist that fits your schedule.' },
+      { title: 'Get confirmed', description: 'We will text or email you to confirm details.' },
+      { title: 'Visit the salon', description: 'Relax, refresh, and let our team take care of you.' },
+      { title: 'Stay in touch', description: 'Easy rebooking and reminders for next time.' },
+    ],
+  },
+  fleet: {
+    headline: 'Booking your service is easy',
+    subtitle: 'Four simple steps from first click to wheels-up.',
+    steps: [
+      { title: 'Book online', description: 'Pick a time that works and request your service in under 60 seconds.' },
+      { title: 'Get confirmed', description: 'A team member reviews and confirms your booking by email or text.' },
+      { title: 'Drop off vehicle', description: 'Bring your vehicle in — we handle everything from inspection to repair.' },
+      { title: 'Back on the road', description: 'Pick up your vehicle when ready, with a full report of work completed.' },
+    ],
+  },
+}
+
+const HOW_IT_WORKS_GENERAL: HowItWorksDefaults = {
+  headline: 'Getting started is easy',
+  subtitle: 'Four simple steps from first hello to a job well done.',
+  steps: [
+    { title: 'Reach out', description: 'Tell us what you need.' },
+    { title: 'We will respond', description: 'Quick reply with details and timing.' },
+    { title: 'We get to work', description: 'Quality service from our team.' },
+    { title: 'Done right', description: 'Follow-up to make sure you are happy.' },
+  ],
+}
+
+export function getHowItWorksDefaultsForLayout(layout?: LayoutId | string): HowItWorksDefaults {
+  if (!layout) return HOW_IT_WORKS_GENERAL
+  return HOW_IT_WORKS_BY_LAYOUT[layout] || HOW_IT_WORKS_GENERAL
+}
+
+export async function getHowItWorksSteps(layout?: LayoutId | string): Promise<HowItWorksStep[]> {
   try {
     const dbValue = await getSiteSetting('how_it_works_steps')
     if (dbValue) {
-      try { return JSON.parse(dbValue) } catch { /* fall through */ }
+      try {
+        const parsed = JSON.parse(dbValue)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      } catch { /* fall through */ }
     }
   } catch { /* fall through */ }
-  return [
-    { title: 'Book online', description: 'Pick a time that works and request your service in under 60 seconds.' },
-    { title: 'Get confirmed', description: 'A team member reviews and confirms your booking by email or text.' },
-    { title: 'Drop off vehicle', description: 'Bring your vehicle in — we handle everything from inspection to repair.' },
-    { title: 'Back on the road', description: 'Pick up your vehicle when ready, with a full report of work completed.' },
-  ]
+  return getHowItWorksDefaultsForLayout(layout).steps
 }
 
 export async function getMenuPreviewDishes(): Promise<{ name: string; description: string; price: string; image: string }[]> {

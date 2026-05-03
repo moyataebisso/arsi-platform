@@ -39,6 +39,7 @@ import {
   getContentMany,
   getServicesContent,
   getHowItWorksSteps,
+  getHowItWorksDefaultsForLayout,
   getMenuPreviewDishes,
   getServicesPriceListItems,
   getProvidersItems,
@@ -142,12 +143,27 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   ])
   const services = await getServicesContent()
   const heroImage = await getSiteSetting('hero_image_url')
+  const businessName = await getSiteSetting('business_name')
+
+  // BUG 1B: ensure About heading uses live business_name when DB has it
+  // but no explicit about_headline override.
+  const aboutHeadline =
+    content.about_headline ||
+    (businessName ? `About ${businessName}` : '') ||
+    (siteConfig.business.name && siteConfig.business.name !== 'Client Business Name'
+      ? `About ${siteConfig.business.name}`
+      : 'About us')
+
+  // BUG 1C: layout-aware How It Works defaults
+  const howItWorks = getHowItWorksDefaultsForLayout(layout)
+  const howItWorksHeadline = content.how_it_works_headline || howItWorks.headline
+  const howItWorksSubtitle = content.how_it_works_subtitle || howItWorks.subtitle
 
   const [
     steps, dishes, priceListItems, providersItems, stats,
     serviceAreaCities, trustStatsItems, editorialProcessSteps, callCTABullets,
   ] = await Promise.all([
-    getHowItWorksSteps(),
+    getHowItWorksSteps(layout),
     getMenuPreviewDishes(),
     getServicesPriceListItems(),
     getProvidersItems(),
@@ -181,7 +197,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     ),
     about: (
       <AboutSection
-        headline={content.about_headline}
+        headline={aboutHeadline}
         body={content.about_body}
         quote={content.about_quote}
         ctaText={content.about_cta_text}
@@ -196,8 +212,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     ) : null,
     how_it_works: (
       <HowItWorksSection
-        headline={content.how_it_works_headline}
-        subtitle={content.how_it_works_subtitle}
+        headline={howItWorksHeadline}
+        subtitle={howItWorksSubtitle}
         steps={steps}
       />
     ),

@@ -26,11 +26,13 @@ interface Stat { number: string; label: string }
 interface TrustStatItem { number: string; label: string; caption?: string }
 interface ProcessStep { number: string; title: string; body: string }
 
+// Generic placeholders shown in the admin editor when no DB value exists yet.
+// Customer-facing layout-aware copy lives in resolver.ts > getHowItWorksDefaultsForLayout.
 const DEFAULT_STEPS: Step[] = [
-  { title: 'Book online', description: 'Pick a time that works and request your service in under 60 seconds.' },
-  { title: 'Get confirmed', description: 'A team member reviews and confirms your booking by email or text.' },
-  { title: 'Drop off vehicle', description: 'Bring your vehicle in — we handle everything from inspection to repair.' },
-  { title: 'Back on the road', description: 'Pick up your vehicle when ready, with a full report of work completed.' },
+  { title: 'Reach out', description: 'Tell us what you need.' },
+  { title: 'We will respond', description: 'Quick reply with details and timing.' },
+  { title: 'We get to work', description: 'Quality service from our team.' },
+  { title: 'Done right', description: 'Follow-up to make sure you are happy.' },
 ]
 
 const DEFAULT_DISHES: Dish[] = [

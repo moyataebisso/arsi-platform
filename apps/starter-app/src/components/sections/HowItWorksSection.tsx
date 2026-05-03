@@ -10,11 +10,13 @@ interface HowItWorksSectionProps {
   steps?: Step[]
 }
 
+// Final fallback when the section is rendered with no props at all. The
+// homepage normally passes layout-aware defaults; this is just defensive.
 const DEFAULT_STEPS: Step[] = [
-  { title: 'Book online', description: 'Pick a time that works and request your service in under 60 seconds.' },
-  { title: 'Get confirmed', description: 'A team member reviews and confirms your booking by email or text.' },
-  { title: 'Drop off vehicle', description: 'Bring your vehicle in — we handle everything from inspection to repair.' },
-  { title: 'Back on the road', description: 'Pick up your vehicle when ready, with a full report of work completed.' },
+  { title: 'Reach out', description: 'Tell us what you need.' },
+  { title: 'We will respond', description: 'Quick reply with details and timing.' },
+  { title: 'We get to work', description: 'Quality service from our team.' },
+  { title: 'Done right', description: 'Follow-up to make sure you are happy.' },
 ]
 
 function AccentedHeadline({ headline, accentTailWords = 2 }: { headline: string; accentTailWords?: number }) {
@@ -34,8 +36,8 @@ function AccentedHeadline({ headline, accentTailWords = 2 }: { headline: string;
 
 export function HowItWorksSection({ pill, headline, subtitle, steps }: HowItWorksSectionProps) {
   const displayPill = pill || 'How it works'
-  const displayHeadline = headline || 'Booking your service is easy'
-  const displaySubtitle = subtitle || 'Four simple steps from first click to wheels-up.'
+  const displayHeadline = headline || 'Getting started is easy'
+  const displaySubtitle = subtitle || 'Four simple steps from first hello to a job well done.'
   const displaySteps = steps && steps.length > 0 ? steps : DEFAULT_STEPS
 
   return (
