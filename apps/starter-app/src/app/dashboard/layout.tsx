@@ -1,11 +1,16 @@
 import Link from 'next/link'
 import { siteConfig } from '@config'
+import { getBusinessProfile } from '@/lib/business'
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = 'force-dynamic'
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const business = await getBusinessProfile()
+  const brand = business.name || 'Welcome'
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b px-4 py-3 flex items-center justify-between">
-        <Link href="/dashboard" className="font-bold text-lg">{siteConfig.business.name}</Link>
+        <Link href="/dashboard" className="font-bold text-lg">{brand}</Link>
         <div className="flex gap-4 text-sm">
           <Link href="/dashboard" className="hover:text-indigo-600">Overview</Link>
           <Link href="/dashboard/profile" className="hover:text-indigo-600">Profile</Link>

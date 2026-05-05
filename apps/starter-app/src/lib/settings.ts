@@ -28,6 +28,9 @@ export async function getSiteSettings(keys: string[]): Promise<Record<string, st
     const result: Record<string, string> = {}
     for (const row of data || []) {
       const val = row.value_json as unknown
+      // Skip null/undefined so callers using `s.key || fallback` actually fall through.
+      // Without this guard, JSON.stringify(null) leaks the literal string "null".
+      if (val === null || val === undefined) continue
       result[row.key] = typeof val === 'string' ? val : JSON.stringify(val)
     }
     return result

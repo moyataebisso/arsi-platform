@@ -37,16 +37,25 @@ function buildLine({
   return { label, address: trimmedAddress, cityStateZip, mapsUrl }
 }
 
-export function LocationStripSection() {
-  const { location } = siteConfig
+interface LocationStripSectionProps {
+  address?: string
+  city?: string
+  state?: string
+  zip?: string
+}
 
-  // Single-location: site.config.ts has one address on `location`.
-  // Multi-location support would require a new `locations: Array<...>` key — not present today.
+export function LocationStripSection({
+  address,
+  city,
+  state,
+  zip,
+}: LocationStripSectionProps = {}) {
+  const cfg = siteConfig.location
   const single = buildLine({
-    address: location.address,
-    city: location.city,
-    state: location.state,
-    zip: location.zip,
+    address: address || cfg.address || '',
+    city: city || cfg.city || '',
+    state: state || cfg.state || '',
+    zip: zip || cfg.zip || '',
   })
 
   const lines: LocationLine[] = single ? [single] : []

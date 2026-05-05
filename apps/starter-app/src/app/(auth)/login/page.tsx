@@ -38,8 +38,8 @@ export default function LoginPage() {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-8">
-      <h1 className="text-2xl font-bold text-center mb-6">{siteConfig.business.name}</h1>
-      <h2 className="text-lg text-gray-600 text-center mb-8">Sign in to your account</h2>
+      <h2 className="text-2xl font-bold text-center mb-6">Sign in</h2>
+      <h3 className="text-base text-gray-600 text-center mb-8">Welcome back</h3>
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>

@@ -50,6 +50,7 @@ import {
   getCallCTABullets,
 } from '@/lib/content/resolver'
 import { getSiteSetting } from '@/lib/settings'
+import { getBusinessProfile } from '@/lib/business'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
 import { themeToCSS, type ResolvedTheme } from '@/lib/theme-resolver'
@@ -143,16 +144,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   ])
   const services = await getServicesContent()
   const heroImage = await getSiteSetting('hero_image_url')
-  const businessName = await getSiteSetting('business_name')
+  const business = await getBusinessProfile()
 
-  // BUG 1B: ensure About heading uses live business_name when DB has it
+  // Ensure About heading uses live business_name when DB has it
   // but no explicit about_headline override.
   const aboutHeadline =
     content.about_headline ||
-    (businessName ? `About ${businessName}` : '') ||
-    (siteConfig.business.name && siteConfig.business.name !== 'Client Business Name'
-      ? `About ${siteConfig.business.name}`
-      : 'About us')
+    (business.name ? `About ${business.name}` : '') ||
+    'About us'
 
   // BUG 1C: layout-aware How It Works defaults
   const howItWorks = getHowItWorksDefaultsForLayout(layout)
@@ -186,6 +185,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         ctaSecondary={content.hero_cta_secondary}
         heroImageUrl={heroImage || undefined}
         variant={heroVariant}
+        businessName={business.name}
+        tagline={business.tagline}
+        city={business.city}
+        state={business.state}
       />
     ),
     services: (
@@ -201,9 +204,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         body={content.about_body}
         quote={content.about_quote}
         ctaText={content.about_cta_text}
+        businessName={business.name}
+        city={business.city}
+        state={business.state}
       />
     ),
-    location: siteConfig.location.showMapOnHome ? <LocationSection /> : null,
+    location: siteConfig.location.showMapOnHome ? (
+      <LocationSection
+        address={business.address}
+        city={business.city}
+        state={business.state}
+        zip={business.zip}
+        hours={business.hours}
+        googleMapsEmbed={business.googleMapsEmbed}
+      />
+    ) : null,
     contact: siteConfig.modules.leads ? (
       <ContactSection
         headline={content.contact_headline}
@@ -284,9 +299,17 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         pill={content.call_cta_pill}
         headline={content.call_cta_headline}
         bullets={callCTABullets}
+        phoneNumber={business.phone}
       />
     ),
-    location_strip: <LocationStripSection />,
+    location_strip: (
+      <LocationStripSection
+        address={business.address}
+        city={business.city}
+        state={business.state}
+        zip={business.zip}
+      />
+    ),
     // modern_minimal
     three_up_benefits: <ThreeUpBenefitsSection />,
     large_feature_left: <LargeFeatureSection imageSide="left" />,

@@ -4,10 +4,42 @@ import { siteConfig } from '@config'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
 import { MapPin, Clock, Navigation } from 'lucide-react'
 
-export function LocationSection() {
-  const { location } = siteConfig
-  const fullAddress = `${location.address}, ${location.city}, ${location.state} ${location.zip}`
+interface LocationSectionProps {
+  address?: string
+  city?: string
+  state?: string
+  zip?: string
+  hours?: { day: string; hours: string }[]
+  googleMapsEmbed?: string
+}
+
+export function LocationSection({
+  address,
+  city,
+  state,
+  zip,
+  hours,
+  googleMapsEmbed,
+}: LocationSectionProps = {}) {
+  const cfg = siteConfig.location
+  const resolvedAddress = address || cfg.address || ''
+  const resolvedCity = city || cfg.city || ''
+  const resolvedState = state || cfg.state || ''
+  const resolvedZip = zip || cfg.zip || ''
+  const resolvedHours: { day: string; hours: string }[] =
+    hours && hours.length > 0 ? hours : cfg.hours.map(h => ({ day: h.day, hours: h.hours }))
+  const resolvedEmbed = googleMapsEmbed || cfg.googleMapsEmbed || ''
+  const fullAddress = `${resolvedAddress}, ${resolvedCity}, ${resolvedState} ${resolvedZip}`.trim()
   const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`
+  // Re-shadow for inline references below.
+  const location = {
+    address: resolvedAddress,
+    city: resolvedCity,
+    state: resolvedState,
+    zip: resolvedZip,
+    hours: resolvedHours,
+    googleMapsEmbed: resolvedEmbed,
+  }
 
   return (
     <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--color-surface)' }}>

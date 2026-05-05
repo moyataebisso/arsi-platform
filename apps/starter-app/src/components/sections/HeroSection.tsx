@@ -3,14 +3,12 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import type { HeroVariant } from '@/lib/layouts'
 
-// Treat the site.config.ts placeholder values as empty so they never render.
-function safeTagline(): string {
-  const t = siteConfig.business.tagline
-  return t && t !== 'Your tagline here' ? t : ''
-}
-function safeBusinessName(): string {
-  const n = siteConfig.business.name
-  return n && n !== 'Client Business Name' ? n : ''
+const PLACEHOLDER_NAME = 'Client Business Name'
+const PLACEHOLDER_TAGLINE = 'Your tagline here'
+
+function clean(value: string | undefined, placeholder: string): string {
+  if (!value) return ''
+  return value === placeholder ? '' : value
 }
 
 interface HeroSectionProps {
@@ -20,27 +18,48 @@ interface HeroSectionProps {
   ctaSecondary?: string
   heroImageUrl?: string
   variant?: HeroVariant
+  // DB-driven business profile passed from page.tsx
+  businessName?: string
+  tagline?: string
+  city?: string
+  state?: string
 }
 
 type VariantProps = Omit<HeroSectionProps, 'variant'>
+
+// Wrap a URL in CSS url('...') with a quoted token so query strings, parens,
+// and other unreserved-but-CSS-special chars don't break the rule.
+function cssUrl(raw: string): string {
+  // Escape any single quotes in the URL value, then wrap in single quotes.
+  const safe = raw.replace(/'/g, "\\'")
+  return `url('${safe}')`
+}
 
 function getCtaHref() {
   const { modules } = siteConfig
   return modules.booking ? '/book' : modules.ecommerce ? '/shop' : '/contact'
 }
 
-function getDisplayValues({ headline, subheadline, ctaPrimary, ctaSecondary }: VariantProps) {
+function resolveBusinessName(propName?: string): string {
+  return propName || clean(siteConfig.business.name, PLACEHOLDER_NAME)
+}
+function resolveTagline(propTagline?: string): string {
+  return propTagline || clean(siteConfig.business.tagline, PLACEHOLDER_TAGLINE)
+}
+
+function getDisplayValues(props: VariantProps) {
   const { modules } = siteConfig
-  const name = safeBusinessName()
+  const name = resolveBusinessName(props.businessName)
+  const tagline = resolveTagline(props.tagline)
   return {
-    headline: headline || (name ? `Welcome to ${name}` : 'Welcome'),
+    headline: props.headline || (name ? `Welcome to ${name}` : 'Welcome'),
     subheadline:
-      subheadline ||
-      safeTagline() ||
+      props.subheadline ||
+      tagline ||
       'We provide exceptional services tailored to your needs. Let us help you achieve your goals with our dedicated team of professionals.',
     ctaPrimary:
-      ctaPrimary || (modules.booking ? 'Book Appointment' : modules.ecommerce ? 'Shop Now' : 'Get In Touch'),
-    ctaSecondary: ctaSecondary || 'Our Services',
+      props.ctaPrimary || (modules.booking ? 'Book Appointment' : modules.ecommerce ? 'Shop Now' : 'Get In Touch'),
+    ctaSecondary: props.ctaSecondary || 'Our Services',
   }
 }
 
@@ -51,8 +70,9 @@ function splitHeadline(headline: string): { line1: string; line2: string | null 
   return { line1: words.slice(0, mid).join(' '), line2: words.slice(mid).join(' ') }
 }
 
-function getLocationLabel(): string | null {
-  const { city, state } = siteConfig.business
+function getLocationLabel(propCity?: string, propState?: string): string | null {
+  const city = propCity || siteConfig.business.city
+  const state = propState || siteConfig.business.state
   if (!city || !state) return null
   return `Serving ${city}, ${state}`
 }
@@ -63,7 +83,7 @@ function getLocationLabel(): string | null {
 function SolidColorHero(props: VariantProps) {
   const display = getDisplayValues(props)
   const { line1, line2 } = splitHeadline(display.headline)
-  const locationLabel = getLocationLabel()
+  const locationLabel = getLocationLabel(props.city, props.state)
   const ctaHref = getCtaHref()
 
   return (
@@ -161,14 +181,18 @@ function ImageOverlayHero(props: VariantProps) {
   const imageUrl =
     props.heroImageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1600'
 
-  const locationLabel = getLocationLabel()
-  const pillLabel = locationLabel || safeTagline() || null
+  const locationLabel = getLocationLabel(props.city, props.state)
+  const pillLabel = locationLabel || resolveTagline(props.tagline) || null
+
+  // Surface the resolved hero image URL in Vercel logs so we can confirm
+  // whether the customer's DB hero_image_url is reaching the renderer.
+  console.log('[HeroSection] image_overlay heroImageUrl=', props.heroImageUrl, 'resolved=', imageUrl)
 
   return (
     <section
       className="relative w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-28 min-h-[440px] sm:min-h-[480px] lg:min-h-[520px] overflow-hidden"
       style={{
-        backgroundImage: `url(${imageUrl})`,
+        backgroundImage: cssUrl(imageUrl),
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
@@ -262,9 +286,11 @@ function ImageOverlayHero(props: VariantProps) {
 // ============================================================
 // SPLIT — Original 2-column hero. PRESERVED EXACTLY.
 // ============================================================
-function SplitHero({ headline, subheadline, ctaPrimary, ctaSecondary, heroImageUrl }: VariantProps) {
+function SplitHero(props: VariantProps) {
+  const { headline, subheadline, ctaPrimary, ctaSecondary, heroImageUrl } = props
   const { modules } = siteConfig
-  const name = safeBusinessName()
+  const name = resolveBusinessName(props.businessName)
+  const tagline = resolveTagline(props.tagline)
 
   const ctaHref = modules.booking
     ? '/book'
@@ -273,11 +299,13 @@ function SplitHero({ headline, subheadline, ctaPrimary, ctaSecondary, heroImageU
     : '/contact'
 
   const displayHeadline = headline || (name ? `Welcome to ${name}` : 'Welcome')
-  const displaySubheadline = subheadline || safeTagline() || 'We provide exceptional services tailored to your needs. Let us help you achieve your goals with our dedicated team of professionals.'
+  const displaySubheadline = subheadline || tagline || 'We provide exceptional services tailored to your needs. Let us help you achieve your goals with our dedicated team of professionals.'
   const displayCtaPrimary = ctaPrimary || (modules.booking ? 'Book Appointment' : modules.ecommerce ? 'Shop Now' : 'Get In Touch')
   const displayCtaSecondary = ctaSecondary || 'Our Services'
 
   const imageUrl = heroImageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800'
+
+  console.log('[HeroSection] split heroImageUrl=', heroImageUrl, 'resolved=', imageUrl)
 
   return (
     <section className="relative overflow-hidden min-h-screen flex items-center">
@@ -381,7 +409,7 @@ function SplitHero({ headline, subheadline, ctaPrimary, ctaSecondary, heroImageU
             <div
               className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl"
               style={{
-                backgroundImage: `url(${imageUrl})`,
+                backgroundImage: cssUrl(imageUrl),
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}
@@ -399,7 +427,7 @@ function SplitHero({ headline, subheadline, ctaPrimary, ctaSecondary, heroImageU
 function CenteredMinimalHero(props: VariantProps) {
   const display = getDisplayValues(props)
   const ctaHref = getCtaHref()
-  const eyebrow = safeTagline() || 'Built for modern teams'
+  const eyebrow = resolveTagline(props.tagline) || 'Built for modern teams'
 
   return (
     <section
@@ -461,7 +489,7 @@ function EditorialSplitHero(props: VariantProps) {
   const ctaHref = getCtaHref()
   const imageUrl =
     props.heroImageUrl || 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1200&q=80'
-  const eyebrow = safeTagline() || 'Established practice'
+  const eyebrow = resolveTagline(props.tagline) || 'Established practice'
 
   return (
     <section
@@ -514,7 +542,7 @@ function EditorialSplitHero(props: VariantProps) {
         <div
           className="aspect-[4/5]"
           style={{
-            backgroundImage: `url(${imageUrl})`,
+            backgroundImage: cssUrl(imageUrl),
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
@@ -609,7 +637,7 @@ function RoundedCardHero(props: VariantProps) {
                 className="inline-block mb-5 px-4 py-1.5 rounded-full text-sm font-semibold"
                 style={{ backgroundColor: '#fff1f3', color: '#be185d' }}
               >
-                {safeTagline() || 'Built with love'}
+                {resolveTagline(props.tagline) || 'Built with love'}
               </span>
               <h1
                 className="mb-5"
@@ -662,7 +690,7 @@ function RoundedCardHero(props: VariantProps) {
             <div
               className="aspect-square rounded-[32px] overflow-hidden"
               style={{
-                backgroundImage: `url(${imageUrl})`,
+                backgroundImage: cssUrl(imageUrl),
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}
@@ -827,6 +855,10 @@ export function HeroSection(props: HeroSectionProps) {
     ctaPrimary: props.ctaPrimary,
     ctaSecondary: props.ctaSecondary,
     heroImageUrl: props.heroImageUrl,
+    businessName: props.businessName,
+    tagline: props.tagline,
+    city: props.city,
+    state: props.state,
   }
 
   switch (activeVariant) {

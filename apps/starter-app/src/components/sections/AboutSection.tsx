@@ -9,17 +9,26 @@ interface AboutSectionProps {
   body?: string
   quote?: string
   ctaText?: string
+  // DB-driven business fields passed from page.tsx
+  businessName?: string
+  city?: string
+  state?: string
 }
 
-export function AboutSection({ headline, body, quote, ctaText }: AboutSectionProps) {
-  const safeName =
+export function AboutSection({ headline, body, quote, ctaText, businessName, city, state }: AboutSectionProps) {
+  const cfgName =
     siteConfig.business.name && siteConfig.business.name !== 'Client Business Name'
       ? siteConfig.business.name
       : ''
-  const displayHeadline = headline || (safeName ? `About ${safeName}` : 'About us')
+  const resolvedName = businessName || cfgName
+  const displayHeadline = headline || (resolvedName ? `About ${resolvedName}` : 'About us')
+  const resolvedCity = city || siteConfig.business.city || ''
+  const resolvedState = state || siteConfig.business.state || ''
   const cityStatePrefix =
-    siteConfig.business.city && siteConfig.business.state
-      ? `Based in ${siteConfig.business.city}, ${siteConfig.business.state}, we`
+    resolvedCity && resolvedState
+      ? `Based in ${resolvedCity}, ${resolvedState}, we`
+      : resolvedCity
+      ? `Based in ${resolvedCity}, we`
       : 'We'
   const displayBody =
     body ||
