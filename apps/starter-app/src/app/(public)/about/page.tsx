@@ -1,10 +1,12 @@
-import { siteConfig } from '@config'
 import { Users, Target, Heart } from 'lucide-react'
+import { getBusinessProfile } from '@/lib/business'
+import { getContentMany } from '@/lib/content/resolver'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = {
-  title: `${siteConfig.pages.about.title} | ${siteConfig.business.name}`,
+export async function generateMetadata() {
+  const { meta_about_title } = await getContentMany(['meta_about_title'])
+  return { title: meta_about_title }
 }
 
 const values = [
@@ -28,28 +30,23 @@ const values = [
   },
 ]
 
-const team = [
-  {
-    name: 'Amina Hassan',
-    role: 'Founder & CEO',
-    image:
-      'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop&crop=face',
-  },
-  {
-    name: 'Khalid Osman',
-    role: 'Operations Manager',
-    image:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
-  },
-  {
-    name: 'Fatima Ali',
-    role: 'Client Relations',
-    image:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&crop=face',
-  },
-]
+export default async function AboutPage() {
+  const profile = await getBusinessProfile()
 
-export default function AboutPage() {
+  const headlineName = profile.name || 'us'
+  const heroIntro = (() => {
+    const tagline = profile.tagline ? `${profile.tagline}.` : ''
+    const place = [profile.city, profile.state].filter(Boolean).join(', ')
+    const baseSentence = place
+      ? `Based in ${place}, we are committed to serving our community with integrity, professionalism, and heart.`
+      : 'We are committed to serving our community with integrity, professionalism, and heart.'
+    return [tagline, baseSentence].filter(Boolean).join(' ')
+  })()
+
+  const storyParagraphs = profile.story
+    ? profile.story.split(/\n+/).map(p => p.trim()).filter(Boolean)
+    : null
+
   return (
     <>
       {/* Hero */}
@@ -69,12 +66,10 @@ export default function AboutPage() {
                 fontFamily: 'var(--font-playfair)',
               }}
             >
-              About {siteConfig.business.name}
+              About {headlineName}
             </h1>
             <p className="text-lg leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-              {siteConfig.business.tagline}. Based in {siteConfig.business.city},{' '}
-              {siteConfig.business.state}, we are committed to serving our community with
-              integrity, professionalism, and heart.
+              {heroIntro}
             </p>
           </div>
         </div>
@@ -107,21 +102,26 @@ export default function AboutPage() {
                 className="space-y-4 text-base leading-relaxed"
                 style={{ color: 'var(--color-text-muted)' }}
               >
-                <p>
-                  We started with a simple belief: every business in our community deserves access
-                  to professional, high-quality services — regardless of size or budget.
-                </p>
-                <p>
-                  What began as a small operation has grown into a trusted local business, serving
-                  dozens of clients across {siteConfig.business.city} and beyond. Our growth has
-                  been powered by word-of-mouth referrals from satisfied customers who have become
-                  like family to us.
-                </p>
-                <p>
-                  Today, we continue to expand our offerings while staying true to the values that
-                  got us here: honest work, fair pricing, and genuine care for every person who
-                  walks through our doors.
-                </p>
+                {storyParagraphs ? (
+                  storyParagraphs.map((p, i) => <p key={i}>{p}</p>)
+                ) : (
+                  <>
+                    <p>
+                      We started with a simple belief: every business in our community deserves access
+                      to professional, high-quality services — regardless of size or budget.
+                    </p>
+                    <p>
+                      What began as a small operation has grown into a trusted local business{profile.city ? `, serving dozens of clients across ${profile.city} and beyond` : ''}.
+                      Our growth has been powered by word-of-mouth referrals from satisfied customers
+                      who have become like family to us.
+                    </p>
+                    <p>
+                      Today, we continue to expand our offerings while staying true to the values that
+                      got us here: honest work, fair pricing, and genuine care for every person who
+                      walks through our doors.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -177,44 +177,49 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Team */}
-      <section
-        className="py-20 pb-28"
-        style={{ backgroundColor: 'var(--color-surface)' }}
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2
-            className="text-3xl font-bold text-center mb-14"
-            style={{
-              color: 'var(--color-text)',
-              fontFamily: 'var(--font-playfair)',
-            }}
-          >
-            Meet the Team
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto">
-            {team.map(member => (
-              <div key={member.name} className="text-center group">
-                <div
-                  className="w-32 h-32 rounded-full mx-auto mb-4 transition-all duration-300 group-hover:shadow-lg group-hover:scale-105"
-                  style={{
-                    backgroundImage: `url(${member.image})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    border: '3px solid var(--color-border)',
-                  }}
-                />
-                <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>
-                  {member.name}
-                </h3>
-                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                  {member.role}
-                </p>
-              </div>
-            ))}
+      {/* Team — only renders when team_members is set in site_settings */}
+      {profile.team.length > 0 && (
+        <section
+          className="py-20 pb-28"
+          style={{ backgroundColor: 'var(--color-surface)' }}
+        >
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2
+              className="text-3xl font-bold text-center mb-14"
+              style={{
+                color: 'var(--color-text)',
+                fontFamily: 'var(--font-playfair)',
+              }}
+            >
+              Meet the Team
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto">
+              {profile.team.map(member => (
+                <div key={member.name} className="text-center group">
+                  <div
+                    className="w-32 h-32 rounded-full mx-auto mb-4 transition-all duration-300 group-hover:shadow-lg group-hover:scale-105"
+                    style={{
+                      backgroundImage: member.image ? `url(${member.image})` : undefined,
+                      backgroundColor: !member.image ? 'var(--color-accent-light)' : undefined,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      border: '3px solid var(--color-border)',
+                    }}
+                  />
+                  <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>
+                    {member.name}
+                  </h3>
+                  {member.role && (
+                    <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                      {member.role}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </>
   )
 }

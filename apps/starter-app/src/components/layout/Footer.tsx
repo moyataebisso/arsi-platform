@@ -2,20 +2,29 @@ import Link from 'next/link'
 import { siteConfig } from '@config'
 import { showPoweredBy } from '@/lib/platform'
 import { getContentMany } from '@/lib/content/resolver'
-import { getSiteSetting } from '@/lib/settings'
+import { getBusinessProfile, fullAddress } from '@/lib/business'
 
 interface FooterProps {
   businessName?: string
 }
 
-export async function Footer({ businessName }: FooterProps = {}) {
-  const { business, integrations, pages, modules, location } = siteConfig
+function trimToTwoSentences(text: string): string {
+  if (!text) return ''
+  // Split on sentence terminators while keeping punctuation; take first two.
+  const parts = text.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) ?? [text]
+  return parts.slice(0, 2).join('').trim()
+}
 
+export async function Footer({ businessName }: FooterProps = {}) {
+  const { integrations, pages, modules } = siteConfig
+  const profile = await getBusinessProfile()
   const content = await getContentMany(['footer_tagline'])
-  const resolvedName =
-    businessName ||
-    (await getSiteSetting('business_name')) ||
-    (business.name === 'Client Business Name' ? 'Welcome' : business.name)
+
+  const resolvedName = businessName || profile.name || 'Welcome'
+  const footerBlurb =
+    trimToTwoSentences(profile.story) ||
+    content.footer_tagline ||
+    'Dedicated to serving our community.'
 
   const navLinks = [
     pages.home.enabled && { href: '/', label: pages.home.title },
@@ -37,7 +46,7 @@ export async function Footer({ businessName }: FooterProps = {}) {
     label: string
   }[]
 
-  const fullAddress = `${location.address}, ${location.city}, ${location.state} ${location.zip}`
+  const fullAddr = fullAddress(profile)
 
   return (
     <footer style={{ backgroundColor: 'var(--color-footer-bg)', color: 'var(--color-footer-text)' }}>
@@ -56,7 +65,7 @@ export async function Footer({ businessName }: FooterProps = {}) {
               {resolvedName}
             </h3>
             <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-footer-muted)' }}>
-              {content.footer_tagline}
+              {footerBlurb}
             </p>
             {socialLinks.length > 0 && (
               <div className="flex gap-4 mt-4">
@@ -103,36 +112,36 @@ export async function Footer({ businessName }: FooterProps = {}) {
               Contact & Hours
             </h4>
             <ul className="space-y-2.5 text-sm" style={{ color: 'var(--color-footer-muted)' }}>
-              {business.email && (
+              {profile.email && (
                 <li>
-                  <a href={`mailto:${business.email}`} className="footer-link">
-                    {business.email}
+                  <a href={`mailto:${profile.email}`} className="footer-link">
+                    {profile.email}
                   </a>
                 </li>
               )}
-              {business.phone && (
+              {profile.phone && (
                 <li>
-                  <a href={`tel:${business.phone}`} className="footer-link">
-                    {business.phone}
+                  <a href={`tel:${profile.phone}`} className="footer-link">
+                    {profile.phone}
                   </a>
                 </li>
               )}
-              {location.address && (
+              {fullAddr && (
                 <li>
                   <a
-                    href={`https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`}
+                    href={`https://maps.google.com/?q=${encodeURIComponent(fullAddr)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="footer-link"
                   >
-                    {fullAddress}
+                    {fullAddr}
                   </a>
                 </li>
               )}
             </ul>
-            {location.hours.length > 0 && (
+            {profile.hours.length > 0 && (
               <div className="mt-4 space-y-1.5 text-sm">
-                {location.hours.map(h => (
+                {profile.hours.map(h => (
                   <div key={h.day} className="flex justify-between gap-4">
                     <span style={{ color: 'var(--color-footer-muted)' }}>{h.day}</span>
                     <span style={{ color: 'var(--color-footer-heading)' }}>{h.hours}</span>

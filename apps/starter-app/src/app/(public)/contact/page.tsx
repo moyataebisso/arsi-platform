@@ -3,6 +3,7 @@ import { ContactForm } from '@/components/forms/ContactForm'
 import { Mail, Phone, MapPin, Clock, Navigation } from 'lucide-react'
 import { MapEmbed } from '@/components/shared/MapEmbed'
 import { getContentMany } from '@/lib/content/resolver'
+import { getBusinessProfile, fullAddress } from '@/lib/business'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,9 +13,9 @@ export async function generateMetadata() {
 }
 
 export default async function ContactPage() {
-  const { business, location } = siteConfig
-  const fullAddress = `${location.address}, ${location.city}, ${location.state} ${location.zip}`
-  const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`
+  const profile = await getBusinessProfile()
+  const fullAddr = fullAddress(profile)
+  const mapsUrl = fullAddr ? `https://maps.google.com/?q=${encodeURIComponent(fullAddr)}` : ''
 
   const content = await getContentMany([
     'contact_headline', 'contact_intro',
@@ -81,7 +82,7 @@ export default async function ContactPage() {
                   Contact Info
                 </h3>
                 <ul className="space-y-5">
-                  {business.email && (
+                  {profile.email && (
                     <li className="flex items-start gap-3">
                       <div
                         className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
@@ -94,16 +95,16 @@ export default async function ContactPage() {
                           Email
                         </p>
                         <a
-                          href={`mailto:${business.email}`}
+                          href={`mailto:${profile.email}`}
                           className="text-sm transition-colors duration-200"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
-                          {business.email}
+                          {profile.email}
                         </a>
                       </div>
                     </li>
                   )}
-                  {business.phone && (
+                  {profile.phone && (
                     <li className="flex items-start gap-3">
                       <div
                         className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
@@ -116,16 +117,16 @@ export default async function ContactPage() {
                           Phone
                         </p>
                         <a
-                          href={`tel:${business.phone}`}
+                          href={`tel:${profile.phone}`}
                           className="text-sm transition-colors duration-200"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
-                          {business.phone}
+                          {profile.phone}
                         </a>
                       </div>
                     </li>
                   )}
-                  {location.address && (
+                  {profile.address && (
                     <li className="flex items-start gap-3">
                       <div
                         className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
@@ -138,60 +139,70 @@ export default async function ContactPage() {
                           Address
                         </p>
                         <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                          {location.address}
-                          <br />
-                          {location.city}, {location.state} {location.zip}
+                          {profile.address}
+                          {(profile.city || profile.state || profile.zip) && (
+                            <>
+                              <br />
+                              {profile.city}{profile.city && profile.state ? ', ' : ''}{profile.state} {profile.zip}
+                            </>
+                          )}
                         </p>
-                        <a
-                          href={mapsUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 mt-1 text-xs font-medium transition-colors duration-200"
-                          style={{ color: 'var(--color-primary)' }}
-                        >
-                          <Navigation size={12} />
-                          Get Directions
-                        </a>
+                        {mapsUrl && (
+                          <a
+                            href={mapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 mt-1 text-xs font-medium transition-colors duration-200"
+                            style={{ color: 'var(--color-primary)' }}
+                          >
+                            <Navigation size={12} />
+                            Get Directions
+                          </a>
+                        )}
                       </div>
                     </li>
                   )}
-                  <li className="flex items-start gap-3">
-                    <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: 'var(--color-accent-light)' }}
-                    >
-                      <Clock size={16} style={{ color: 'var(--color-primary)' }} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                        Hours
-                      </p>
-                      <div className="text-sm space-y-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                        {location.hours.map(h => (
-                          <p key={h.day}>
-                            {h.day}: {h.hours}
-                          </p>
-                        ))}
+                  {profile.hours.length > 0 && (
+                    <li className="flex items-start gap-3">
+                      <div
+                        className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: 'var(--color-accent-light)' }}
+                      >
+                        <Clock size={16} style={{ color: 'var(--color-primary)' }} />
                       </div>
-                    </div>
-                  </li>
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                          Hours
+                        </p>
+                        <div className="text-sm space-y-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                          {profile.hours.map(h => (
+                            <p key={h.day}>
+                              {h.day}: {h.hours}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    </li>
+                  )}
                 </ul>
               </div>
 
               {/* Map */}
-              {siteConfig.location.showMapOnContact && (
+              {siteConfig.location.showMapOnContact && profile.address && (
                 <MapEmbed
-                  embedUrl={location.googleMapsEmbed || undefined}
-                  address={location.address}
-                  city={location.city}
-                  state={location.state}
-                  zip={location.zip}
+                  embedUrl={profile.googleMapsEmbed || undefined}
+                  address={profile.address}
+                  city={profile.city}
+                  state={profile.state}
+                  zip={profile.zip}
+                  phone={profile.phone}
+                  email={profile.email}
                   height={240}
                 />
               )}
 
               {/* Hours below map */}
-              {siteConfig.location.showMapOnContact && location.hours.length > 0 && (
+              {siteConfig.location.showMapOnContact && profile.hours.length > 0 && (
                 <div
                   className="rounded-2xl p-5 border"
                   style={{
@@ -203,7 +214,7 @@ export default async function ContactPage() {
                     Business Hours
                   </h4>
                   <div className="space-y-1.5 text-sm">
-                    {location.hours.map(h => (
+                    {profile.hours.map(h => (
                       <div key={h.day} className="flex justify-between gap-4">
                         <span style={{ color: 'var(--color-text-muted)' }}>{h.day}</span>
                         <span style={{ color: 'var(--color-text)' }}>{h.hours}</span>

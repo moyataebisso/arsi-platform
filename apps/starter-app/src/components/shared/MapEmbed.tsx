@@ -1,6 +1,5 @@
 'use client'
 
-import { siteConfig } from '@config'
 import { MapPin, Phone, Mail, Navigation } from 'lucide-react'
 
 interface MapEmbedProps {
@@ -9,6 +8,8 @@ interface MapEmbedProps {
   city: string
   state: string
   zip?: string
+  phone?: string
+  email?: string
   height?: number
   className?: string
 }
@@ -19,12 +20,13 @@ export function MapEmbed({
   city,
   state,
   zip,
+  phone,
+  email,
   height = 400,
   className = '',
 }: MapEmbedProps) {
   const fullAddress = `${address}, ${city}, ${state}${zip ? ` ${zip}` : ''}`
   const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`
-  const { business, location } = siteConfig
 
   return (
     <div className={className}>
@@ -81,16 +83,16 @@ export function MapEmbed({
           <MapPin size={14} style={{ color: 'var(--color-primary)' }} />
           {fullAddress}
         </span>
-        {business.phone && (
-          <a href={`tel:${business.phone}`} className="flex items-center gap-1.5 hover:underline">
+        {phone && (
+          <a href={`tel:${phone}`} className="flex items-center gap-1.5 hover:underline">
             <Phone size={14} style={{ color: 'var(--color-primary)' }} />
-            {business.phone}
+            {phone}
           </a>
         )}
-        {business.email && (
-          <a href={`mailto:${business.email}`} className="flex items-center gap-1.5 hover:underline">
+        {email && (
+          <a href={`mailto:${email}`} className="flex items-center gap-1.5 hover:underline">
             <Mail size={14} style={{ color: 'var(--color-primary)' }} />
-            {business.email}
+            {email}
           </a>
         )}
       </div>

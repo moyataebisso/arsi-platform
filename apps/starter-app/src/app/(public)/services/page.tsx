@@ -1,5 +1,3 @@
-'use client'
-
 import { siteConfig } from '@config'
 import Link from 'next/link'
 import {
@@ -9,82 +7,64 @@ import {
   Shield,
   Star,
   Wrench,
-  Clock,
-  Sparkles,
-  Zap,
+  type LucideIcon,
 } from 'lucide-react'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
+import { getAdminClient } from '@/lib/supabase/admin'
+import { getContentMany } from '@/lib/content/resolver'
 
-const services = [
-  {
-    icon: Lightbulb,
-    name: 'Initial Consultation',
-    description:
-      'A thorough assessment of your needs with personalized recommendations and a clear action plan to move forward.',
-    price: 'Free',
-  },
-  {
-    icon: Briefcase,
-    name: 'Professional Services',
-    description:
-      'Our core offering. Expert service delivered with care, precision, and attention to every detail that matters.',
-    price: 'From $99',
-  },
-  {
-    icon: Wrench,
-    name: 'Custom Solutions',
-    description:
-      'When standard packages do not fit, we create bespoke solutions designed around your specific requirements.',
-    price: 'Custom quote',
-  },
-  {
-    icon: HeartHandshake,
-    name: 'Ongoing Support',
-    description:
-      'Continued partnership with regular check-ins, adjustments, and priority access to our team when you need us.',
-    price: '$49/mo',
-  },
-  {
-    icon: Shield,
-    name: 'Premium Package',
-    description:
-      'Our comprehensive package includes everything in our standard offering plus priority scheduling and extended support.',
-    price: 'From $199',
-  },
-  {
-    icon: Star,
-    name: 'VIP Experience',
-    description:
-      'White-glove service for clients who want the absolute best. Dedicated account manager and same-day response guarantee.',
-    price: 'From $399',
-  },
-  {
-    icon: Clock,
-    name: 'Express Service',
-    description:
-      'Need it fast? Our expedited service gets you results in half the time without sacrificing quality.',
-    price: 'From $149',
-  },
-  {
-    icon: Sparkles,
-    name: 'Seasonal Specials',
-    description:
-      'Limited-time packages that offer exceptional value. Check in regularly for our latest promotions and deals.',
-    price: 'Varies',
-  },
-  {
-    icon: Zap,
-    name: 'Emergency Service',
-    description:
-      'Urgent situations require urgent solutions. We offer after-hours and weekend availability for critical needs.',
-    price: 'From $249',
-  },
+export const dynamic = 'force-dynamic'
+
+export async function generateMetadata() {
+  const { meta_services_title } = await getContentMany(['meta_services_title'])
+  return { title: meta_services_title }
+}
+
+interface ServiceItem {
+  id: string
+  name: string
+  description: string
+  price: string
+  icon: LucideIcon
+}
+
+const ICON_ROTATION: LucideIcon[] = [
+  Lightbulb, Briefcase, Wrench, HeartHandshake, Shield, Star,
 ]
 
-export default function ServicesPage() {
+const FALLBACK_SERVICES: ServiceItem[] = [
+  { id: '1', name: 'Service 1', description: 'Description coming soon.', price: '', icon: Lightbulb },
+  { id: '2', name: 'Service 2', description: 'Description coming soon.', price: '', icon: Briefcase },
+  { id: '3', name: 'Service 3', description: 'Description coming soon.', price: '', icon: Wrench },
+  { id: '4', name: 'Service 4', description: 'Description coming soon.', price: '', icon: HeartHandshake },
+]
+
+async function loadServices(): Promise<ServiceItem[]> {
+  try {
+    const supabase = getAdminClient()
+    const { data, error } = await supabase
+      .from('services')
+      .select('id, name, description, price, is_active')
+      .eq('is_active', true)
+      .order('name')
+    if (!error && data && data.length > 0) {
+      return data.map((row, i) => ({
+        id: String(row.id),
+        name: row.name ?? 'Service',
+        description: row.description ?? '',
+        price: row.price != null ? String(row.price) : '',
+        icon: ICON_ROTATION[i % ICON_ROTATION.length],
+      }))
+    }
+  } catch { /* fall through */ }
+  return FALLBACK_SERVICES
+}
+
+export default async function ServicesPage() {
   const { modules } = siteConfig
   const ctaText = modules.booking ? 'Book This Service' : 'Contact Us'
   const ctaHref = modules.booking ? '/book' : '/contact'
+  const services = await loadServices()
 
   return (
     <>
@@ -125,7 +105,7 @@ export default function ServicesPage() {
             {services.map((service, index) => {
               const Icon = service.icon
               return (
-                <ScrollReveal key={service.name} delay={index * 60}>
+                <ScrollReveal key={service.id} delay={index * 60}>
                   <div
                     className="rounded-2xl p-6 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col"
                     style={{
