@@ -18,6 +18,28 @@ function lightenHex(hex: string, amount = 40): string {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
 }
 
+// Perceived luma (0–255). Used to pick the darker of two colors so the footer
+// always renders dark regardless of whether the theme is light- or dark-mode.
+function luma(hex: string): number {
+  const num = parseInt(hex.replace('#', ''), 16)
+  const r = num >> 16
+  const g = (num >> 8) & 0x00ff
+  const b = num & 0x0000ff
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+// Linearly mix two hex colors. t=0 returns a, t=1 returns b.
+function mixHex(a: string, b: string, t: number): string {
+  const ai = parseInt(a.replace('#', ''), 16)
+  const bi = parseInt(b.replace('#', ''), 16)
+  const ar = ai >> 16, ag = (ai >> 8) & 0xff, ab = ai & 0xff
+  const br = bi >> 16, bg = (bi >> 8) & 0xff, bb = bi & 0xff
+  const r = Math.round(ar + (br - ar) * t)
+  const g = Math.round(ag + (bg - ag) * t)
+  const bch = Math.round(ab + (bb - ab) * t)
+  return `#${((r << 16) | (g << 8) | bch).toString(16).padStart(6, '0')}`
+}
+
 export interface ResolvedTheme {
   themeName: string
   primary: string
@@ -80,7 +102,14 @@ export async function getActiveTheme(): Promise<ResolvedTheme> {
     themeStyle,
     fontHeading: settings.font_heading || siteConfig.branding.fontHeading,
     fontBody: settings.font_body || siteConfig.branding.fontBody,
-    footerBg: settings.color_footer_bg || baseTheme.text,
+    // Pick the darker of the theme's text/background as the footer bg so the
+    // footer always renders dark — even on dark themes (e.g. bistro) where
+    // `text` is light cream and using it as the footer bg makes white text
+    // invisible. The customer can still override via the color_footer_bg
+    // setting if they want a colored footer.
+    footerBg:
+      settings.color_footer_bg ||
+      (luma(baseTheme.background) < luma(baseTheme.text) ? baseTheme.background : baseTheme.text),
     footerText: '#ffffff',
     heroBg: settings.color_hero_bg || baseTheme.background,
     ctaBg: settings.color_cta_bg || baseTheme.primary,
@@ -101,10 +130,14 @@ export async function getActiveTheme(): Promise<ResolvedTheme> {
 }
 
 export function themeToCSS(t: ResolvedTheme): string {
-  // Derive footer muted/heading/border from footer bg
-  const footerHeading = lightenHex(t.footerText, -30)
-  const footerMuted = darkenHex(t.footerText, 60)
-  const footerBorder = lightenHex(t.footerBg, 25)
+  // Footer color hierarchy (always against a dark footer bg):
+  //   heading: full contrast (= footerText, typically white)
+  //   body:    footerText
+  //   muted:   ~35% mixed toward bg (still readable, lower visual weight)
+  //   border:  ~12% mixed toward text (a hair lighter than bg)
+  const footerHeading = t.footerText
+  const footerMuted = mixHex(t.footerText, t.footerBg, 0.35)
+  const footerBorder = mixHex(t.footerBg, t.footerText, 0.12)
 
   return `
     :root {
