@@ -15,6 +15,7 @@ DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS product_categories CASCADE;
 DROP TABLE IF EXISTS bookings CASCADE;
 DROP TABLE IF EXISTS availability CASCADE;
+DROP TABLE IF EXISTS menu_items CASCADE;
 DROP TABLE IF EXISTS services CASCADE;
 DROP TABLE IF EXISTS leads CASCADE;
 DROP TABLE IF EXISTS form_submissions CASCADE;
@@ -157,6 +158,25 @@ CREATE TABLE services (
   requires_prepayment BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TABLE menu_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  description TEXT,
+  price DECIMAL(10,2),
+  -- category is free text (e.g. 'starter', 'main', 'appetizer', 'salad', 'specials').
+  -- The /menu page sorts known categories first; unknown categories are appended.
+  category TEXT DEFAULT 'main',
+  is_featured BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  display_order INTEGER DEFAULT 0,
+  image_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_menu_items_active ON menu_items(is_active);
+CREATE INDEX IF NOT EXISTS idx_menu_items_featured ON menu_items(is_featured);
+CREATE INDEX IF NOT EXISTS idx_menu_items_category ON menu_items(category);
 
 CREATE TABLE availability (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

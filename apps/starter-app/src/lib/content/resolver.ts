@@ -144,13 +144,56 @@ export async function getHowItWorksSteps(layout?: LayoutId | string): Promise<Ho
   return getHowItWorksDefaultsForLayout(layout).steps
 }
 
-export async function getMenuPreviewDishes(): Promise<{ name: string; description: string; price: string; image: string }[]> {
+interface DishCard {
+  name: string
+  description: string
+  price: string
+  image: string
+}
+
+function formatPrice(raw: unknown): string {
+  if (raw == null) return ''
+  const n = typeof raw === 'number' ? raw : Number(raw)
+  if (!Number.isFinite(n)) return ''
+  // Whole-dollar prices render without decimals; anything else with two decimals.
+  return Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`
+}
+
+export async function getMenuPreviewDishes(): Promise<DishCard[]> {
+  // 1) Primary source: menu_items table — show featured first, fall back to
+  //    any active items if there are fewer than 3 featured.
+  try {
+    const supabase = getAdminClient()
+    const { data, error } = await supabase
+      .from('menu_items')
+      .select('name, description, price, image_url, is_featured, display_order, is_active')
+      .eq('is_active', true)
+      .order('is_featured', { ascending: false })
+      .order('display_order', { ascending: true })
+      .order('name', { ascending: true })
+      .limit(3)
+    if (!error && data && data.length > 0) {
+      return data.map(row => ({
+        name: row.name ?? 'Dish',
+        description: row.description ?? '',
+        price: formatPrice(row.price),
+        image: row.image_url ?? '',
+      }))
+    }
+  } catch { /* table missing on legacy schema — fall through to JSON setting */ }
+
+  // 2) Secondary: site_settings.menu_preview_dishes JSON (legacy path).
   try {
     const dbValue = await getSiteSetting('menu_preview_dishes')
     if (dbValue) {
-      try { return JSON.parse(dbValue) } catch { /* fall through */ }
+      try {
+        const parsed = JSON.parse(dbValue)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      } catch { /* fall through */ }
     }
   } catch { /* fall through */ }
+
+  // 3) Final fallback — generic stock photos so a fresh demo isn't blank.
   return [
     { name: 'Roasted Heirloom Chicken', description: 'Slow-roasted with rosemary and garlic, served with seasonal vegetables.', price: '$24', image: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=800' },
     { name: 'Wild Mushroom Risotto', description: 'Carnaroli rice with foraged mushrooms, parmesan, and white truffle oil.', price: '$22', image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=800' },
