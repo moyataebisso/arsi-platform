@@ -6,6 +6,7 @@ import { getBusinessProfile, fullAddress } from '@/lib/business'
 
 interface FooterProps {
   businessName?: string
+  showMenuLink?: boolean
 }
 
 function trimToTwoSentences(text: string): string {
@@ -15,7 +16,7 @@ function trimToTwoSentences(text: string): string {
   return parts.slice(0, 2).join('').trim()
 }
 
-export async function Footer({ businessName }: FooterProps = {}) {
+export async function Footer({ businessName, showMenuLink }: FooterProps = {}) {
   const { integrations, pages, modules } = siteConfig
   const profile = await getBusinessProfile()
   const content = await getContentMany(['footer_tagline'])
@@ -29,6 +30,7 @@ export async function Footer({ businessName }: FooterProps = {}) {
   const navLinks = [
     pages.home.enabled && { href: '/', label: pages.home.title },
     pages.about.enabled && { href: '/about', label: pages.about.title },
+    showMenuLink && { href: '/menu', label: 'Menu' },
     pages.services.enabled && { href: '/services', label: pages.services.title },
     (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
     (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },

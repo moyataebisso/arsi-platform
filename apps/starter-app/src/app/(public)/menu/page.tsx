@@ -2,6 +2,7 @@ import { getAdminClient } from '@/lib/supabase/admin'
 import { getContentMany } from '@/lib/content/resolver'
 import { getBusinessProfile } from '@/lib/business'
 import { Star } from 'lucide-react'
+import { MenuItemImage } from '@/components/MenuItemImage'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,10 +58,26 @@ async function loadItems(): Promise<MenuItem[]> {
   }
 }
 
+async function loadCuisineType(): Promise<string | null> {
+  try {
+    const supabase = getAdminClient()
+    const { data } = await supabase
+      .from('site_settings')
+      .select('value_json')
+      .eq('key', 'cuisine_type')
+      .maybeSingle()
+    const v = data?.value_json
+    return typeof v === 'string' && v.trim() ? v.trim() : null
+  } catch {
+    return null
+  }
+}
+
 export default async function MenuPage() {
   const items = await loadItems()
   const business = await getBusinessProfile()
   const brand = business.name || ''
+  const cuisineType = await loadCuisineType()
 
   // Group items by category, preserving the order in CATEGORY_ORDER.
   const grouped = new Map<string, MenuItem[]>()
@@ -133,16 +150,13 @@ export default async function MenuPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {list.map(item => (
                     <div key={item.id} className="flex flex-col">
-                      {item.image_url && (
-                        <div
-                          className="aspect-[4/3] rounded-lg overflow-hidden mb-3"
-                          style={{
-                            backgroundImage: `url('${item.image_url.replace(/'/g, "\\'")}')`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                          }}
+                      <div className="mb-3">
+                        <MenuItemImage
+                          imageUrl={item.image_url}
+                          dishName={item.name}
+                          cuisineType={cuisineType}
                         />
-                      )}
+                      </div>
                       <div className="flex items-start justify-between gap-3">
                         <h3
                           className="flex-1 inline-flex items-center gap-2"

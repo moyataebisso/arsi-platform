@@ -26,9 +26,10 @@ import {
   UserCheck,
   MessageSquare,
   TrendingUp,
+  UtensilsCrossed,
 } from 'lucide-react'
 
-const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings, ImageIcon, Star, Image, HelpCircle, CreditCard, CalendarDays, UserCheck, MessageSquare, TrendingUp }
+const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart, FileText, Send, Settings, ImageIcon, Star, Image, HelpCircle, CreditCard, CalendarDays, UserCheck, MessageSquare, TrendingUp, UtensilsCrossed }
 
 const baseLinks = [
   { href: '/admin', label: 'Dashboard', icon: 'LayoutDashboard' },
@@ -39,6 +40,7 @@ const baseLinks = [
 ]
 
 const moduleLinks = [
+  { href: '/admin/menu', label: 'Menu', icon: 'UtensilsCrossed', module: 'menu' },
   { href: '/admin/bookings', label: 'Bookings', icon: 'Calendar', module: 'booking' },
   { href: '/admin/products', label: 'Products', icon: 'Package', module: 'ecommerce' },
   { href: '/admin/orders', label: 'Orders', icon: 'ShoppingCart', module: 'ecommerce' },

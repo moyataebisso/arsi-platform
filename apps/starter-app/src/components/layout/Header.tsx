@@ -11,9 +11,10 @@ import type { User } from '@supabase/supabase-js'
 interface HeaderProps {
   businessName?: string
   tagline?: string
+  showMenuLink?: boolean
 }
 
-export function Header({ businessName, tagline }: HeaderProps = {}) {
+export function Header({ businessName, tagline, showMenuLink }: HeaderProps = {}) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<User | null>(null)
@@ -65,6 +66,7 @@ export function Header({ businessName, tagline }: HeaderProps = {}) {
   const navLinks = [
     pages.home.enabled && { href: '/', label: pages.home.title },
     pages.about.enabled && { href: '/about', label: pages.about.title },
+    showMenuLink && { href: '/menu', label: 'Menu' },
     pages.services.enabled && { href: '/services', label: pages.services.title },
     (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
     (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },

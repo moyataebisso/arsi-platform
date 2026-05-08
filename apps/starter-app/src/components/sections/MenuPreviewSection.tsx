@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { MenuItemImage } from '@/components/MenuItemImage'
 
 interface Dish {
   name: string
   description: string
   price: string
-  image: string
+  image: string | null
 }
 
 interface MenuPreviewSectionProps {
@@ -14,6 +15,7 @@ interface MenuPreviewSectionProps {
   subtitle?: string
   dishes?: Dish[]
   viewFullMenuHref?: string
+  cuisineType?: string | null
 }
 
 const DEFAULT_DISHES: Dish[] = [
@@ -52,7 +54,7 @@ function AccentedHeadline({ headline, accentTailWords = 1 }: { headline: string;
   )
 }
 
-export function MenuPreviewSection({ pill, headline, subtitle, dishes, viewFullMenuHref }: MenuPreviewSectionProps) {
+export function MenuPreviewSection({ pill, headline, subtitle, dishes, viewFullMenuHref, cuisineType }: MenuPreviewSectionProps) {
   const displayPill = pill || 'On the menu'
   const displayHeadline = headline || 'Tastes worth coming back for'
   const displaySubtitle = subtitle || 'A handful of guest favorites — the full menu changes with the season.'
@@ -94,13 +96,10 @@ export function MenuPreviewSection({ pill, headline, subtitle, dishes, viewFullM
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {displayDishes.slice(0, 3).map((dish, i) => (
             <div key={i} className="flex flex-col">
-              <div
-                className="aspect-[4/3] rounded-lg overflow-hidden"
-                style={{
-                  backgroundImage: `url(${dish.image})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}
+              <MenuItemImage
+                imageUrl={dish.image}
+                dishName={dish.name}
+                cuisineType={cuisineType}
               />
               <div className="flex items-start justify-between gap-3 mt-3">
                 <h3
