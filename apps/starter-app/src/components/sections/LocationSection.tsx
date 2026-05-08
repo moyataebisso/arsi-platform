@@ -31,6 +31,19 @@ export function LocationSection({
   const resolvedEmbed = googleMapsEmbed || cfg.googleMapsEmbed || ''
   const fullAddress = `${resolvedAddress}, ${resolvedCity}, ${resolvedState} ${resolvedZip}`.trim()
   const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`
+
+  // Build the embed URL from address when no explicit embed is configured.
+  // Google's basic ?output=embed endpoint works without an API key. Returns
+  // null only when there's literally no address to render (we collapse the
+  // map column rather than show an empty box in that case).
+  const hasAddress =
+    resolvedAddress.trim().length > 0 ||
+    (resolvedCity.trim().length > 0 && resolvedState.trim().length > 0)
+  const mapSrc =
+    resolvedEmbed ||
+    (hasAddress
+      ? `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`
+      : null)
   // Re-shadow for inline references below.
   const location = {
     address: resolvedAddress,
@@ -135,55 +148,27 @@ export function LocationSection({
             </div>
           </ScrollReveal>
 
-          {/* Right: Map or styled placeholder */}
-          <ScrollReveal delay={200}>
-            <div className="h-full min-h-[320px]">
-              {location.googleMapsEmbed ? (
+          {/* Right: Map (auto-built from address). Renders nothing when
+              there's no address to embed — we'd rather collapse than show
+              an empty box. */}
+          {mapSrc && (
+            <ScrollReveal delay={200}>
+              <div
+                className="w-full aspect-[16/9] lg:aspect-auto lg:h-full lg:min-h-[320px] rounded-2xl overflow-hidden border"
+                style={{ borderColor: 'var(--color-border)' }}
+              >
                 <iframe
-                  src={location.googleMapsEmbed}
+                  src={mapSrc}
                   width="100%"
                   height="100%"
-                  className="rounded-2xl border-0 min-h-[320px]"
-                  allowFullScreen
+                  style={{ border: 0, display: 'block' }}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="Business location"
+                  title={`Map of ${siteConfig.business.name || 'our location'}`}
                 />
-              ) : (
-                <a
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col items-center justify-center h-full min-h-[320px] rounded-2xl border-2 border-dashed transition-all duration-300 hover:shadow-md group"
-                  style={{
-                    borderColor: 'var(--color-border)',
-                    backgroundColor: 'var(--color-surface-alt)',
-                  }}
-                >
-                  <MapPin
-                    size={48}
-                    className="mb-4 transition-transform duration-300 group-hover:scale-110"
-                    style={{ color: 'var(--color-primary)' }}
-                  />
-                  <p
-                    className="text-lg font-semibold mb-1"
-                    style={{ color: 'var(--color-text)' }}
-                  >
-                    {location.address}
-                  </p>
-                  <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
-                    {location.city}, {location.state} {location.zip}
-                  </p>
-                  <span
-                    className="text-sm font-medium transition-colors duration-200"
-                    style={{ color: 'var(--color-primary)' }}
-                  >
-                    Open in Google Maps &rarr;
-                  </span>
-                </a>
-              )}
-            </div>
-          </ScrollReveal>
+              </div>
+            </ScrollReveal>
+          )}
         </div>
       </div>
     </section>
