@@ -61,6 +61,14 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
+  // Allow invite-link password setup. The Supabase invite token arrives in the
+  // URL hash (client-only), so the server has no session yet — must skip the
+  // admin gate or the user would be redirected to /login before they can set
+  // a password.
+  if (pathname === '/admin/set-password') {
+    return supabaseResponse
+  }
+
   // Allow setup page (already configured, just let it through)
   if (pathname === '/setup') {
     return supabaseResponse
