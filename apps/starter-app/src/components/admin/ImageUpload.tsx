@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Upload, X, Loader2, AlertCircle } from 'lucide-react'
 import { uploadImage, deleteImage, type StorageFolder } from '@/lib/storage/upload'
 
@@ -36,6 +36,14 @@ export function ImageUpload({
   const [error, setError] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Sync preview with currentUrl when the parent hydrates it asynchronously
+  // (e.g. loaded from site_settings after mount). Skip while uploading so the
+  // FileReader data-URL preview isn't clobbered mid-upload.
+  useEffect(() => {
+    if (uploading) return
+    setPreview(currentUrl || null)
+  }, [currentUrl, uploading])
 
   const handleFile = useCallback(async (file: File) => {
     setError(null)

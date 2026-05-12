@@ -100,6 +100,17 @@ export default function AdminSettingsPage() {
         if (data.color_footer_bg) setColorFooterBg(data.color_footer_bg)
         if (data.color_cta_bg) setColorCtaBg(data.color_cta_bg)
         if (data.color_surface) setColorSurface(data.color_surface)
+        if (data.logo_url) setLogoUrl(data.logo_url)
+        if (data.hero_image_url) setHeroUrl(data.hero_image_url)
+        if (data.gallery_images) {
+          try {
+            const parsed = JSON.parse(data.gallery_images)
+            if (Array.isArray(parsed)) {
+              setGalleryUrls(parsed.filter((u): u is string => typeof u === 'string'))
+            }
+          } catch {}
+        }
+        if (data.google_maps_embed) setMapsEmbedUrl(data.google_maps_embed)
       })
       .catch(() => {})
   }, [])
@@ -222,7 +233,17 @@ export default function AdminSettingsPage() {
   const addGallerySlot = () => {
     if (galleryUrls.length < 8) setGalleryUrls([...galleryUrls, ''])
   }
-  const removeGallerySlot = (i: number) => setGalleryUrls(galleryUrls.filter((_, idx) => idx !== i))
+  // Persisted gallery is the non-empty URLs only — empty strings are local
+  // UI placeholders for unfilled upload slots.
+  async function persistGallery(arr: string[]) {
+    const filtered = arr.filter(Boolean)
+    await saveSetting('gallery_images', JSON.stringify(filtered))
+  }
+  const removeGallerySlot = (i: number) => {
+    const next = galleryUrls.filter((_, idx) => idx !== i)
+    setGalleryUrls(next)
+    persistGallery(next).catch(() => {})
+  }
 
   return (
     <div>
@@ -467,8 +488,16 @@ export default function AdminSettingsPage() {
             folder="logo"
             aspectRatio="square"
             currentUrl={logoUrl || undefined}
-            onUpload={setLogoUrl}
-            onDelete={() => setLogoUrl('')}
+            onUpload={async url => {
+              setLogoUrl(url)
+              await saveSetting('logo_url', url)
+              showToast('Logo saved!')
+            }}
+            onDelete={async () => {
+              setLogoUrl('')
+              await saveSetting('logo_url', '')
+              showToast('Logo removed')
+            }}
             maxSizeMB={2}
             label="Upload your business logo"
           />
@@ -484,8 +513,16 @@ export default function AdminSettingsPage() {
             folder="hero"
             aspectRatio="landscape"
             currentUrl={heroUrl || undefined}
-            onUpload={setHeroUrl}
-            onDelete={() => setHeroUrl('')}
+            onUpload={async url => {
+              setHeroUrl(url)
+              await saveSetting('hero_image_url', url)
+              showToast('Hero image saved!')
+            }}
+            onDelete={async () => {
+              setHeroUrl('')
+              await saveSetting('hero_image_url', '')
+              showToast('Hero image removed')
+            }}
             maxSizeMB={5}
             label="Upload hero image"
           />
@@ -524,10 +561,12 @@ export default function AdminSettingsPage() {
                     folder="gallery"
                     aspectRatio="square"
                     currentUrl={url || undefined}
-                    onUpload={newUrl => {
+                    onUpload={async newUrl => {
                       const updated = [...galleryUrls]
                       updated[i] = newUrl
                       setGalleryUrls(updated)
+                      await persistGallery(updated)
+                      showToast('Gallery image saved!')
                     }}
                     onDelete={() => removeGallerySlot(i)}
                   />
@@ -719,7 +758,20 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        <button className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
+        <button
+          onClick={async () => {
+            try {
+              await Promise.all([
+                saveSetting('google_maps_embed', mapsEmbedUrl),
+                saveSetting('business_hours', JSON.stringify(hours.filter(h => h.day || h.hours))),
+              ])
+              showToast('Saved!')
+            } catch {
+              showToast('Save failed. Try again.')
+            }
+          }}
+          className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+        >
           <Save size={16} />
           Save Changes
         </button>

@@ -11,22 +11,19 @@ export async function uploadImage(file: File, folder: StorageFolder): Promise<st
     throw new Error('Invalid file type. Allowed: JPG, PNG, WebP, GIF')
   }
 
-  const supabase = createClient()
-  const ext = file.name.split('.').pop()
-  const uuid = crypto.randomUUID()
-  const path = `${folder}/${uuid}-${file.name}`
+  // Route through the server so the tenant prefix (client/<schema>/) is set
+  // server-side from SUPABASE_SCHEMA and cannot be bypassed by the browser.
+  const fd = new FormData()
+  fd.append('file', file)
+  fd.append('folder', folder)
 
-  const { error } = await supabase.storage
-    .from(BUCKET)
-    .upload(path, file, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: file.type,
-    })
-
-  if (error) throw new Error(`Upload failed: ${error.message}`)
-
-  return getImageUrl(path)
+  const res = await fetch('/api/admin/upload', { method: 'POST', body: fd })
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({ error: 'Upload failed' }))
+    throw new Error(detail.error || `Upload failed (${res.status})`)
+  }
+  const json = (await res.json()) as { url: string }
+  return json.url
 }
 
 export async function deleteImage(url: string): Promise<void> {
