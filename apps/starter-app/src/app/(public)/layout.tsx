@@ -41,7 +41,11 @@ export default async function PublicLayout({ children }: { children: React.React
           showMenuLink={showMenuLink}
         />
         <main className="flex-1">{children}</main>
-        <Footer businessName={settings.business_name} showMenuLink={showMenuLink} />
+        <Footer
+          businessName={settings.business_name}
+          logoUrl={settings.logo_url || undefined}
+          showMenuLink={showMenuLink}
+        />
       </div>
     </>
   )

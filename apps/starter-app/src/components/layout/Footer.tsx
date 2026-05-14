@@ -6,6 +6,7 @@ import { getBusinessProfile, fullAddress } from '@/lib/business'
 
 interface FooterProps {
   businessName?: string
+  logoUrl?: string
   showMenuLink?: boolean
 }
 
@@ -16,7 +17,7 @@ function trimToTwoSentences(text: string): string {
   return parts.slice(0, 2).join('').trim()
 }
 
-export async function Footer({ businessName, showMenuLink }: FooterProps = {}) {
+export async function Footer({ businessName, logoUrl, showMenuLink }: FooterProps = {}) {
   const { integrations, pages, modules } = siteConfig
   const profile = await getBusinessProfile()
   const content = await getContentMany(['footer_tagline'])
@@ -60,6 +61,10 @@ export async function Footer({ businessName, showMenuLink }: FooterProps = {}) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* About blurb */}
           <div>
+            {logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt={resolvedName} className="h-12 w-auto mb-3" />
+            )}
             <h3
               className="text-xl font-bold mb-3"
               style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-footer-heading)' }}

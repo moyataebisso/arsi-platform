@@ -95,14 +95,32 @@ export function Header({ businessName, tagline, logoUrl, showMenuLink }: HeaderP
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-18">
             {/* Logo */}
-            <Link href="/" className="flex flex-col leading-tight group">
+            <Link
+              href="/"
+              className={
+                logoUrl
+                  ? 'flex items-center gap-3 group'
+                  : 'flex flex-col leading-tight group'
+              }
+            >
               {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={logoUrl}
-                  alt={displayBusinessName}
-                  className="h-10 w-auto"
-                />
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={logoUrl}
+                    alt={displayBusinessName}
+                    className="h-10 w-auto"
+                  />
+                  <span
+                    className="text-lg font-bold tracking-tight"
+                    style={{
+                      color: 'var(--color-primary)',
+                      fontFamily: 'var(--font-playfair)',
+                    }}
+                  >
+                    {displayBusinessName}
+                  </span>
+                </>
               ) : (
                 <>
                   <span
@@ -227,8 +245,16 @@ export function Header({ businessName, tagline, logoUrl, showMenuLink }: HeaderP
       >
         <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
           {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt={displayBusinessName} className="h-8 w-auto" />
+            <div className="flex items-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={logoUrl} alt={displayBusinessName} className="h-8 w-auto" />
+              <span
+                className="text-base font-bold"
+                style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-playfair)' }}
+              >
+                {displayBusinessName}
+              </span>
+            </div>
           ) : (
             <span
               className="text-lg font-bold"
