@@ -34,8 +34,10 @@ const iconMap = { LayoutDashboard, Users, Mail, Calendar, Package, ShoppingCart,
 const baseLinks = [
   { href: '/admin', label: 'Dashboard', icon: 'LayoutDashboard' },
   { href: '/admin/content', label: 'Content', icon: 'FileText' },
-  { href: '/admin/users', label: 'Users', icon: 'Users' },
-  { href: '/admin/leads', label: 'Leads', icon: 'Mail' },
+  // Hidden until Cycle 5 — needs real data wiring
+  // { href: '/admin/users', label: 'Users', icon: 'Users' },
+  // Hidden until Cycle 5 — needs real data wiring
+  // { href: '/admin/leads', label: 'Leads', icon: 'Mail' },
   { href: '/admin/requests', label: 'Change Requests', icon: 'MessageSquare' },
 ]
 
@@ -55,7 +57,8 @@ const moduleLinks = [
 
 const bottomLinks = [
   { href: '/admin/media', label: 'Media Library', icon: 'ImageIcon' },
-  { href: '/admin/emails', label: 'Emails', icon: 'Send' },
+  // Hidden until Cycle 5 — needs real data wiring
+  // { href: '/admin/emails', label: 'Emails', icon: 'Send' },
   { href: '/admin/marketing', label: 'Marketing', icon: 'TrendingUp' },
   { href: '/admin/settings', label: 'Settings', icon: 'Settings' },
 ]
@@ -63,6 +66,14 @@ const bottomLinks = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const [pendingCount, setPendingCount] = useState(0)
+  const [businessName, setBusinessName] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/admin/content')
+      .then(r => r.json())
+      .then(data => setBusinessName(data.business_name || null))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     async function fetchPending() {
@@ -92,7 +103,7 @@ export function AdminSidebar() {
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col">
       <div className="p-5 border-b border-gray-200">
         <Link href="/admin" className="text-lg font-bold text-gray-900">
-          {siteConfig.business.name}
+          {businessName || siteConfig.business.name}
         </Link>
         <p className="text-xs text-gray-500 mt-0.5">Admin Panel</p>
       </div>

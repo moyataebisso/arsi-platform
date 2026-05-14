@@ -60,11 +60,12 @@ export default function ChangeRequestsPage() {
       }
       const { data } = await supabase
         .from('site_settings')
-        .select('value')
+        .select('value_json')
         .eq('key', 'business_name')
         .single()
-      if (data?.value) {
-        setBusinessName(data.value)
+      const val = data?.value_json as unknown
+      if (val) {
+        setBusinessName(typeof val === 'string' ? val : JSON.stringify(val))
       }
     }
     init()
