@@ -97,7 +97,7 @@ const themeFontMap: Record<string, string> = {
 const siteUrl = siteConfig.siteUrl
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings(['business_name', 'tagline', 'meta_description'])
+  const settings = await getSiteSettings(['business_name', 'tagline', 'meta_description', 'logo_url'])
   const fallbackName =
     siteConfig.business.name === 'Client Business Name' ? 'Waji Site' : siteConfig.business.name
   const businessName = settings.business_name || fallbackName

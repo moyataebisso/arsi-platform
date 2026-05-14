@@ -15,6 +15,7 @@ export default async function PublicLayout({ children }: { children: React.React
     'tagline',
     'active_layout',
     'selected_layout',
+    'logo_url',
   ])
   // Show the Menu nav link only on restaurant-style sites. Read the raw
   // setting (not validateSelection's fallback) so non-canonical values like
@@ -36,6 +37,7 @@ export default async function PublicLayout({ children }: { children: React.React
         <Header
           businessName={settings.business_name}
           tagline={settings.tagline}
+          logoUrl={settings.logo_url || undefined}
           showMenuLink={showMenuLink}
         />
         <main className="flex-1">{children}</main>

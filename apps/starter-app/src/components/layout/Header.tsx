@@ -11,10 +11,11 @@ import type { User } from '@supabase/supabase-js'
 interface HeaderProps {
   businessName?: string
   tagline?: string
+  logoUrl?: string
   showMenuLink?: boolean
 }
 
-export function Header({ businessName, tagline, showMenuLink }: HeaderProps = {}) {
+export function Header({ businessName, tagline, logoUrl, showMenuLink }: HeaderProps = {}) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<User | null>(null)
@@ -95,22 +96,33 @@ export function Header({ businessName, tagline, showMenuLink }: HeaderProps = {}
           <div className="flex items-center justify-between h-16 sm:h-18">
             {/* Logo */}
             <Link href="/" className="flex flex-col leading-tight group">
-              <span
-                className="text-xl font-bold tracking-tight transition-colors var(--font-playfair)"
-                style={{
-                  color: 'var(--color-primary)',
-                  fontFamily: 'var(--font-playfair)',
-                }}
-              >
-                {displayBusinessName}
-              </span>
-              {displayTagline && (
-                <span
-                  className="text-[10px] tracking-wide uppercase"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
-                  {displayTagline}
-                </span>
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoUrl}
+                  alt={displayBusinessName}
+                  className="h-10 w-auto"
+                />
+              ) : (
+                <>
+                  <span
+                    className="text-xl font-bold tracking-tight transition-colors var(--font-playfair)"
+                    style={{
+                      color: 'var(--color-primary)',
+                      fontFamily: 'var(--font-playfair)',
+                    }}
+                  >
+                    {displayBusinessName}
+                  </span>
+                  {displayTagline && (
+                    <span
+                      className="text-[10px] tracking-wide uppercase"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      {displayTagline}
+                    </span>
+                  )}
+                </>
               )}
             </Link>
 
@@ -214,12 +226,17 @@ export function Header({ businessName, tagline, showMenuLink }: HeaderProps = {}
         style={{ backgroundColor: 'var(--color-background)' }}
       >
         <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
-          <span
-            className="text-lg font-bold"
-            style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-playfair)' }}
-          >
-            {displayBusinessName}
-          </span>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={displayBusinessName} className="h-8 w-auto" />
+          ) : (
+            <span
+              className="text-lg font-bold"
+              style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-playfair)' }}
+            >
+              {displayBusinessName}
+            </span>
+          )}
           <button
             onClick={() => setMobileOpen(false)}
             className="p-2 rounded-xl"
