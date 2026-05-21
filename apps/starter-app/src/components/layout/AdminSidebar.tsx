@@ -35,8 +35,7 @@ const baseLinks = [
   { href: '/admin', label: 'Dashboard', icon: 'LayoutDashboard' },
   { href: '/admin/content', label: 'Content', icon: 'FileText' },
   { href: '/admin/users', label: 'Users', icon: 'Users' },
-  // Hidden until Cycle 5 — needs real data wiring
-  // { href: '/admin/leads', label: 'Leads', icon: 'Mail' },
+  { href: '/admin/leads', label: 'Leads', icon: 'Mail' },
   { href: '/admin/requests', label: 'Change Requests', icon: 'MessageSquare' },
 ]
 
