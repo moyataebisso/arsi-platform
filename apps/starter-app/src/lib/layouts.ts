@@ -76,6 +76,9 @@ export type SectionId =
   | 'code_strip'
   | 'neon_stats'
   | 'terminal_final_cta'
+  // healthcare / residential care add-ons (gated by enabled_modules)
+  | 'mission_values'
+  | 'community_subscribe'
 
 export interface LayoutMeta {
   name: string

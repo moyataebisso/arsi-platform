@@ -3,6 +3,7 @@ import { Footer } from '@/components/layout/Footer'
 import { ThemeBackground } from '@/components/ThemeBackground'
 import { getActiveTheme, themeToCSS, getGoogleFontsUrl } from '@/lib/theme-resolver'
 import { getSiteSettings } from '@/lib/settings'
+import { getEnabledModules } from '@/lib/enabled-modules'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,12 +11,15 @@ export default async function PublicLayout({ children }: { children: React.React
   const theme = await getActiveTheme()
   const css = themeToCSS(theme)
   const fontsUrl = getGoogleFontsUrl(theme)
-  const settings = await getSiteSettings([
-    'business_name',
-    'tagline',
-    'active_layout',
-    'selected_layout',
-    'logo_url',
+  const [settings, enabledModules] = await Promise.all([
+    getSiteSettings([
+      'business_name',
+      'tagline',
+      'active_layout',
+      'selected_layout',
+      'logo_url',
+    ]),
+    getEnabledModules(),
   ])
   // Show the Menu nav link only on restaurant-style sites. Read the raw
   // setting (not validateSelection's fallback) so non-canonical values like
@@ -39,12 +43,18 @@ export default async function PublicLayout({ children }: { children: React.React
           tagline={settings.tagline}
           logoUrl={settings.logo_url || undefined}
           showMenuLink={showMenuLink}
+          showOurHomes={enabledModules.our_homes}
+          showReferrals={enabledModules.referrals}
+          showResources={enabledModules.resources_page}
         />
         <main className="flex-1">{children}</main>
         <Footer
           businessName={settings.business_name}
           logoUrl={settings.logo_url || undefined}
           showMenuLink={showMenuLink}
+          showOurHomes={enabledModules.our_homes}
+          showReferrals={enabledModules.referrals}
+          showResources={enabledModules.resources_page}
         />
       </div>
     </>

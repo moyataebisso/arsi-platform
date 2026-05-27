@@ -44,7 +44,7 @@ export const siteConfig = {
   //                    split         — Current 2-column text + image split
   // ------------------------------------------------------------
   branding: {
-    theme: "warm" as "warm" | "corporate" | "bold" | "nature" | "luxury" | "ocean" | "sunset" | "midnight" | "rose" | "slate" | "forest" | "sand" | "arctic" | "grape" | "mint" | "fire" | "sage" | "navyGold" | "charcoal" | "crimson" | "stripe" | "linear" | "vercel" | "notion" | "figma" | "loom" | "clinical" | "wellness" | "dental" | "therapy" | "law" | "bistro" | "bakery" | "vegan" | "cafe" | "foodtruck" | "boutique" | "sport" | "kids" | "studio" | "portfolio" | "photography" | "music" | "oromo" | "nonprofit" | "faith" | "edu" | "realty" | "modernRealty" | "transport" | "stripeLight" | "aurora" | "sunriseSaas" | "obsidian" | "meadow" | "midnightMesh" | "coralReef" | "glacier" | "neonCity" | "sandDune" | "deepSpace" | "paper" | "mango" | "frosted" | "ember" | "lavenderField" | "arcticChrome" | "terra" | "stealth" | "goldenHour" | "mintFresh" | "brutalist" | "sakura" | "forestNight" | "marketplace" | "evergreen" | "arcticMin" | "editorial" | "vivid" | "pastel" | "nightshift",
+    theme: "warm" as "warm" | "corporate" | "bold" | "nature" | "luxury" | "ocean" | "sunset" | "midnight" | "rose" | "slate" | "forest" | "sand" | "arctic" | "grape" | "mint" | "fire" | "sage" | "navyGold" | "charcoal" | "crimson" | "stripe" | "linear" | "vercel" | "notion" | "figma" | "loom" | "clinical" | "wellness" | "dental" | "therapy" | "law" | "bistro" | "bakery" | "vegan" | "cafe" | "foodtruck" | "boutique" | "sport" | "kids" | "studio" | "portfolio" | "photography" | "music" | "oromo" | "nonprofit" | "faith" | "edu" | "realty" | "modernRealty" | "transport" | "stripeLight" | "aurora" | "sunriseSaas" | "obsidian" | "meadow" | "midnightMesh" | "coralReef" | "glacier" | "neonCity" | "sandDune" | "deepSpace" | "paper" | "mango" | "frosted" | "ember" | "lavenderField" | "arcticChrome" | "terra" | "stealth" | "goldenHour" | "mintFresh" | "brutalist" | "sakura" | "forestNight" | "marketplace" | "evergreen" | "arcticMin" | "editorial" | "vivid" | "pastel" | "nightshift" | "entrustedMaroon",
     layout: 'fleet' as 'fleet' | 'restaurant' | 'salon' | 'healthcare' | 'community' | 'home_services' | 'modern_minimal' | 'editorial_premium' | 'bold_block' | 'friendly_soft' | 'tech_forward',
     heroVariant: 'split' as 'solid_color' | 'image_overlay' | 'split' | 'centered_minimal' | 'editorial_split' | 'block_hero' | 'rounded_card_hero' | 'terminal_hero',
     primaryColor: '#c2410c',
@@ -71,6 +71,12 @@ export const siteConfig = {
     emailMarketing: false,// Email campaigns + subscribers
     customForms: false,   // Custom form builder
     payments: false,      // Stripe payments integration
+    // Healthcare / residential care modules (Entrusted Care + future tenants)
+    mission_values: false,      // 3-column Mission / Values / Philosophy band on home
+    our_homes: false,           // /our-homes multi-location page + nav link
+    referrals: false,           // /referrals form page + nav link
+    resources_page: false,      // /resources external links page + nav link
+    community_subscribe: false, // "Join Our Care Community" subscribe band on home
   },
 
   // -- 4. AUTHENTICATION --

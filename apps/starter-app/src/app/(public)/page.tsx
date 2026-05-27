@@ -51,6 +51,9 @@ import {
 } from '@/lib/content/resolver'
 import { getSiteSetting } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
+import { getEnabledModules } from '@/lib/enabled-modules'
+import { MissionValuesPhilosophy } from '@/components/sections/MissionValuesPhilosophy'
+import { JoinCareCommunity } from '@/components/sections/JoinCareCommunity'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
 import { themeToCSS, type ResolvedTheme } from '@/lib/theme-resolver'
@@ -145,6 +148,26 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const services = await getServicesContent()
   const heroImage = await getSiteSetting('hero_image_url')
   const business = await getBusinessProfile()
+  const enabledModules = await getEnabledModules()
+
+  // Healthcare/residential-care section content from site_settings (optional).
+  // If missing, components fall back to their built-in defaults.
+  const [missionValuesRaw, communityHeadlineRaw, communitySubheadRaw] = await Promise.all([
+    getSiteSetting('mission_values_content'),
+    getSiteSetting('community_subscribe_headline'),
+    getSiteSetting('community_subscribe_subhead'),
+  ])
+  let missionValuesContent: {
+    mission?: string
+    values?: { title: string; body: string }[]
+    philosophy?: string
+  } | null = null
+  if (missionValuesRaw) {
+    try {
+      const parsed = JSON.parse(missionValuesRaw)
+      if (parsed && typeof parsed === 'object') missionValuesContent = parsed
+    } catch { /* fall back to component defaults */ }
+  }
 
   // Ensure About heading uses live business_name when DB has it
   // but no explicit about_headline override.
@@ -225,13 +248,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         intro={content.contact_intro}
       />
     ) : null,
-    how_it_works: (
+    how_it_works: enabledModules.booking ? (
       <HowItWorksSection
         headline={howItWorksHeadline}
         subtitle={howItWorksSubtitle}
         steps={steps}
       />
-    ),
+    ) : null,
     menu_preview: (
       <MenuPreviewSection
         headline={content.menu_preview_headline}
@@ -336,12 +359,43 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     code_strip: <CodeStripSection />,
     neon_stats: <NeonStatsSection />,
     terminal_final_cta: <TerminalFinalCTASection />,
+    // healthcare / residential care add-ons (gated by enabled_modules)
+    mission_values: enabledModules.mission_values ? (
+      <MissionValuesPhilosophy
+        mission={missionValuesContent?.mission}
+        values={missionValuesContent?.values}
+        philosophy={missionValuesContent?.philosophy}
+      />
+    ) : null,
+    community_subscribe: enabledModules.community_subscribe ? (
+      <JoinCareCommunity
+        headline={communityHeadlineRaw || undefined}
+        subhead={communitySubheadRaw || undefined}
+      />
+    ) : null,
+  }
+
+  // Inject add-on sections into the base sectionOrder based on enabled flags.
+  //   mission_values     — after `services`, before `contact` (falls back to end)
+  //   community_subscribe — at the end (just before footer)
+  const finalOrder: SectionId[] = [...sectionOrder]
+  if (enabledModules.mission_values && !finalOrder.includes('mission_values')) {
+    const servicesIdx = finalOrder.indexOf('services')
+    const contactIdx = finalOrder.indexOf('contact')
+    const insertAt =
+      servicesIdx >= 0 ? servicesIdx + 1 :
+      contactIdx >= 0 ? contactIdx :
+      finalOrder.length
+    finalOrder.splice(insertAt, 0, 'mission_values')
+  }
+  if (enabledModules.community_subscribe && !finalOrder.includes('community_subscribe')) {
+    finalOrder.push('community_subscribe')
   }
 
   return (
     <>
       {themeOverrideCSS && <style dangerouslySetInnerHTML={{ __html: themeOverrideCSS }} />}
-      {sectionOrder.map((id) => {
+      {finalOrder.map((id) => {
         const node = sectionMap[id]
         if (!node) return null
         return <div key={id}>{node}</div>

@@ -178,6 +178,26 @@ export const themes = {
     border: '#bfdbfe', borderLight: '#d0e0f8', heading: 'font-sans font-extrabold',
     heroGradient: 'linear-gradient(135deg, #dbeafe 0%, #eff6ff 40%, #fff7ed 100%)',
   },
+  // ── HEALTHCARE / RESIDENTIAL CARE ────────────────────────
+  entrustedMaroon: {
+    primary: '#7A1F2B',
+    primaryHover: '#5E1620',
+    secondary: '#5E1620',
+    accent: '#C9A977',
+    accentLight: '#F2E8D5',
+    background: '#FAF7F1',
+    surface: '#FFFFFF',
+    surfaceAlt: '#F4EDDE',
+    cardBg: '#FFFFFF',
+    text: '#1A1A1A',
+    textMuted: '#5C5C5C',
+    textLight: '#8A8A8A',
+    border: '#E8E1D5',
+    borderLight: '#F0EADC',
+    heading: 'font-serif font-bold tracking-tight',
+    heroGradient: 'linear-gradient(135deg, #FAF7F1 0%, #F4EDDE 50%, #E8DCC2 100%)',
+  },
+
   // ── CLASSIC ──────────────────────────────────────────────
   warm: {
     primary: '#c2410c',
@@ -2196,6 +2216,15 @@ export const themeStyles: Partial<Record<ThemeName, ThemeStyle>> = {
     badgeStyle: 'text-[#00f0ff] font-mono uppercase tracking-wide text-xs',
     accentShape: 'none',
   },
+  entrustedMaroon: {
+    heroShape: 'none',
+    cardStyle: 'rounded-2xl bg-white shadow-[0_2px_15px_rgba(122,31,43,0.06)] border border-[#E8E1D5] p-6',
+    cardHover: 'hover:shadow-[0_8px_30px_rgba(122,31,43,0.12)] hover:-translate-y-0.5 transition-all duration-200',
+    buttonStyle: 'bg-[#7A1F2B] text-white rounded-xl px-8 py-3 font-semibold hover:bg-[#5E1620] shadow-lg shadow-[rgba(122,31,43,0.18)]',
+    sectionDivider: 'none',
+    badgeStyle: 'bg-[#F2E8D5] text-[#7A1F2B] border border-[#C9A977]/40 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest',
+    accentShape: 'radial-gradient(ellipse at 50% 0%, rgba(201,169,119,0.20) 0%, transparent 65%)',
+  },
 }
 
 export function getThemeStyle(name: ThemeName): ThemeStyle {
@@ -2223,6 +2252,8 @@ export const themeCategories = {
     // New 25
     'cobalt', 'terracotta', 'sageLight', 'plum', 'copper', 'glacierBlue', 'mahogany', 'limePunch', 'dustyRose', 'steelBlue', 'tangerine', 'midnightGreen', 'lavenderMist', 'rust', 'pearl', 'indigoLight', 'olive', 'blush', 'charcoalGold', 'navyCoral', 'forestCream', 'blackRed', 'skyWhite', 'grapeMint', 'bronzeDark',
     'evergreen',
+    // Healthcare / Residential Care
+    'entrustedMaroon',
     // Layout-paired
     'arcticMin', 'editorial', 'vivid', 'pastel', 'nightshift',
   ] as ThemeName[],
@@ -2276,6 +2307,8 @@ export const themeLabels: Record<ThemeName, string> = {
   movingCompany: 'Moving Company', techRepair: 'Tech Repair', tattooStudio: 'Tattoo Studio',
   // Editorial
   evergreen: 'Evergreen',
+  // Healthcare / Residential Care
+  entrustedMaroon: 'Entrusted Maroon',
   // Layout-paired
   arcticMin: 'Arctic Minimal', editorial: 'Editorial', vivid: 'Vivid', pastel: 'Pastel', nightshift: 'Nightshift',
 }

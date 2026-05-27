@@ -13,9 +13,20 @@ interface HeaderProps {
   tagline?: string
   logoUrl?: string
   showMenuLink?: boolean
+  showOurHomes?: boolean
+  showReferrals?: boolean
+  showResources?: boolean
 }
 
-export function Header({ businessName, tagline, logoUrl, showMenuLink }: HeaderProps = {}) {
+export function Header({
+  businessName,
+  tagline,
+  logoUrl,
+  showMenuLink,
+  showOurHomes,
+  showReferrals,
+  showResources,
+}: HeaderProps = {}) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<User | null>(null)
@@ -69,10 +80,13 @@ export function Header({ businessName, tagline, logoUrl, showMenuLink }: HeaderP
     pages.about.enabled && { href: '/about', label: pages.about.title },
     showMenuLink && { href: '/menu', label: 'Menu' },
     pages.services.enabled && { href: '/services', label: pages.services.title },
+    showOurHomes && { href: '/our-homes', label: 'Our Homes' },
+    showReferrals && { href: '/referrals', label: 'Referrals' },
     (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
     (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
     (pages.blog.enabled || modules.blog) && { href: '/blog', label: pages.blog.title },
     pages.contact.enabled && { href: '/contact', label: pages.contact.title },
+    showResources && { href: '/resources', label: 'Resources' },
   ].filter(Boolean) as { href: string; label: string }[]
 
   function isActive(href: string) {

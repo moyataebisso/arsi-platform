@@ -8,6 +8,9 @@ interface FooterProps {
   businessName?: string
   logoUrl?: string
   showMenuLink?: boolean
+  showOurHomes?: boolean
+  showReferrals?: boolean
+  showResources?: boolean
 }
 
 function trimToTwoSentences(text: string): string {
@@ -17,7 +20,14 @@ function trimToTwoSentences(text: string): string {
   return parts.slice(0, 2).join('').trim()
 }
 
-export async function Footer({ businessName, logoUrl, showMenuLink }: FooterProps = {}) {
+export async function Footer({
+  businessName,
+  logoUrl,
+  showMenuLink,
+  showOurHomes,
+  showReferrals,
+  showResources,
+}: FooterProps = {}) {
   const { integrations, pages, modules } = siteConfig
   const profile = await getBusinessProfile()
   const content = await getContentMany(['footer_tagline'])
@@ -33,10 +43,13 @@ export async function Footer({ businessName, logoUrl, showMenuLink }: FooterProp
     pages.about.enabled && { href: '/about', label: pages.about.title },
     showMenuLink && { href: '/menu', label: 'Menu' },
     pages.services.enabled && { href: '/services', label: pages.services.title },
+    showOurHomes && { href: '/our-homes', label: 'Our Homes' },
+    showReferrals && { href: '/referrals', label: 'Referrals' },
     (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
     (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
     (pages.blog.enabled || modules.blog) && { href: '/blog', label: pages.blog.title },
     pages.contact.enabled && { href: '/contact', label: pages.contact.title },
+    showResources && { href: '/resources', label: 'Resources' },
   ].filter(Boolean) as { href: string; label: string }[]
 
   const socialLinks = ([
