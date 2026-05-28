@@ -13,9 +13,28 @@ interface AboutSectionProps {
   businessName?: string
   city?: string
   state?: string
+  // Stacked image cards on the right side. Either can be omitted; defaults
+  // to the existing unsplash stock photos when missing.
+  image1?: string
+  image2?: string
 }
 
-export function AboutSection({ headline, body, quote, ctaText, businessName, city, state }: AboutSectionProps) {
+const DEFAULT_IMAGE_1 =
+  'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600'
+const DEFAULT_IMAGE_2 =
+  'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600'
+
+export function AboutSection({
+  headline,
+  body,
+  quote,
+  ctaText,
+  businessName,
+  city,
+  state,
+  image1,
+  image2,
+}: AboutSectionProps) {
   const cfgName =
     siteConfig.business.name && siteConfig.business.name !== 'Client Business Name'
       ? siteConfig.business.name
@@ -106,8 +125,7 @@ export function AboutSection({ headline, body, quote, ctaText, businessName, cit
                   className="absolute top-0 right-0 w-[85%] h-[75%] rounded-2xl overflow-hidden shadow-md"
                   style={{
                     transform: 'rotate(3deg)',
-                    backgroundImage:
-                      'url(https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600)',
+                    backgroundImage: `url(${image1 || DEFAULT_IMAGE_1})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}
@@ -117,8 +135,7 @@ export function AboutSection({ headline, body, quote, ctaText, businessName, cit
                   className="absolute bottom-0 left-0 w-[75%] h-[65%] rounded-2xl overflow-hidden shadow-xl"
                   style={{
                     transform: 'rotate(-2deg)',
-                    backgroundImage:
-                      'url(https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600)',
+                    backgroundImage: `url(${image2 || DEFAULT_IMAGE_2})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     border: '3px solid var(--color-card-bg)',

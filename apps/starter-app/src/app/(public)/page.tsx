@@ -132,6 +132,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     'hero_cta_primary', 'hero_cta_secondary',
     'services_title', 'services_subtitle',
     'about_headline', 'about_body', 'about_text', 'about_quote', 'about_cta_text',
+    'about_image', 'about_image_1', 'about_image_2',
     'contact_headline', 'contact_intro',
     'how_it_works_headline', 'how_it_works_subtitle',
     'menu_preview_headline', 'menu_preview_subtitle',
@@ -231,6 +232,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         businessName={business.name}
         city={business.city}
         state={business.state}
+        image1={content.about_image_1 || content.about_image || undefined}
+        image2={content.about_image_2 || undefined}
       />
     ),
     location: siteConfig.location.showMapOnHome ? (

@@ -85,7 +85,7 @@ function parseAboutValues(raw: string | null | undefined): AboutValue[] | null {
 export default async function AboutPage() {
   const [profile, settings] = await Promise.all([
     getBusinessProfile(),
-    getSiteSettings(['about_values', 'about_story']),
+    getSiteSettings(['about_values', 'about_story', 'about_image', 'about_image_1']),
   ])
 
   const headlineName = profile.name || 'us'
@@ -112,6 +112,15 @@ export default async function AboutPage() {
   //   1. site_settings.about_values  (JSON array)
   //   2. NEUTRAL DEFAULT_VALUES      (Quality / Integrity / Community)
   const values = parseAboutValues(settings.about_values) ?? DEFAULT_VALUES
+
+  // Story image precedence:
+  //   1. site_settings.about_image_1  (new, aligns with home AboutSection)
+  //   2. site_settings.about_image    (legacy alias from /admin/content)
+  //   3. hardcoded unsplash fallback
+  const storyImage =
+    settings.about_image_1?.trim() ||
+    settings.about_image?.trim() ||
+    'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&h=600&fit=crop'
 
   return (
     <>
@@ -148,8 +157,7 @@ export default async function AboutPage() {
             <div
               className="aspect-[4/3] rounded-2xl shadow-md"
               style={{
-                backgroundImage:
-                  'url(https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&h=600&fit=crop)',
+                backgroundImage: `url(${storyImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}

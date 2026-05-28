@@ -30,47 +30,103 @@ const DEFAULT_GROUPS: ResourceGroup[] = [
   },
 ]
 
-function isLink(x: unknown): x is ResourceLink {
-  return !!x && typeof x === 'object'
-    && typeof (x as Record<string, unknown>).label === 'string'
-    && typeof (x as Record<string, unknown>).url === 'string'
+// Pull a string from one of several candidate keys on an unknown object.
+// Returns '' when no key holds a non-empty string. Tolerates the common
+// shape variations seen in tenant SQL seeds (label/name/title/text, url/href/link).
+function pickStr(obj: Record<string, unknown>, keys: string[]): string {
+  for (const k of keys) {
+    const v = obj[k]
+    if (typeof v === 'string' && v.trim().length > 0) return v.trim()
+  }
+  return ''
+}
+
+function pickArray(obj: Record<string, unknown>, keys: string[]): unknown[] | null {
+  for (const k of keys) {
+    const v = obj[k]
+    if (Array.isArray(v)) return v
+  }
+  return null
+}
+
+function normalizeLink(raw: unknown): ResourceLink | null {
+  if (!raw || typeof raw !== 'object') return null
+  const r = raw as Record<string, unknown>
+  const label = pickStr(r, ['label', 'name', 'title', 'text'])
+  const url = pickStr(r, ['url', 'href', 'link'])
+  if (!label || !url) return null
+  const description = pickStr(r, ['description', 'desc', 'subtitle'])
+  return description ? { label, url, description } : { label, url }
 }
 
 // Parses both the NEW grouped shape and the OLD flat array shape.
-//   NEW: { groups: [ { heading, links: [{ label, url, description? }] }, ... ] }
-//   OLD: [ { label, url, description? }, ... ]   (renders as a single unheaded group)
-// Returns [] for missing/invalid data so callers can fall back to defaults.
+//   NEW: { groups: [ { heading | title | name, links | items | list: [...] }, ... ] }
+//   OLD: [ { label | name | title, url | href, description? }, ... ]
+// Lenient on field names so common SQL seed variants Just Work. Returns []
+// for missing/invalid data so callers can fall back to defaults.
 function parseResources(raw: string | null): ResourceGroup[] {
   if (!raw) return []
+
+  // Defensive: site_settings.value_json sometimes round-trips as a JSON-encoded
+  // string of JSON (double-stringified). Try once, then try parsing again if
+  // the result is still a string that looks like JSON.
+  let parsed: unknown
   try {
-    const parsed = JSON.parse(raw)
-    // New shape: { groups: [...] }
-    if (parsed && typeof parsed === 'object' && Array.isArray((parsed as { groups?: unknown }).groups)) {
-      const groups = (parsed as { groups: unknown[] }).groups
+    parsed = JSON.parse(raw)
+  } catch {
+    return []
+  }
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed)
+    } catch {
+      return []
+    }
+  }
+
+  // Pull a `groups` array from the new shape, accepting common aliases.
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    const root = parsed as Record<string, unknown>
+    const groupsArr = pickArray(root, ['groups', 'sections', 'categories'])
+    if (groupsArr) {
       const out: ResourceGroup[] = []
-      for (const g of groups) {
+      for (const g of groupsArr) {
         if (!g || typeof g !== 'object') continue
-        const links = (g as { links?: unknown }).links
-        if (!Array.isArray(links)) continue
-        const filtered = links.filter(isLink)
+        const grec = g as Record<string, unknown>
+        const linksArr =
+          pickArray(grec, ['links', 'items', 'list', 'buttons', 'resources']) || []
+        const filtered = linksArr
+          .map(normalizeLink)
+          .filter((l): l is ResourceLink => l !== null)
         if (filtered.length === 0) continue
-        const heading = (g as { heading?: unknown }).heading
+        const heading = pickStr(grec, ['heading', 'title', 'name', 'label'])
         out.push({
-          heading: typeof heading === 'string' ? heading : undefined,
+          heading: heading || undefined,
           links: filtered,
         })
       }
       return out
     }
-    // Old shape: flat array of links → render as a single unheaded group.
-    if (Array.isArray(parsed)) {
-      const filtered = parsed.filter(isLink)
-      return filtered.length > 0 ? [{ links: filtered }] : []
+    // Single-group object: top-level { heading, links } with no wrapper.
+    const topLinks = pickArray(root, ['links', 'items', 'list', 'buttons', 'resources'])
+    if (topLinks) {
+      const filtered = topLinks
+        .map(normalizeLink)
+        .filter((l): l is ResourceLink => l !== null)
+      const heading = pickStr(root, ['heading', 'title', 'name', 'label'])
+      if (filtered.length > 0) return [{ heading: heading || undefined, links: filtered }]
     }
-    return []
-  } catch {
-    return []
   }
+
+  // Old shape: bare array of links → render as a single unheaded group.
+  if (Array.isArray(parsed)) {
+    const filtered = parsed
+      .map(normalizeLink)
+      .filter((l): l is ResourceLink => l !== null)
+    return filtered.length > 0 ? [{ links: filtered }] : []
+  }
+
+  return []
 }
 
 export default async function ResourcesPage() {
@@ -80,6 +136,14 @@ export default async function ResourcesPage() {
   const raw = await getSiteSetting('resources')
   const parsed = parseResources(raw)
   const groups = parsed.length > 0 ? parsed : DEFAULT_GROUPS
+
+  // Diagnostic — surfaces in Vercel logs so we can confirm the shape of the
+  // tenant-seeded JSON when the live page falls back to defaults unexpectedly.
+  console.log('[resources] raw bytes=', raw?.length ?? 0,
+    'parsedGroups=', parsed.length,
+    'usedGroups=', groups.length,
+    'firstHeading=', groups[0]?.heading,
+    'linkCounts=', groups.map(g => g.links.length))
 
   return (
     <section className="py-20 sm:py-24" style={{ backgroundColor: 'var(--color-background)' }}>

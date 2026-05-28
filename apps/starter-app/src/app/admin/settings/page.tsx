@@ -72,6 +72,8 @@ export default function AdminSettingsPage() {
   const [heroUrl, setHeroUrl] = useState('')
   const [galleryUrls, setGalleryUrls] = useState<string[]>([])
   const [ourHomesGalleryUrls, setOurHomesGalleryUrls] = useState<string[]>([])
+  const [aboutImage1, setAboutImage1] = useState('')
+  const [aboutImage2, setAboutImage2] = useState('')
 
   // Appearance state
   const [activeTheme, setActiveTheme] = useState<ThemeName>(siteConfig.branding.theme as ThemeName)
@@ -119,6 +121,13 @@ export default function AdminSettingsPage() {
             }
           } catch {}
         }
+        // about_image_1 / about_image_2 feed the home AboutSection (2 stacked
+        // cards) and the /about page (uses image_1). Legacy about_image is
+        // accepted as alias for image_1 so the older /admin/content editor
+        // and any prior data still works.
+        if (data.about_image_1) setAboutImage1(data.about_image_1)
+        else if (data.about_image) setAboutImage1(data.about_image)
+        if (data.about_image_2) setAboutImage2(data.about_image_2)
         if (data.google_maps_embed) setMapsEmbedUrl(data.google_maps_embed)
       })
       .catch(() => {})
@@ -553,7 +562,12 @@ export default function AdminSettingsPage() {
           />
         </div>
 
-        {/* Gallery Images */}
+        {/* Gallery Images — only show when the tenant uses the gallery module.
+            site_settings.gallery_images is not currently read by any rendered
+            page; the /gallery page reads from the `gallery_images` TABLE
+            (separate surface). Gating by siteConfig.modules.gallery keeps
+            this card out of admins' way on tenants who don't use it. */}
+        {(siteConfig.modules as Record<string, boolean>).gallery && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-900">Gallery Images</h2>
@@ -600,6 +614,7 @@ export default function AdminSettingsPage() {
             </div>
           )}
         </div>
+        )}
 
         {/* Our Homes Gallery — feeds the /our-homes Photo Highlights section */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -651,6 +666,57 @@ export default function AdminSettingsPage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* About Section Images — feeds the home AboutSection (2 stacked
+            cards) and the /about page (uses Image 1). */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="font-semibold text-gray-900 mb-1">About Section Images</h2>
+          <p className="text-xs text-gray-500 mb-4">
+            Image 1 appears on both the home About section (background card) and the
+            /about page hero. Image 2 appears as the foreground stacked card on the
+            home About section only. Uploaded to Supabase storage.
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-2">Image 1</label>
+              <ImageUpload
+                folder="about"
+                aspectRatio="landscape"
+                currentUrl={aboutImage1 || undefined}
+                onUpload={async newUrl => {
+                  setAboutImage1(newUrl)
+                  await saveSetting('about_image_1', newUrl)
+                  showToast('About image 1 saved!')
+                }}
+                onDelete={async () => {
+                  setAboutImage1('')
+                  await deleteSetting('about_image_1')
+                  showToast('About image 1 removed')
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-2">
+                Image 2 <span className="text-gray-400">(home only)</span>
+              </label>
+              <ImageUpload
+                folder="about"
+                aspectRatio="landscape"
+                currentUrl={aboutImage2 || undefined}
+                onUpload={async newUrl => {
+                  setAboutImage2(newUrl)
+                  await saveSetting('about_image_2', newUrl)
+                  showToast('About image 2 saved!')
+                }}
+                onDelete={async () => {
+                  setAboutImage2('')
+                  await deleteSetting('about_image_2')
+                  showToast('About image 2 removed')
+                }}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Location & Map */}
