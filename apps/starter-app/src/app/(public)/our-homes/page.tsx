@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile, fullAddress } from '@/lib/business'
+import { GalleryCarousel } from '@/components/our-homes/GalleryCarousel'
 
 export const dynamic = 'force-dynamic'
 
@@ -91,8 +92,16 @@ export default async function OurHomesPage() {
   const eyebrow =
     eyebrowFromSettings ||
     (business.name ? `${business.name} / ${DEFAULT_EYEBROW}` : DEFAULT_EYEBROW)
-  // Use a dedicated our_homes_hero if provided; otherwise the first gallery image.
-  const heroImage = settings.our_homes_hero?.trim() || gallery[0] || null
+  // Carousel slide list. Primary source is the full gallery so the top hero
+  // cycles through every uploaded photo. our_homes_hero is kept as a legacy
+  // single-image fallback so tenants who set it (and didn't upload a gallery)
+  // still see something on top.
+  const carouselImages: string[] =
+    gallery.length > 0
+      ? gallery
+      : settings.our_homes_hero?.trim()
+      ? [settings.our_homes_hero.trim()]
+      : []
 
   return (
     <>
@@ -115,17 +124,13 @@ export default async function OurHomesPage() {
             </span>
           </div>
 
-          {/* Feature image (only when we have one) */}
-          {heroImage && (
-            <div
+          {/* Feature carousel — auto-cycles through every uploaded gallery photo.
+              Renders nothing when there are zero images, static image when there's
+              exactly one. */}
+          {carouselImages.length > 0 && (
+            <GalleryCarousel
+              images={carouselImages}
               className="w-full aspect-[21/9] sm:aspect-[21/8] rounded-2xl mb-12 shadow-lg overflow-hidden"
-              style={{
-                backgroundColor: 'var(--color-surface-alt)',
-                backgroundImage: `url(${heroImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
-              aria-label="Featured Our Homes photo"
             />
           )}
 
