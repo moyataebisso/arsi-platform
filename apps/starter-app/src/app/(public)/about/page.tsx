@@ -1,6 +1,11 @@
-import { Handshake, ShieldCheck, Heart } from 'lucide-react'
+import {
+  Award, Briefcase, Handshake, Heart, HeartHandshake, Leaf, Lightbulb, ShieldCheck,
+  Star, Target, Users,
+  type LucideIcon,
+} from 'lucide-react'
 import { getBusinessProfile } from '@/lib/business'
 import { getContentMany } from '@/lib/content/resolver'
+import { getSiteSettings } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,33 +14,79 @@ export async function generateMetadata() {
   return { title: meta_about_title }
 }
 
-// Match the home page MissionValuesPhilosophy values (Trust / Respect /
-// Integrity). Care-focused wording — avoids the word "client" in favor of
-// "those we serve" / "every individual" so it reads cleanly for residential
-// care tenants. Generic-enough that non-care tenants still get reasonable
-// copy on a default render.
-const values = [
+// Lucide icons addressable by string name from site_settings.about_values JSON.
+// Unknown names fall back to Star.
+const ICON_MAP: Record<string, LucideIcon> = {
+  Award, Briefcase, Handshake, Heart, HeartHandshake, Leaf, Lightbulb, ShieldCheck,
+  Star, Target, Users,
+}
+
+interface AboutValue {
+  title: string
+  description: string
+  icon: LucideIcon
+}
+
+// Neutral defaults — intentionally NOT care-specific so tenants without
+// site_settings.about_values (e.g. Adama) don't see healthcare copy. Care
+// tenants override via SQL.
+const DEFAULT_VALUES: AboutValue[] = [
   {
-    icon: Handshake,
-    title: 'Trust',
+    icon: Star,
+    title: 'Quality',
     description:
-      'We are committed to prioritizing the best interests of those we serve in everything we do.',
-  },
-  {
-    icon: Heart,
-    title: 'Respect',
-    description:
-      'We treat every individual with the utmost honor, dignity, and respect.',
+      'We hold ourselves to a high standard in every interaction and every piece of work we put out.',
   },
   {
     icon: ShieldCheck,
     title: 'Integrity',
-    description: 'We align our actions with our words.',
+    description:
+      'We do what we say we will do — honestly, transparently, and on time.',
+  },
+  {
+    icon: Users,
+    title: 'Community',
+    description:
+      'We build long-term relationships with the people and businesses we work with.',
   },
 ]
 
+// Parse site_settings.about_values JSON. Accepts:
+//   [{ title, body | description, icon? }]
+// Returns null when missing/invalid so callers can fall back to defaults.
+function parseAboutValues(raw: string | null | undefined): AboutValue[] | null {
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return null
+    const out: AboutValue[] = []
+    for (const entry of parsed) {
+      if (!entry || typeof entry !== 'object') continue
+      const r = entry as Record<string, unknown>
+      const title = typeof r.title === 'string' ? r.title.trim() : ''
+      const description =
+        (typeof r.body === 'string' && r.body.trim()) ||
+        (typeof r.description === 'string' && r.description.trim()) ||
+        ''
+      if (!title || !description) continue
+      const iconName = typeof r.icon === 'string' ? r.icon : ''
+      out.push({
+        title,
+        description,
+        icon: ICON_MAP[iconName] || Star,
+      })
+    }
+    return out.length > 0 ? out : null
+  } catch {
+    return null
+  }
+}
+
 export default async function AboutPage() {
-  const profile = await getBusinessProfile()
+  const [profile, settings] = await Promise.all([
+    getBusinessProfile(),
+    getSiteSettings(['about_values', 'about_story']),
+  ])
 
   const headlineName = profile.name || 'us'
   const heroIntro = (() => {
@@ -47,9 +98,20 @@ export default async function AboutPage() {
     return [tagline, baseSentence].filter(Boolean).join(' ')
   })()
 
-  const storyParagraphs = profile.story
-    ? profile.story.split(/\n+/).map(p => p.trim()).filter(Boolean)
+  // Story precedence:
+  //   1. site_settings.about_story   (new, accepted alias)
+  //   2. site_settings.business_story (existing, exposed via profile.story)
+  //   3. NEUTRAL fallback prose (industry-agnostic)
+  const aboutStoryOverride = settings.about_story?.trim() || ''
+  const resolvedStory = aboutStoryOverride || profile.story || ''
+  const storyParagraphs = resolvedStory
+    ? resolvedStory.split(/\n+/).map(p => p.trim()).filter(Boolean)
     : null
+
+  // Values precedence:
+  //   1. site_settings.about_values  (JSON array)
+  //   2. NEUTRAL DEFAULT_VALUES      (Quality / Integrity / Community)
+  const values = parseAboutValues(settings.about_values) ?? DEFAULT_VALUES
 
   return (
     <>
@@ -111,20 +173,19 @@ export default async function AboutPage() {
                 ) : (
                   <>
                     <p>
-                      We started with a simple belief: every person in our community deserves
-                      access to compassionate, person-centered support — delivered with the same
-                      care we would want for our own loved ones.
+                      We started with a simple belief: the people in our community deserve
+                      service done with care, honesty, and a real understanding of what they need.
                     </p>
                     <p>
                       What began as a small operation has grown into a trusted local
-                      organization{profile.city ? `, serving residents and families across ${profile.city} and beyond` : ''}.
-                      Our growth has been powered by word-of-mouth referrals from those we serve
-                      who have become like family to us.
+                      business{profile.city ? `, serving customers across ${profile.city} and beyond` : ''}.
+                      Our growth has been powered by word-of-mouth referrals from people who
+                      have become regulars and friends.
                     </p>
                     <p>
-                      Today, we continue to expand our reach while staying true to the values
-                      that got us here: trust, respect, and integrity in every interaction —
-                      with full HIPAA-compliant handling of personal information at every step.
+                      Today, we continue to expand what we offer while staying true to the values
+                      that got us here: quality work, fair treatment, and genuine respect for
+                      every person we work with.
                     </p>
                   </>
                 )}

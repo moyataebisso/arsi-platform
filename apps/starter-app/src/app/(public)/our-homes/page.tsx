@@ -70,14 +70,6 @@ export default async function OurHomesPage() {
     getBusinessProfile(),
   ])
 
-  // Surface what we read so we can confirm in Vercel logs that
-  // site_settings.our_homes_gallery is reaching the renderer.
-  console.log('[our-homes] settings keys present:', {
-    locations: !!settings.locations,
-    our_homes_gallery: settings.our_homes_gallery ? settings.our_homes_gallery.slice(0, 60) + '…' : null,
-    our_homes_intro: !!settings.our_homes_intro,
-  })
-
   let locations = parseLocations(settings.locations)
   if (locations.length === 0) {
     locations = [
