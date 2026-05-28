@@ -28,6 +28,7 @@ const ALLOWED_FOLDERS = new Set([
   'products',
   'blog',
   'menu',
+  'our_homes',
 ])
 
 async function requireAdmin() {

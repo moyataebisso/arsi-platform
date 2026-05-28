@@ -86,6 +86,7 @@ function buildPreviewThemeCSS(themeName: ThemeName): string {
     heroBg: base.background,
     ctaBg: base.primary,
     sectionSurface: base.surface,
+    headerBg: (base as { headerBackground?: string }).headerBackground || base.background,
   }
   return themeToCSS(resolved)
 }

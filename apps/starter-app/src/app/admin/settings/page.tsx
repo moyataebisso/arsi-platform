@@ -71,6 +71,7 @@ export default function AdminSettingsPage() {
   const [logoUrl, setLogoUrl] = useState('')
   const [heroUrl, setHeroUrl] = useState('')
   const [galleryUrls, setGalleryUrls] = useState<string[]>([])
+  const [ourHomesGalleryUrls, setOurHomesGalleryUrls] = useState<string[]>([])
 
   // Appearance state
   const [activeTheme, setActiveTheme] = useState<ThemeName>(siteConfig.branding.theme as ThemeName)
@@ -107,6 +108,14 @@ export default function AdminSettingsPage() {
             const parsed = JSON.parse(data.gallery_images)
             if (Array.isArray(parsed)) {
               setGalleryUrls(parsed.filter((u): u is string => typeof u === 'string'))
+            }
+          } catch {}
+        }
+        if (data.our_homes_gallery) {
+          try {
+            const parsed = JSON.parse(data.our_homes_gallery)
+            if (Array.isArray(parsed)) {
+              setOurHomesGalleryUrls(parsed.filter((u): u is string => typeof u === 'string'))
             }
           } catch {}
         }
@@ -243,6 +252,22 @@ export default function AdminSettingsPage() {
     const next = galleryUrls.filter((_, idx) => idx !== i)
     setGalleryUrls(next)
     persistGallery(next).catch(() => {})
+  }
+
+  // Our Homes Gallery — same UX as Gallery Images, persists to
+  // site_settings.our_homes_gallery, uploads to Supabase storage folder
+  // 'our_homes' (whitelisted server-side).
+  const addOurHomesSlot = () => {
+    if (ourHomesGalleryUrls.length < 12) setOurHomesGalleryUrls([...ourHomesGalleryUrls, ''])
+  }
+  async function persistOurHomesGallery(arr: string[]) {
+    const filtered = arr.filter(Boolean)
+    await saveSetting('our_homes_gallery', JSON.stringify(filtered))
+  }
+  const removeOurHomesSlot = (i: number) => {
+    const next = ourHomesGalleryUrls.filter((_, idx) => idx !== i)
+    setOurHomesGalleryUrls(next)
+    persistOurHomesGallery(next).catch(() => {})
   }
 
   return (
@@ -569,6 +594,58 @@ export default function AdminSettingsPage() {
                       showToast('Gallery image saved!')
                     }}
                     onDelete={() => removeGallerySlot(i)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Our Homes Gallery — feeds the /our-homes Photo Highlights section */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="font-semibold text-gray-900">Our Homes Gallery</h2>
+            {ourHomesGalleryUrls.length < 12 && (
+              <button
+                onClick={addOurHomesSlot}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                <Plus size={14} />
+                Add Image
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mb-4">
+            Photos for the &ldquo;Our Home: Photo Highlights&rdquo; section on the
+            /our-homes page. Uploaded to Supabase storage.
+          </p>
+          {ourHomesGalleryUrls.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-gray-400 mb-3">No Our Homes images yet</p>
+              <button
+                onClick={addOurHomesSlot}
+                className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                <Plus size={14} />
+                Add First Image
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {ourHomesGalleryUrls.map((url, i) => (
+                <div key={i} className="relative">
+                  <ImageUpload
+                    folder="our_homes"
+                    aspectRatio="landscape"
+                    currentUrl={url || undefined}
+                    onUpload={async newUrl => {
+                      const updated = [...ourHomesGalleryUrls]
+                      updated[i] = newUrl
+                      setOurHomesGalleryUrls(updated)
+                      await persistOurHomesGallery(updated)
+                      showToast('Our Homes image saved!')
+                    }}
+                    onDelete={() => removeOurHomesSlot(i)}
                   />
                 </div>
               ))}

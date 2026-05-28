@@ -22,7 +22,8 @@ export async function generateMetadata() {
 
 interface ServiceItem {
   id: string
-  name: string
+  name?: string
+  title?: string
   description: string
   price: string
   icon: LucideIcon
@@ -101,9 +102,18 @@ export default async function ServicesPage() {
       {/* Services Grid */}
       <section className="py-16 sm:py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            className={
+              services.length === 2
+                ? 'grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto'
+                : services.length === 1
+                ? 'grid grid-cols-1 gap-6 max-w-xl mx-auto'
+                : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+            }
+          >
             {services.map((service, index) => {
               const Icon = service.icon
+              const displayName = service.name ?? service.title ?? 'Service'
               return (
                 <ScrollReveal key={service.id} delay={index * 60}>
                   <div
@@ -136,7 +146,7 @@ export default async function ServicesPage() {
                       className="text-lg font-semibold mb-2"
                       style={{ color: 'var(--color-text)' }}
                     >
-                      {service.name}
+                      {displayName}
                     </h3>
                     <p
                       className="text-sm leading-relaxed mb-4 flex-1"

@@ -341,7 +341,7 @@ function SplitHero(props: VariantProps) {
       />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 sm:gap-20 lg:gap-24 xl:gap-28 items-center">
           {/* Left: Text content */}
           <div>
             {/* Floating badge */}

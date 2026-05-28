@@ -4,7 +4,7 @@ const BUCKET = 'site-media'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
 
-export type StorageFolder = 'hero' | 'gallery' | 'team' | 'logo' | 'products' | 'blog' | 'menu'
+export type StorageFolder = 'hero' | 'gallery' | 'team' | 'logo' | 'products' | 'blog' | 'menu' | 'our_homes'
 
 export async function uploadImage(file: File, folder: StorageFolder): Promise<string> {
   if (!ALLOWED_TYPES.includes(file.type)) {

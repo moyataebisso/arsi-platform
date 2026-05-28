@@ -100,8 +100,8 @@ export function Header({
         className="sticky top-0 z-50 backdrop-blur-md border-b transition-all duration-300"
         style={{
           backgroundColor: scrolled
-            ? 'color-mix(in srgb, var(--color-background) 95%, transparent)'
-            : 'color-mix(in srgb, var(--color-background) 80%, transparent)',
+            ? 'color-mix(in srgb, var(--color-header-bg, var(--color-background)) 95%, transparent)'
+            : 'color-mix(in srgb, var(--color-header-bg, var(--color-background)) 80%, transparent)',
           borderColor: scrolled ? 'var(--color-border)' : 'transparent',
           boxShadow: scrolled ? '0 1px 8px rgba(0,0,0,0.06)' : 'none',
         }}
@@ -245,7 +245,7 @@ export function Header({
         className={`fixed top-0 right-0 bottom-0 w-72 z-50 md:hidden transition-transform duration-300 ${
           mobileOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
-        style={{ backgroundColor: 'var(--color-background)' }}
+        style={{ backgroundColor: 'var(--color-header-bg, var(--color-background))' }}
       >
         <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
           {logoUrl ? (

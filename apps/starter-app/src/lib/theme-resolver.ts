@@ -68,6 +68,7 @@ export interface ResolvedTheme {
   heroBg: string
   ctaBg: string
   sectionSurface: string
+  headerBg: string
 }
 
 const settingsKeys = [
@@ -80,6 +81,7 @@ const settingsKeys = [
   'color_footer_bg',
   'color_cta_bg',
   'color_surface',
+  'color_header_bg',
 ]
 
 export async function getActiveTheme(): Promise<ResolvedTheme> {
@@ -114,6 +116,13 @@ export async function getActiveTheme(): Promise<ResolvedTheme> {
     heroBg: settings.color_hero_bg || baseTheme.background,
     ctaBg: settings.color_cta_bg || baseTheme.primary,
     sectionSurface: settings.color_surface || baseTheme.surface,
+    // Per-theme opt-in header background. Defaults to the theme background
+    // (current behavior for every existing theme that does not declare one).
+    // Override at site_settings.color_header_bg for tenant-level customization.
+    headerBg:
+      settings.color_header_bg ||
+      (baseTheme as { headerBackground?: string }).headerBackground ||
+      baseTheme.background,
   }
 
   if (customPrimary) {
@@ -171,6 +180,7 @@ export function themeToCSS(t: ResolvedTheme): string {
       --color-button-primary: ${t.primary};
       --color-button-text: #ffffff;
       --color-nav-bg: ${t.background};
+      --color-header-bg: ${t.headerBg};
     }
   `.trim()
 }

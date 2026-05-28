@@ -17,7 +17,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 interface ServiceItem {
   id: string
-  name: string
+  name?: string
+  title?: string
   description: string
   price?: string
   icon: string
@@ -41,7 +42,20 @@ export function ServicesSection({
   subtitle = 'From consultation to delivery, we provide comprehensive services',
   services,
 }: ServicesSectionProps) {
-  const displayServices = services || defaultServices
+  const displayServices = (services || defaultServices).slice(0, 4)
+  const count = displayServices.length
+
+  // Pick grid columns + max-width so 2 services center cleanly without empty
+  // trailing cells, while 3-4 services keep the wider layout.
+  //   2 → 2 cols, capped to a 2-card width so they don't stretch full-width
+  //   3 → 3 cols at lg
+  //   4 → 4 cols at lg (original)
+  const gridClass =
+    count === 2
+      ? 'grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto'
+      : count === 3
+      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+      : 'grid grid-cols-2 lg:grid-cols-4 gap-6'
 
   return (
     <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--color-surface)' }}>
@@ -67,9 +81,10 @@ export function ServicesSection({
         </ScrollReveal>
 
         {/* Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {displayServices.slice(0, 4).map((service, index) => {
+        <div className={gridClass}>
+          {displayServices.map((service, index) => {
             const Icon = ICON_MAP[service.icon] || Lightbulb
+            const displayName = service.name ?? service.title ?? 'Service'
 
             return (
               <ScrollReveal key={service.id || index} delay={index * 80}>
@@ -90,7 +105,7 @@ export function ServicesSection({
                     className="text-base font-semibold mb-2"
                     style={{ color: 'var(--color-text)' }}
                   >
-                    {service.name}
+                    {displayName}
                   </h3>
                   <p
                     className="text-sm leading-relaxed"
