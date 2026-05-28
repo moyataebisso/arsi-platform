@@ -1,4 +1,4 @@
-import { Users, Target, Heart } from 'lucide-react'
+import { Handshake, ShieldCheck, Heart } from 'lucide-react'
 import { getBusinessProfile } from '@/lib/business'
 import { getContentMany } from '@/lib/content/resolver'
 
@@ -9,24 +9,28 @@ export async function generateMetadata() {
   return { title: meta_about_title }
 }
 
+// Match the home page MissionValuesPhilosophy values (Trust / Respect /
+// Integrity). Care-focused wording — avoids the word "client" in favor of
+// "those we serve" / "every individual" so it reads cleanly for residential
+// care tenants. Generic-enough that non-care tenants still get reasonable
+// copy on a default render.
 const values = [
   {
+    icon: Handshake,
+    title: 'Trust',
+    description:
+      'We are committed to prioritizing the best interests of those we serve in everything we do.',
+  },
+  {
     icon: Heart,
-    title: 'Community First',
+    title: 'Respect',
     description:
-      'Everything we do is rooted in strengthening our community. We believe success is shared.',
+      'We treat every individual with the utmost honor, dignity, and respect.',
   },
   {
-    icon: Target,
-    title: 'Excellence',
-    description:
-      'We hold ourselves to the highest standards in every service we provide, every single time.',
-  },
-  {
-    icon: Users,
-    title: 'Relationships',
-    description:
-      'We build lasting partnerships with our clients based on trust, transparency, and mutual respect.',
+    icon: ShieldCheck,
+    title: 'Integrity',
+    description: 'We align our actions with our words.',
   },
 ]
 
@@ -107,18 +111,20 @@ export default async function AboutPage() {
                 ) : (
                   <>
                     <p>
-                      We started with a simple belief: every business in our community deserves access
-                      to professional, high-quality services — regardless of size or budget.
+                      We started with a simple belief: every person in our community deserves
+                      access to compassionate, person-centered support — delivered with the same
+                      care we would want for our own loved ones.
                     </p>
                     <p>
-                      What began as a small operation has grown into a trusted local business{profile.city ? `, serving dozens of clients across ${profile.city} and beyond` : ''}.
-                      Our growth has been powered by word-of-mouth referrals from satisfied customers
+                      What began as a small operation has grown into a trusted local
+                      organization{profile.city ? `, serving residents and families across ${profile.city} and beyond` : ''}.
+                      Our growth has been powered by word-of-mouth referrals from those we serve
                       who have become like family to us.
                     </p>
                     <p>
-                      Today, we continue to expand our offerings while staying true to the values that
-                      got us here: honest work, fair pricing, and genuine care for every person who
-                      walks through our doors.
+                      Today, we continue to expand our reach while staying true to the values
+                      that got us here: trust, respect, and integrity in every interaction —
+                      with full HIPAA-compliant handling of personal information at every step.
                     </p>
                   </>
                 )}

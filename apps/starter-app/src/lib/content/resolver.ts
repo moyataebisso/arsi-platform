@@ -77,10 +77,22 @@ function parseServiceArray(raw: string | null | undefined): ServiceItem[] {
   }
 }
 
+// Shared fallback for both home + /services when no site_settings override
+// and no `services` table data exist. Kept as a function so each caller gets
+// a fresh array.
+function genericServiceDefaults(): ServiceItem[] {
+  return [
+    { id: '1', name: 'Service 1', description: 'Description coming soon.', price: '', icon: 'Lightbulb' },
+    { id: '2', name: 'Service 2', description: 'Description coming soon.', price: '', icon: 'Briefcase' },
+    { id: '3', name: 'Service 3', description: 'Description coming soon.', price: '', icon: 'Wrench' },
+    { id: '4', name: 'Service 4', description: 'Description coming soon.', price: '', icon: 'HeartHandshake' },
+  ]
+}
+
+// /services PAGE source — reads the canonical service list.
+// Precedence: site_settings.services → site_settings.services_items →
+//             services table → generic defaults.
 export async function getServicesContent(): Promise<ServiceItem[]> {
-  // 1) site_settings.services — admin/SQL-managed JSON array. Highest priority
-  //    so tenants can override stale `services` table data via SQL alone.
-  // 2) site_settings.services_items — legacy alias, same JSON shape.
   for (const key of ['services', 'services_items'] as const) {
     try {
       const raw = await getSiteSetting(key)
@@ -89,7 +101,6 @@ export async function getServicesContent(): Promise<ServiceItem[]> {
     } catch { /* fall through */ }
   }
 
-  // 3) `services` table (original behavior for tenants without site_settings overrides)
   try {
     const supabase = getAdminClient()
     const { data, error } = await supabase
@@ -109,12 +120,21 @@ export async function getServicesContent(): Promise<ServiceItem[]> {
     }
   } catch { /* fall through to defaults */ }
 
-  return [
-    { id: '1', name: 'Service 1', description: 'Description coming soon.', price: '', icon: 'Lightbulb' },
-    { id: '2', name: 'Service 2', description: 'Description coming soon.', price: '', icon: 'Briefcase' },
-    { id: '3', name: 'Service 3', description: 'Description coming soon.', price: '', icon: 'Wrench' },
-    { id: '4', name: 'Service 4', description: 'Description coming soon.', price: '', icon: 'HeartHandshake' },
-  ]
+  return genericServiceDefaults()
+}
+
+// HOME ServicesSection source — separate from /services so tenants can show
+// a different (typically broader, 4-up) preview on the home page while the
+// /services page lists the real, longer-form service catalog.
+// Precedence: site_settings.home_services → getServicesContent() (which itself
+// falls back through services → services_items → table → generic defaults).
+export async function getHomeServicesContent(): Promise<ServiceItem[]> {
+  try {
+    const raw = await getSiteSetting('home_services')
+    const parsed = parseServiceArray(raw)
+    if (parsed.length > 0) return parsed
+  } catch { /* fall through */ }
+  return getServicesContent()
 }
 
 type HowItWorksStep = { title: string; description: string }

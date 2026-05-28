@@ -37,7 +37,7 @@ import { NeonStatsSection } from '@/components/sections/NeonStatsSection'
 import { TerminalFinalCTASection } from '@/components/sections/TerminalFinalCTASection'
 import {
   getContentMany,
-  getServicesContent,
+  getHomeServicesContent,
   getHowItWorksSteps,
   getHowItWorksDefaultsForLayout,
   getMenuPreviewDishes,
@@ -146,7 +146,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     'editorial_process_pill', 'editorial_process_headline', 'editorial_process_subtitle',
     'call_cta_pill', 'call_cta_headline',
   ])
-  const services = await getServicesContent()
+  const services = await getHomeServicesContent()
   const heroImage = await getSiteSetting('hero_image_url')
   const business = await getBusinessProfile()
   const enabledModules = await getEnabledModules()

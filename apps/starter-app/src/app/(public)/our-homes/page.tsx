@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic'
 
 const DEFAULT_INTRO =
   'Safe, comfortable care with personalized support in St. Paul. Feel at home with our caring community.'
+const DEFAULT_EYEBROW = 'Assisted Living'
 
 interface LocationEntry {
   name?: string
@@ -59,9 +60,23 @@ export default async function OurHomesPage() {
   if (!enabled.our_homes) return notFound()
 
   const [settings, business] = await Promise.all([
-    getSiteSettings(['locations', 'our_homes_gallery', 'our_homes_intro']),
+    getSiteSettings([
+      'locations',
+      'our_homes_gallery',
+      'our_homes_intro',
+      'our_homes_eyebrow',
+      'our_homes_hero',
+    ]),
     getBusinessProfile(),
   ])
+
+  // Surface what we read so we can confirm in Vercel logs that
+  // site_settings.our_homes_gallery is reaching the renderer.
+  console.log('[our-homes] settings keys present:', {
+    locations: !!settings.locations,
+    our_homes_gallery: settings.our_homes_gallery ? settings.our_homes_gallery.slice(0, 60) + '…' : null,
+    our_homes_intro: !!settings.our_homes_intro,
+  })
 
   let locations = parseLocations(settings.locations)
   if (locations.length === 0) {
@@ -80,15 +95,21 @@ export default async function OurHomesPage() {
 
   const gallery = parseGallery(settings.our_homes_gallery)
   const intro = settings.our_homes_intro?.trim() || DEFAULT_INTRO
+  const eyebrowFromSettings = settings.our_homes_eyebrow?.trim()
+  const eyebrow =
+    eyebrowFromSettings ||
+    (business.name ? `${business.name} / ${DEFAULT_EYEBROW}` : DEFAULT_EYEBROW)
+  // Use a dedicated our_homes_hero if provided; otherwise the first gallery image.
+  const heroImage = settings.our_homes_hero?.trim() || gallery[0] || null
 
   return (
     <>
-      {/* Locations */}
-      <section className="py-20 sm:py-24" style={{ backgroundColor: 'var(--color-background)' }}>
+      {/* Hero — eyebrow + feature image + title + intro + gold rule */}
+      <section className="pt-16 sm:pt-20 pb-12" style={{ backgroundColor: 'var(--color-background)' }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <span
-              className="inline-block mb-4 px-3 py-1.5 rounded-full"
+              className="inline-block mb-6 px-3 py-1.5 rounded-full"
               style={{
                 backgroundColor: 'var(--color-surface)',
                 color: 'var(--color-primary)',
@@ -98,8 +119,25 @@ export default async function OurHomesPage() {
                 textTransform: 'uppercase',
               }}
             >
-              Our Homes
+              {eyebrow}
             </span>
+          </div>
+
+          {/* Feature image (only when we have one) */}
+          {heroImage && (
+            <div
+              className="w-full aspect-[21/9] sm:aspect-[21/8] rounded-2xl mb-12 shadow-lg overflow-hidden"
+              style={{
+                backgroundColor: 'var(--color-surface-alt)',
+                backgroundImage: `url(${heroImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+              aria-label="Featured Our Homes photo"
+            />
+          )}
+
+          <div className="text-center max-w-3xl mx-auto">
             <h1
               className="text-3xl sm:text-4xl lg:text-5xl mb-4"
               style={{
@@ -111,10 +149,7 @@ export default async function OurHomesPage() {
             >
               Where We Care
             </h1>
-            <p
-              className="max-w-2xl mx-auto text-base sm:text-lg"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
+            <p className="text-base sm:text-lg" style={{ color: 'var(--color-text-muted)' }}>
               {intro}
             </p>
             <div
@@ -122,6 +157,73 @@ export default async function OurHomesPage() {
               style={{ backgroundColor: 'var(--color-accent)' }}
               aria-hidden="true"
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Photo Highlights — only renders when admin has uploaded gallery photos */}
+      {gallery.length > 0 && (
+        <section className="py-16 sm:py-20" style={{ backgroundColor: 'var(--color-surface)' }}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-10">
+              <span
+                className="inline-block mb-4 px-3 py-1.5 rounded-full"
+                style={{
+                  backgroundColor: 'var(--color-card-bg)',
+                  color: 'var(--color-accent)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Our Home: Photo Highlights
+              </span>
+              <div
+                className="mx-auto mt-4 h-[3px] w-16 rounded-full"
+                style={{ backgroundColor: 'var(--color-accent)' }}
+                aria-hidden="true"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {gallery.map((url, i) => (
+                <div
+                  key={`${url}-${i}`}
+                  className="rounded-2xl overflow-hidden border aspect-[4/3]"
+                  style={{
+                    backgroundColor: 'var(--color-surface-alt)',
+                    backgroundImage: `url(${url})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    borderColor: 'var(--color-border)',
+                  }}
+                  aria-label={`Our Homes photo ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Locations — each card's image area is hidden when the location has no photo,
+          so we never render an empty placeholder. */}
+      <section className="py-16 sm:py-24" style={{ backgroundColor: 'var(--color-background)' }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <span
+              className="inline-block mb-3 px-3 py-1.5 rounded-full"
+              style={{
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-primary)',
+                fontSize: '11px',
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Our Locations
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -138,16 +240,17 @@ export default async function OurHomesPage() {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
                   }}
                 >
-                  <div
-                    className="w-full aspect-[16/9]"
-                    style={{
-                      backgroundColor: 'var(--color-surface-alt)',
-                      backgroundImage: loc.image ? `url(${loc.image})` : undefined,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }}
-                    aria-hidden={!loc.image}
-                  />
+                  {loc.image && (
+                    <div
+                      className="w-full aspect-[16/9]"
+                      style={{
+                        backgroundImage: `url(${loc.image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
+                      aria-label={`${displayName} photo`}
+                    />
+                  )}
                   <div className="p-6 flex flex-col flex-1">
                     <h3
                       className="text-xl mb-3"
@@ -196,52 +299,6 @@ export default async function OurHomesPage() {
           </div>
         </div>
       </section>
-
-      {/* Photo Highlights gallery — only renders when the tenant has uploaded
-          images to site_settings.our_homes_gallery. Empty/missing → no section. */}
-      {gallery.length > 0 && (
-        <section className="py-20 sm:py-24" style={{ backgroundColor: 'var(--color-surface)' }}>
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <span
-                className="inline-block mb-4 px-3 py-1.5 rounded-full"
-                style={{
-                  backgroundColor: 'var(--color-card-bg)',
-                  color: 'var(--color-accent)',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Our Home: Photo Highlights
-              </span>
-              <div
-                className="mx-auto mt-4 h-[3px] w-16 rounded-full"
-                style={{ backgroundColor: 'var(--color-accent)' }}
-                aria-hidden="true"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {gallery.map((url, i) => (
-                <div
-                  key={`${url}-${i}`}
-                  className="rounded-2xl overflow-hidden border aspect-[4/3]"
-                  style={{
-                    backgroundColor: 'var(--color-surface-alt)',
-                    backgroundImage: `url(${url})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    borderColor: 'var(--color-border)',
-                  }}
-                  aria-label={`Our Homes photo ${i + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
     </>
   )
 }
