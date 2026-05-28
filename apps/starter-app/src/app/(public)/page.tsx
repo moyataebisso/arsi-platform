@@ -72,17 +72,31 @@ const HERO_VARIANTS: HeroVariant[] = [
   'terminal_hero',
 ]
 
+// Quick local copy of the resolver's luma() so this preview mode follows the
+// same light-vs-dark footer heuristic as getActiveTheme() at runtime.
+function previewLuma(hex: string): number {
+  const num = parseInt(hex.replace('#', ''), 16)
+  const r = num >> 16
+  const g = (num >> 8) & 0x00ff
+  const b = num & 0x0000ff
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
 function buildPreviewThemeCSS(themeName: ThemeName): string {
   const base = themes[themeName]
   const themeStyle = getThemeStyle(themeName)
+  const footerBg =
+    (base as { footerBackground?: string }).footerBackground ||
+    (previewLuma(base.background) < previewLuma(base.text) ? base.background : base.text)
+  const footerText = previewLuma(footerBg) > 190 ? base.text : '#ffffff'
   const resolved: ResolvedTheme = {
     ...base,
     themeName,
     themeStyle,
     fontHeading: siteConfig.branding.fontHeading,
     fontBody: siteConfig.branding.fontBody,
-    footerBg: base.text,
-    footerText: '#ffffff',
+    footerBg,
+    footerText,
     heroBg: base.background,
     ctaBg: base.primary,
     sectionSurface: base.surface,

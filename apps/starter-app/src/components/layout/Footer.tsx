@@ -67,8 +67,8 @@ export async function Footer({
   return (
     <footer style={{ backgroundColor: 'var(--color-footer-bg)', color: 'var(--color-footer-text)' }}>
       <style dangerouslySetInnerHTML={{ __html: `
-        .footer-link { color: var(--color-footer-muted); transition: color 0.2s; }
-        .footer-link:hover { color: var(--color-footer-heading); }
+        .footer-link { color: var(--color-footer-link, var(--color-footer-muted)); transition: color 0.2s; }
+        .footer-link:hover { color: var(--color-footer-link-hover, var(--color-footer-heading)); }
       `}} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">

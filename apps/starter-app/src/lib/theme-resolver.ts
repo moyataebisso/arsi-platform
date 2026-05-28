@@ -109,10 +109,14 @@ export async function getActiveTheme(): Promise<ResolvedTheme> {
     // `text` is light cream and using it as the footer bg makes white text
     // invisible. The customer can still override via the color_footer_bg
     // setting if they want a colored footer.
-    footerBg:
-      settings.color_footer_bg ||
-      (luma(baseTheme.background) < luma(baseTheme.text) ? baseTheme.background : baseTheme.text),
-    footerText: '#ffffff',
+    //
+    // Per-theme opt-in light footer: a theme may set `footerBackground` to
+    // declare a custom footer bg (e.g. entrustedMaroon → '#FFFFFF'). The
+    // resolved bg's luma then drives `footerText` so we never end up with
+    // white-on-white. Themes that don't set footerBackground keep the
+    // existing dark-footer / white-text behavior byte-for-byte.
+    footerBg: '', // placeholder — assigned below so we can also derive footerText from it
+    footerText: '', // placeholder — see below
     heroBg: settings.color_hero_bg || baseTheme.background,
     ctaBg: settings.color_cta_bg || baseTheme.primary,
     sectionSurface: settings.color_surface || baseTheme.surface,
@@ -124,6 +128,16 @@ export async function getActiveTheme(): Promise<ResolvedTheme> {
       (baseTheme as { headerBackground?: string }).headerBackground ||
       baseTheme.background,
   }
+
+  // Now derive footerBg + footerText together so a per-theme footerBackground
+  // (or a tenant override) flips the text color automatically.
+  const themeFooterBg = (baseTheme as { footerBackground?: string }).footerBackground
+  resolved.footerBg =
+    settings.color_footer_bg ||
+    themeFooterBg ||
+    (luma(baseTheme.background) < luma(baseTheme.text) ? baseTheme.background : baseTheme.text)
+  // luma > ~190 ≈ near-white → use the theme's dark text. Otherwise white.
+  resolved.footerText = luma(resolved.footerBg) > 190 ? baseTheme.text : '#ffffff'
 
   if (customPrimary) {
     resolved.primary = customPrimary
@@ -139,14 +153,20 @@ export async function getActiveTheme(): Promise<ResolvedTheme> {
 }
 
 export function themeToCSS(t: ResolvedTheme): string {
-  // Footer color hierarchy (always against a dark footer bg):
-  //   heading: full contrast (= footerText, typically white)
+  // Footer color hierarchy. Adapts to dark OR light footer bg:
+  //   heading: full contrast (= footerText)
   //   body:    footerText
-  //   muted:   ~35% mixed toward bg (still readable, lower visual weight)
-  //   border:  ~12% mixed toward text (a hair lighter than bg)
+  //   muted:   ~35% mixed toward bg — readable at lower visual weight
+  //   border:  ~12% mixed toward text — a hair lighter (or darker) than bg
+  //   link:    on dark footer → muted (current behavior); on light footer →
+  //            theme primary so links pop against the bright bg.
+  //   link:hover: dark → heading; light → primaryHover.
   const footerHeading = t.footerText
   const footerMuted = mixHex(t.footerText, t.footerBg, 0.35)
   const footerBorder = mixHex(t.footerBg, t.footerText, 0.12)
+  const footerIsLight = luma(t.footerBg) > 190
+  const footerLink = footerIsLight ? t.primary : footerMuted
+  const footerLinkHover = footerIsLight ? t.primaryHover : footerHeading
 
   return `
     :root {
@@ -176,6 +196,8 @@ export function themeToCSS(t: ResolvedTheme): string {
       --color-footer-heading: ${footerHeading};
       --color-footer-muted: ${footerMuted};
       --color-footer-border: ${footerBorder};
+      --color-footer-link: ${footerLink};
+      --color-footer-link-hover: ${footerLinkHover};
       --color-section-alt: ${t.sectionSurface};
       --color-button-primary: ${t.primary};
       --color-button-text: #ffffff;

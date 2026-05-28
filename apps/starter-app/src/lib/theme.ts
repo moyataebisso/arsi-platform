@@ -197,6 +197,7 @@ export const themes = {
     heading: 'font-serif font-bold tracking-tight',
     heroGradient: 'linear-gradient(135deg, #FAF7F1 0%, #F4EDDE 50%, #E8DCC2 100%)',
     headerBackground: '#FFFFFF',
+    footerBackground: '#FFFFFF',
   },
 
   // ── CLASSIC ──────────────────────────────────────────────
