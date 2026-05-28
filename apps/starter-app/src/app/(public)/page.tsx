@@ -131,7 +131,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     'hero_headline', 'hero_subheadline',
     'hero_cta_primary', 'hero_cta_secondary',
     'services_title', 'services_subtitle',
-    'about_headline', 'about_body', 'about_quote', 'about_cta_text',
+    'about_headline', 'about_body', 'about_text', 'about_quote', 'about_cta_text',
     'contact_headline', 'contact_intro',
     'how_it_works_headline', 'how_it_works_subtitle',
     'menu_preview_headline', 'menu_preview_subtitle',
@@ -225,7 +225,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     about: (
       <AboutSection
         headline={aboutHeadline}
-        body={content.about_body}
+        body={content.about_text || content.about_body}
         quote={content.about_quote}
         ctaText={content.about_cta_text}
         businessName={business.name}

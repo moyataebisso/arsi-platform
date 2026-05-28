@@ -41,7 +41,55 @@ interface ServiceItem {
 
 const DEFAULT_SERVICE_ICONS = ['Lightbulb', 'Briefcase', 'Wrench', 'HeartHandshake', 'Star', 'Shield']
 
+// Normalize one entry from a site_settings JSON array. Accepts both
+//   { name, description, price?, icon? }   (existing convention)
+//   { title, description, price?, icon? } (new shape used in SQL seeds)
+function normalizeServiceEntry(raw: unknown, i: number): ServiceItem | null {
+  if (!raw || typeof raw !== 'object') return null
+  const r = raw as Record<string, unknown>
+  const name =
+    (typeof r.name === 'string' && r.name) ||
+    (typeof r.title === 'string' && r.title) ||
+    ''
+  const description = typeof r.description === 'string' ? r.description : ''
+  if (!name && !description) return null
+  return {
+    id: typeof r.id === 'string' || typeof r.id === 'number' ? String(r.id) : String(i + 1),
+    name: name || 'Service',
+    description,
+    price: r.price != null ? String(r.price) : '',
+    icon: typeof r.icon === 'string' && r.icon
+      ? r.icon
+      : DEFAULT_SERVICE_ICONS[i % DEFAULT_SERVICE_ICONS.length],
+  }
+}
+
+function parseServiceArray(raw: string | null | undefined): ServiceItem[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .map((entry, i) => normalizeServiceEntry(entry, i))
+      .filter((s): s is ServiceItem => s !== null)
+  } catch {
+    return []
+  }
+}
+
 export async function getServicesContent(): Promise<ServiceItem[]> {
+  // 1) site_settings.services — admin/SQL-managed JSON array. Highest priority
+  //    so tenants can override stale `services` table data via SQL alone.
+  // 2) site_settings.services_items — legacy alias, same JSON shape.
+  for (const key of ['services', 'services_items'] as const) {
+    try {
+      const raw = await getSiteSetting(key)
+      const parsed = parseServiceArray(raw)
+      if (parsed.length > 0) return parsed
+    } catch { /* fall through */ }
+  }
+
+  // 3) `services` table (original behavior for tenants without site_settings overrides)
   try {
     const supabase = getAdminClient()
     const { data, error } = await supabase
@@ -59,17 +107,7 @@ export async function getServicesContent(): Promise<ServiceItem[]> {
         icon: DEFAULT_SERVICE_ICONS[i % DEFAULT_SERVICE_ICONS.length],
       }))
     }
-  } catch { /* fall through to JSON setting then defaults */ }
-
-  try {
-    const dbValue = await getSiteSetting('services_items')
-    if (dbValue) {
-      try {
-        const parsed = JSON.parse(dbValue)
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed
-      } catch { /* fall through */ }
-    }
-  } catch { /* fall through */ }
+  } catch { /* fall through to defaults */ }
 
   return [
     { id: '1', name: 'Service 1', description: 'Description coming soon.', price: '', icon: 'Lightbulb' },

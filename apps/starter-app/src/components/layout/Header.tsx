@@ -106,15 +106,15 @@ export function Header({
           boxShadow: scrolled ? '0 1px 8px rgba(0,0,0,0.06)' : 'none',
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-18">
-            {/* Logo */}
+        <div className="max-w-7xl mx-auto pl-3 pr-4 sm:pl-4 sm:pr-6 lg:pl-4 lg:pr-6">
+          <div className="flex items-center justify-between h-16 sm:h-18 gap-6 lg:gap-10">
+            {/* Logo — sits at the far-left edge of the header container */}
             <Link
               href="/"
               className={
                 logoUrl
-                  ? 'flex items-center group'
-                  : 'flex flex-col leading-tight group'
+                  ? 'flex items-center shrink-0 group'
+                  : 'flex flex-col leading-tight shrink-0 group'
               }
               aria-label={displayBusinessName}
             >
@@ -128,7 +128,7 @@ export function Header({
               ) : (
                 <>
                   <span
-                    className="text-xl font-bold tracking-tight transition-colors var(--font-playfair)"
+                    className="text-xl font-bold tracking-tight transition-colors var(--font-playfair) whitespace-nowrap"
                     style={{
                       color: 'var(--color-primary)',
                       fontFamily: 'var(--font-playfair)',
@@ -148,13 +148,13 @@ export function Header({
               )}
             </Link>
 
-            {/* Desktop nav */}
-            <nav className="hidden md:flex items-center gap-1">
+            {/* Desktop nav — every link nowrap so multi-word labels stay on one line */}
+            <nav className="hidden md:flex items-center gap-0.5 lg:gap-1">
               {navLinks.map(link => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`nav-link-underline px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                  className={`nav-link-underline px-2 lg:px-2.5 py-2 text-[13px] lg:text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
                     isActive(link.href) ? 'active' : ''
                   }`}
                   style={{
@@ -176,7 +176,7 @@ export function Header({
               ))}
               <Link
                 href="/contact"
-                className="ml-4 px-5 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                className="ml-2 lg:ml-3 px-4 lg:px-5 py-2 rounded-xl text-[13px] lg:text-sm font-semibold text-white whitespace-nowrap transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
                 style={{ backgroundColor: 'var(--color-primary)' }}
                 onMouseEnter={e =>
                   ((e.currentTarget as HTMLElement).style.backgroundColor =
@@ -189,7 +189,7 @@ export function Header({
               >
                 Get In Touch
               </Link>
-              <div className="ml-3 pl-3 flex items-center gap-2" style={{ borderLeft: '1px solid var(--color-border)' }}>
+              <div className="ml-2 lg:ml-3 pl-2 lg:pl-3 flex items-center gap-1.5 lg:gap-2 whitespace-nowrap" style={{ borderLeft: '1px solid var(--color-border)' }}>
                 {user ? (
                   <>
                     <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{truncatedName}</span>
