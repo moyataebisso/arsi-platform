@@ -113,28 +113,18 @@ export function Header({
               href="/"
               className={
                 logoUrl
-                  ? 'flex items-center gap-3 group'
+                  ? 'flex items-center group'
                   : 'flex flex-col leading-tight group'
               }
+              aria-label={displayBusinessName}
             >
               {logoUrl ? (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={logoUrl}
-                    alt={displayBusinessName}
-                    className="h-10 w-auto"
-                  />
-                  <span
-                    className="text-lg font-bold tracking-tight"
-                    style={{
-                      color: 'var(--color-primary)',
-                      fontFamily: 'var(--font-playfair)',
-                    }}
-                  >
-                    {displayBusinessName}
-                  </span>
-                </>
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={logoUrl}
+                  alt={displayBusinessName}
+                  className="h-10 sm:h-12 w-auto max-h-12"
+                />
               ) : (
                 <>
                   <span
@@ -259,16 +249,12 @@ export function Header({
       >
         <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
           {logoUrl ? (
-            <div className="flex items-center gap-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logoUrl} alt={displayBusinessName} className="h-8 w-auto" />
-              <span
-                className="text-base font-bold"
-                style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-playfair)' }}
-              >
-                {displayBusinessName}
-              </span>
-            </div>
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={logoUrl}
+              alt={displayBusinessName}
+              className="h-10 w-auto max-h-10"
+            />
           ) : (
             <span
               className="text-lg font-bold"

@@ -74,16 +74,21 @@ export async function Footer({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* About blurb */}
           <div>
-            {logoUrl && (
+            {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={resolvedName} className="h-12 w-auto mb-3" />
+              <img
+                src={logoUrl}
+                alt={resolvedName}
+                className="h-12 w-auto max-h-14 mb-4"
+              />
+            ) : (
+              <h3
+                className="text-xl font-bold mb-3"
+                style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-footer-heading)' }}
+              >
+                {resolvedName}
+              </h3>
             )}
-            <h3
-              className="text-xl font-bold mb-3"
-              style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-footer-heading)' }}
-            >
-              {resolvedName}
-            </h3>
             <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-footer-muted)' }}>
               {footerBlurb}
             </p>
