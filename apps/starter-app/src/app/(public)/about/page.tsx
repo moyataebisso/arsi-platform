@@ -5,7 +5,6 @@ import {
 } from 'lucide-react'
 import { getBusinessProfile } from '@/lib/business'
 import { getContentMany } from '@/lib/content/resolver'
-import { getSiteSettings } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,9 +82,21 @@ function parseAboutValues(raw: string | null | undefined): AboutValue[] | null {
 }
 
 export default async function AboutPage() {
-  const [profile, settings] = await Promise.all([
+  // Use getContentMany so the read path here is byte-identical to the home
+  // page (src/app/(public)/page.tsx), which reads about_image_1 + about_image
+  // the same way and successfully renders the uploaded URL. Previously this
+  // page used getSiteSettings directly, which (despite wrapping the same
+  // supabase call internally) was the only surface still showing the unsplash
+  // fallback for the uploaded image — unifying the call shape eliminates any
+  // subtle divergence.
+  const [profile, content] = await Promise.all([
     getBusinessProfile(),
-    getSiteSettings(['about_values', 'about_story', 'about_image', 'about_image_1']),
+    getContentMany([
+      'about_values',
+      'about_story',
+      'about_image',
+      'about_image_1',
+    ]),
   ])
 
   const headlineName = profile.name || 'us'
@@ -102,7 +113,7 @@ export default async function AboutPage() {
   //   1. site_settings.about_story   (new, accepted alias)
   //   2. site_settings.business_story (existing, exposed via profile.story)
   //   3. NEUTRAL fallback prose (industry-agnostic)
-  const aboutStoryOverride = settings.about_story?.trim() || ''
+  const aboutStoryOverride = content.about_story?.trim() || ''
   const resolvedStory = aboutStoryOverride || profile.story || ''
   const storyParagraphs = resolvedStory
     ? resolvedStory.split(/\n+/).map(p => p.trim()).filter(Boolean)
@@ -111,16 +122,26 @@ export default async function AboutPage() {
   // Values precedence:
   //   1. site_settings.about_values  (JSON array)
   //   2. NEUTRAL DEFAULT_VALUES      (Quality / Integrity / Community)
-  const values = parseAboutValues(settings.about_values) ?? DEFAULT_VALUES
+  const values = parseAboutValues(content.about_values) ?? DEFAULT_VALUES
 
-  // Story image precedence:
-  //   1. site_settings.about_image_1  (new, aligns with home AboutSection)
+  // Story image precedence (mirrors the home AboutSection):
+  //   1. site_settings.about_image_1  (preferred, written by /admin/settings)
   //   2. site_settings.about_image    (legacy alias from /admin/content)
   //   3. hardcoded unsplash fallback
   const storyImage =
-    settings.about_image_1?.trim() ||
-    settings.about_image?.trim() ||
+    content.about_image_1?.trim() ||
+    content.about_image?.trim() ||
     'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&h=600&fit=crop'
+
+  // Diagnostic — surfaces in Vercel logs so we can confirm the image read
+  // matches what the home page sees. Remove once verified.
+  console.log('[about] image read:', {
+    about_image_1_len: content.about_image_1?.length ?? 0,
+    about_image_len: content.about_image?.length ?? 0,
+    resolved: storyImage.startsWith('https://images.unsplash.com')
+      ? 'unsplash-fallback'
+      : 'storage-url',
+  })
 
   return (
     <>

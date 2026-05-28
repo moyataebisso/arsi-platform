@@ -137,14 +137,6 @@ export default async function ResourcesPage() {
   const parsed = parseResources(raw)
   const groups = parsed.length > 0 ? parsed : DEFAULT_GROUPS
 
-  // Diagnostic — surfaces in Vercel logs so we can confirm the shape of the
-  // tenant-seeded JSON when the live page falls back to defaults unexpectedly.
-  console.log('[resources] raw bytes=', raw?.length ?? 0,
-    'parsedGroups=', parsed.length,
-    'usedGroups=', groups.length,
-    'firstHeading=', groups[0]?.heading,
-    'linkCounts=', groups.map(g => g.links.length))
-
   return (
     <section className="py-20 sm:py-24" style={{ backgroundColor: 'var(--color-background)' }}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
