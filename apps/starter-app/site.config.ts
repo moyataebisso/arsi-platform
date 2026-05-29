@@ -169,8 +169,8 @@ export const siteConfig = {
     showMapOnContact: true,
     showMapOnHome: true,
     hours: [
-      { day: 'Monday - Friday', hours: '9:00 AM - 6:00 PM' },
-      { day: 'Saturday', hours: '10:00 AM - 4:00 PM' },
+      { day: 'Monday - Friday', hours: '9:00 AM - 5:00 PM' },
+      { day: 'Saturday', hours: 'Closed' },
       { day: 'Sunday', hours: 'Closed' },
     ],
   },

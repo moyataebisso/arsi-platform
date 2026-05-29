@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/sender'
 import { leadNotificationEmail } from '@/lib/email/templates/lead-notification'
+import { getNotificationRecipients } from '@/lib/email/recipients'
 import { siteConfig } from '@config'
 
 export async function POST(request: NextRequest) {
@@ -36,10 +37,10 @@ export async function POST(request: NextRequest) {
     // Send admin notification — don't fail the request if email fails
     if (siteConfig.notifications.notifyOnNewLead) {
       try {
-        const adminEmail = process.env.RESEND_FROM_EMAIL ? 'arsitechgroup@gmail.com' : siteConfig.notifications.adminEmail
+        const recipients = await getNotificationRecipients()
         const template = leadNotificationEmail({ name, email, phone, message, sourcePage: sourcePage || '/contact' })
         // replyTo override: admin's reply goes straight to the lead.
-        await sendEmail({ to: adminEmail, replyTo: email, ...template })
+        await sendEmail({ to: recipients, replyTo: email, ...template })
       } catch (emailError) {
         console.error('Failed to send lead notification email:', emailError)
       }

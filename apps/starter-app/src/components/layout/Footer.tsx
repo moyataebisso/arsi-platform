@@ -1,8 +1,10 @@
 import Link from 'next/link'
+import { Facebook, Instagram, Linkedin, Twitter, type LucideIcon } from 'lucide-react'
 import { siteConfig } from '@config'
 import { showPoweredBy } from '@/lib/platform'
 import { getContentMany } from '@/lib/content/resolver'
 import { getBusinessProfile, fullAddress } from '@/lib/business'
+import { getSiteSettings } from '@/lib/settings'
 
 interface FooterProps {
   businessName?: string
@@ -31,6 +33,21 @@ export async function Footer({
   const { integrations, pages, modules } = siteConfig
   const profile = await getBusinessProfile()
   const content = await getContentMany(['footer_tagline'])
+  const socialSettings = await getSiteSettings([
+    'social_facebook',
+    'social_linkedin',
+    'social_instagram',
+    'social_twitter',
+  ])
+
+  // DB-driven social icons. Built per-tenant so Adama (no keys set) renders
+  // no icons row and the footer is byte-identical to before.
+  const socialIcons: { url: string; label: string; Icon: LucideIcon }[] = [
+    { url: (socialSettings.social_facebook || '').trim(), label: 'Facebook', Icon: Facebook },
+    { url: (socialSettings.social_linkedin || '').trim(), label: 'LinkedIn', Icon: Linkedin },
+    { url: (socialSettings.social_instagram || '').trim(), label: 'Instagram', Icon: Instagram },
+    { url: (socialSettings.social_twitter || '').trim(), label: 'Twitter', Icon: Twitter },
+  ].filter(s => s.url.length > 0)
 
   const resolvedName = businessName || profile.name || 'Welcome'
   const footerBlurb =
@@ -103,6 +120,26 @@ export async function Footer({
                     className="footer-link text-sm"
                   >
                     {link.label}
+                  </a>
+                ))}
+              </div>
+            )}
+            {socialIcons.length > 0 && (
+              <div className="flex gap-3 mt-4" aria-label="Social media">
+                {socialIcons.map(({ url, label, Icon }) => (
+                  <a
+                    key={label}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    style={{
+                      backgroundColor: 'var(--color-primary)',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <Icon size={16} strokeWidth={2} />
                   </a>
                 ))}
               </div>

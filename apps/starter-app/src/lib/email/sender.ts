@@ -27,7 +27,7 @@ function defaultReplyTo(): string {
 }
 
 export async function sendEmail(params: {
-  to: string
+  to: string | string[]
   subject: string
   html: string
   text?: string

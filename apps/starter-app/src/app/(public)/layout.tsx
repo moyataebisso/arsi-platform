@@ -4,6 +4,7 @@ import { ThemeBackground } from '@/components/ThemeBackground'
 import { getActiveTheme, themeToCSS, getGoogleFontsUrl } from '@/lib/theme-resolver'
 import { getSiteSettings } from '@/lib/settings'
 import { getEnabledModules } from '@/lib/enabled-modules'
+import { getCtaConfig } from '@/lib/cta'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +12,7 @@ export default async function PublicLayout({ children }: { children: React.React
   const theme = await getActiveTheme()
   const css = themeToCSS(theme)
   const fontsUrl = getGoogleFontsUrl(theme)
-  const [settings, enabledModules] = await Promise.all([
+  const [settings, enabledModules, cta] = await Promise.all([
     getSiteSettings([
       'business_name',
       'tagline',
@@ -20,6 +21,7 @@ export default async function PublicLayout({ children }: { children: React.React
       'logo_url',
     ]),
     getEnabledModules(),
+    getCtaConfig(),
   ])
   // Show the Menu nav link only on restaurant-style sites. Read the raw
   // setting (not validateSelection's fallback) so non-canonical values like
@@ -46,6 +48,8 @@ export default async function PublicLayout({ children }: { children: React.React
           showOurHomes={enabledModules.our_homes}
           showReferrals={enabledModules.referrals}
           showResources={enabledModules.resources_page}
+          phoneCtaLabel={cta.phoneCtaLabel}
+          phoneCtaHref={cta.phoneCtaHref}
         />
         <main className="flex-1">{children}</main>
         <Footer

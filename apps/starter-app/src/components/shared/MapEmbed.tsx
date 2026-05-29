@@ -28,13 +28,24 @@ export function MapEmbed({
   const fullAddress = `${address}, ${city}, ${state}${zip ? ` ${zip}` : ''}`
   const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`
 
+  // When no explicit embed URL is configured, fall back to a basic q-based
+  // Google Maps iframe using the address. Renders a real map without
+  // requiring the tenant to paste an embed URL. Only collapses to the
+  // text/CTA fallback panel when we don't even have an address to query.
+  const hasAddress = address.trim().length > 0 || (city.trim().length > 0 && state.trim().length > 0)
+  const resolvedEmbedUrl =
+    embedUrl ||
+    (hasAddress
+      ? `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`
+      : '')
+
   return (
     <div className={className}>
       {/* Map or Fallback */}
-      {embedUrl ? (
+      {resolvedEmbedUrl ? (
         <div className="rounded-2xl overflow-hidden shadow-lg">
           <iframe
-            src={embedUrl}
+            src={resolvedEmbedUrl}
             width="100%"
             height={height}
             className="border-0"

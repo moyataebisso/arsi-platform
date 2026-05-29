@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/sender'
 import { referralNotificationEmail } from '@/lib/email/templates/referral-notification'
+import { getNotificationRecipients } from '@/lib/email/recipients'
 import { siteConfig } from '@config'
 import { getEnabledModules } from '@/lib/enabled-modules'
 
@@ -58,9 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (siteConfig.notifications.notifyOnNewLead) {
       try {
-        const adminEmail = process.env.RESEND_FROM_EMAIL
-          ? 'arsitechgroup@gmail.com'
-          : siteConfig.notifications.adminEmail
+        const recipients = await getNotificationRecipients()
         const template = referralNotificationEmail({
           referrerName,
           organization,
@@ -70,7 +69,7 @@ export async function POST(request: NextRequest) {
           residentName: residentName || undefined,
           notes,
         })
-        await sendEmail({ to: adminEmail, replyTo: email, ...template })
+        await sendEmail({ to: recipients, replyTo: email, ...template })
       } catch (emailError) {
         console.error('Failed to send referral notification email:', emailError)
       }

@@ -55,6 +55,10 @@ const SETTINGS_KEYS = [
   'business_name',
   'tagline',
   'business_story',
+  // contact_email is the public-facing email shown in the Contact page +
+  // Footer. Preferred over `email` so tenants can keep an internal Resend
+  // routing address in `email` while displaying a different mailbox publicly.
+  'contact_email',
   'email',
   'phone',
   'address',
@@ -82,7 +86,7 @@ export async function getBusinessProfile(): Promise<BusinessProfile> {
     name: s.business_name || strip(siteConfig.business.name),
     tagline: s.tagline || strip(siteConfig.business.tagline),
     story: s.business_story || '',
-    email: s.email || strip(siteConfig.business.email),
+    email: s.contact_email || s.email || strip(siteConfig.business.email),
     phone: s.phone || strip(siteConfig.business.phone),
     address: s.address || strip(siteConfig.business.address) || strip(siteConfig.location.address),
     city: s.city || siteConfig.business.city || siteConfig.location.city || '',

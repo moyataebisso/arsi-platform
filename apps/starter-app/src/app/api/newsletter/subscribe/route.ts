@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { sendEmail } from '@/lib/email/sender'
+import { getNotificationRecipients } from '@/lib/email/recipients'
 import { siteConfig } from '@config'
 import { getEnabledModules } from '@/lib/enabled-modules'
 
@@ -23,11 +24,9 @@ export async function POST(request: NextRequest) {
 
     if (siteConfig.notifications.notifyOnNewLead) {
       try {
-        const adminEmail = process.env.RESEND_FROM_EMAIL
-          ? 'arsitechgroup@gmail.com'
-          : siteConfig.notifications.adminEmail
+        const recipients = await getNotificationRecipients()
         await sendEmail({
-          to: adminEmail,
+          to: recipients,
           replyTo: email,
           subject: `New care community subscriber: ${email}`,
           html: `<p>New subscriber to <strong>${siteConfig.business.name}</strong> care community:</p><p><a href="mailto:${email}">${email}</a></p>`,

@@ -52,6 +52,7 @@ import {
 import { getSiteSetting } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
+import { getCtaConfig } from '@/lib/cta'
 import { MissionValuesPhilosophy } from '@/components/sections/MissionValuesPhilosophy'
 import { JoinCareCommunity } from '@/components/sections/JoinCareCommunity'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
@@ -165,6 +166,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const heroImage = await getSiteSetting('hero_image_url')
   const business = await getBusinessProfile()
   const enabledModules = await getEnabledModules()
+  const cta = await getCtaConfig()
 
   // Healthcare/residential-care section content from site_settings (optional).
   // If missing, components fall back to their built-in defaults.
@@ -228,6 +230,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         tagline={business.tagline}
         city={business.city}
         state={business.state}
+        phoneCtaLabel={cta.phoneCtaLabel}
+        phoneCtaHref={cta.phoneCtaHref}
       />
     ),
     services: (

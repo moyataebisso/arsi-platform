@@ -23,6 +23,11 @@ interface HeroSectionProps {
   tagline?: string
   city?: string
   state?: string
+  // When both set, the SplitHero primary CTA renders as a tel: link with this
+  // label/href instead of the default Get-In-Touch button. Tenants without
+  // site_settings.cta_style='phone' leave these unset and keep current behavior.
+  phoneCtaLabel?: string
+  phoneCtaHref?: string
 }
 
 type VariantProps = Omit<HeroSectionProps, 'variant'>
@@ -384,13 +389,24 @@ function SplitHero(props: VariantProps) {
             </p>
 
             <div className="animate-fade-in-up delay-300 flex flex-col sm:flex-row gap-4">
-              <Link
-                href={ctaHref}
-                className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
-                style={{ backgroundColor: 'var(--color-primary)' }}
-              >
-                {displayCtaPrimary}
-              </Link>
+              {props.phoneCtaLabel && props.phoneCtaHref ? (
+                <a
+                  href={props.phoneCtaHref}
+                  className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  aria-label={`Call ${props.phoneCtaLabel}`}
+                >
+                  {props.phoneCtaLabel}
+                </a>
+              ) : (
+                <Link
+                  href={ctaHref}
+                  className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                >
+                  {displayCtaPrimary}
+                </Link>
+              )}
               <Link
                 href="/services"
                 className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl font-semibold text-base border-2 transition-all duration-200 hover:-translate-y-0.5"
@@ -859,6 +875,8 @@ export function HeroSection(props: HeroSectionProps) {
     tagline: props.tagline,
     city: props.city,
     state: props.state,
+    phoneCtaLabel: props.phoneCtaLabel,
+    phoneCtaHref: props.phoneCtaHref,
   }
 
   switch (activeVariant) {

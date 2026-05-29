@@ -16,6 +16,11 @@ interface HeaderProps {
   showOurHomes?: boolean
   showReferrals?: boolean
   showResources?: boolean
+  // When both set, the maroon "Get In Touch" button is replaced with a
+  // clickable tel: link styled identically. Tenants without cta_style='phone'
+  // leave these unset and keep the default Get-In-Touch button.
+  phoneCtaLabel?: string
+  phoneCtaHref?: string
 }
 
 export function Header({
@@ -26,6 +31,8 @@ export function Header({
   showOurHomes,
   showReferrals,
   showResources,
+  phoneCtaLabel,
+  phoneCtaHref,
 }: HeaderProps = {}) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -174,21 +181,40 @@ export function Header({
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href="/contact"
-                className="ml-2 lg:ml-3 px-4 lg:px-5 py-2 rounded-xl text-[13px] lg:text-sm font-semibold text-white whitespace-nowrap transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-                style={{ backgroundColor: 'var(--color-primary)' }}
-                onMouseEnter={e =>
-                  ((e.currentTarget as HTMLElement).style.backgroundColor =
-                    'var(--color-primary-hover)')
-                }
-                onMouseLeave={e =>
-                  ((e.currentTarget as HTMLElement).style.backgroundColor =
-                    'var(--color-primary)')
-                }
-              >
-                Get In Touch
-              </Link>
+              {phoneCtaLabel && phoneCtaHref ? (
+                <a
+                  href={phoneCtaHref}
+                  className="ml-2 lg:ml-3 px-4 lg:px-5 py-2 rounded-xl text-[13px] lg:text-sm font-semibold text-white whitespace-nowrap transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  onMouseEnter={e =>
+                    ((e.currentTarget as HTMLElement).style.backgroundColor =
+                      'var(--color-primary-hover)')
+                  }
+                  onMouseLeave={e =>
+                    ((e.currentTarget as HTMLElement).style.backgroundColor =
+                      'var(--color-primary)')
+                  }
+                  aria-label={`Call ${phoneCtaLabel}`}
+                >
+                  {phoneCtaLabel}
+                </a>
+              ) : (
+                <Link
+                  href="/contact"
+                  className="ml-2 lg:ml-3 px-4 lg:px-5 py-2 rounded-xl text-[13px] lg:text-sm font-semibold text-white whitespace-nowrap transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  onMouseEnter={e =>
+                    ((e.currentTarget as HTMLElement).style.backgroundColor =
+                      'var(--color-primary-hover)')
+                  }
+                  onMouseLeave={e =>
+                    ((e.currentTarget as HTMLElement).style.backgroundColor =
+                      'var(--color-primary)')
+                  }
+                >
+                  Get In Touch
+                </Link>
+              )}
               <div className="ml-2 lg:ml-3 pl-2 lg:pl-3 flex items-center gap-1.5 lg:gap-2 whitespace-nowrap" style={{ borderLeft: '1px solid var(--color-border)' }}>
                 {user ? (
                   <>
@@ -288,14 +314,26 @@ export function Header({
             </Link>
           ))}
           <div className="pt-4">
-            <Link
-              href="/contact"
-              onClick={() => setMobileOpen(false)}
-              className="block px-4 py-3 rounded-xl text-sm font-semibold text-white text-center transition-all"
-              style={{ backgroundColor: 'var(--color-primary)' }}
-            >
-              Get In Touch
-            </Link>
+            {phoneCtaLabel && phoneCtaHref ? (
+              <a
+                href={phoneCtaHref}
+                onClick={() => setMobileOpen(false)}
+                className="block px-4 py-3 rounded-xl text-sm font-semibold text-white text-center transition-all"
+                style={{ backgroundColor: 'var(--color-primary)' }}
+                aria-label={`Call ${phoneCtaLabel}`}
+              >
+                {phoneCtaLabel}
+              </a>
+            ) : (
+              <Link
+                href="/contact"
+                onClick={() => setMobileOpen(false)}
+                className="block px-4 py-3 rounded-xl text-sm font-semibold text-white text-center transition-all"
+                style={{ backgroundColor: 'var(--color-primary)' }}
+              >
+                Get In Touch
+              </Link>
+            )}
           </div>
           <div className="pt-3 mt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
             {user ? (
