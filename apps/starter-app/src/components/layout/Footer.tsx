@@ -13,6 +13,14 @@ interface FooterProps {
   showOurHomes?: boolean
   showReferrals?: boolean
   showResources?: boolean
+  // Restaurant nav extras. All default false so non-restaurant tenants stay
+  // byte-identical.
+  showDrinks?: boolean
+  showOrder?: boolean
+  showReserve?: boolean
+  showParties?: boolean
+  showCatering?: boolean
+  showJobs?: boolean
 }
 
 function trimToTwoSentences(text: string): string {
@@ -29,6 +37,12 @@ export async function Footer({
   showOurHomes,
   showReferrals,
   showResources,
+  showDrinks,
+  showOrder,
+  showReserve,
+  showParties,
+  showCatering,
+  showJobs,
 }: FooterProps = {}) {
   const { integrations, pages, modules } = siteConfig
   const profile = await getBusinessProfile()
@@ -59,11 +73,17 @@ export async function Footer({
     pages.home.enabled && { href: '/', label: pages.home.title },
     pages.about.enabled && { href: '/about', label: pages.about.title },
     showMenuLink && { href: '/menu', label: 'Menu' },
+    showDrinks && { href: '/drinks', label: 'Drinks' },
+    showOrder && { href: '/order', label: 'Order' },
+    showReserve && { href: '/book', label: 'Reserve' },
     pages.services.enabled && { href: '/services', label: pages.services.title },
     showOurHomes && { href: '/our-homes', label: 'Our Homes' },
     showReferrals && { href: '/referrals', label: 'Referrals' },
+    showParties && { href: '/parties', label: 'Parties' },
+    showCatering && { href: '/catering', label: 'Catering' },
+    showJobs && { href: '/jobs', label: 'Jobs' },
     (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
-    (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
+    !showReserve && (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
     (pages.blog.enabled || modules.blog) && { href: '/blog', label: pages.blog.title },
     pages.contact.enabled && { href: '/contact', label: pages.contact.title },
     showResources && { href: '/resources', label: 'Resources' },

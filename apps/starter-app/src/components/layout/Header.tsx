@@ -16,6 +16,20 @@ interface HeaderProps {
   showOurHomes?: boolean
   showReferrals?: boolean
   showResources?: boolean
+  // Restaurant nav extras. All default false so non-restaurant tenants are
+  // unaffected and the existing nav is byte-identical to before.
+  showDrinks?: boolean
+  showOrder?: boolean
+  showReserve?: boolean
+  showParties?: boolean
+  showCatering?: boolean
+  showJobs?: boolean
+  // Thin promo bar above the nav. Both must be non-empty to render; an empty
+  // promo_bar_text site_setting keeps the existing chrome unchanged for every
+  // tenant that does not opt in.
+  promoBarText?: string
+  promoBarCtaUrl?: string
+  promoBarCtaLabel?: string
   // When both set, the maroon "Get In Touch" button is replaced with a
   // clickable tel: link styled identically. Tenants without cta_style='phone'
   // leave these unset and keep the default Get-In-Touch button.
@@ -31,6 +45,15 @@ export function Header({
   showOurHomes,
   showReferrals,
   showResources,
+  showDrinks,
+  showOrder,
+  showReserve,
+  showParties,
+  showCatering,
+  showJobs,
+  promoBarText,
+  promoBarCtaUrl,
+  promoBarCtaLabel,
   phoneCtaLabel,
   phoneCtaHref,
 }: HeaderProps = {}) {
@@ -86,11 +109,17 @@ export function Header({
     pages.home.enabled && { href: '/', label: pages.home.title },
     pages.about.enabled && { href: '/about', label: pages.about.title },
     showMenuLink && { href: '/menu', label: 'Menu' },
+    showDrinks && { href: '/drinks', label: 'Drinks' },
+    showOrder && { href: '/order', label: 'Order' },
+    showReserve && { href: '/book', label: 'Reserve' },
     pages.services.enabled && { href: '/services', label: pages.services.title },
     showOurHomes && { href: '/our-homes', label: 'Our Homes' },
     showReferrals && { href: '/referrals', label: 'Referrals' },
+    showParties && { href: '/parties', label: 'Parties' },
+    showCatering && { href: '/catering', label: 'Catering' },
+    showJobs && { href: '/jobs', label: 'Jobs' },
     (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
-    (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
+    !showReserve && (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
     (pages.blog.enabled || modules.blog) && { href: '/blog', label: pages.blog.title },
     pages.contact.enabled && { href: '/contact', label: pages.contact.title },
     showResources && { href: '/resources', label: 'Resources' },
@@ -101,8 +130,30 @@ export function Header({
     return pathname.startsWith(href)
   }
 
+  const showPromoBar = Boolean((promoBarText || '').trim())
+  const promoBarHasCta = showPromoBar && Boolean((promoBarCtaUrl || '').trim())
+
   return (
     <>
+      {showPromoBar && (
+        <div
+          className="w-full text-center text-[12px] tracking-[0.18em] uppercase py-2 px-4"
+          style={{
+            backgroundColor: 'var(--color-primary)',
+            color: '#000',
+          }}
+        >
+          <span className="font-semibold">{promoBarText}</span>
+          {promoBarHasCta && (
+            <a
+              href={promoBarCtaUrl}
+              className="ml-3 underline underline-offset-4 hover:opacity-80"
+            >
+              {promoBarCtaLabel || 'Reserve Now'}
+            </a>
+          )}
+        </div>
+      )}
       <header
         className="sticky top-0 z-50 backdrop-blur-md border-b transition-all duration-300"
         style={{

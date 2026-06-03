@@ -28,6 +28,11 @@ interface HeroSectionProps {
   // site_settings.cta_style='phone' leave these unset and keep current behavior.
   phoneCtaLabel?: string
   phoneCtaHref?: string
+  // video_hero only. hero_video_url + hero_poster_url site_settings keys.
+  // Poster MUST be set so the hero never renders an empty box when the video
+  // is blocked, slow, or absent.
+  heroVideoUrl?: string
+  heroPosterUrl?: string
 }
 
 type VariantProps = Omit<HeroSectionProps, 'variant'>
@@ -861,6 +866,143 @@ function TerminalHero(props: VariantProps) {
 }
 
 // ============================================================
+// VIDEO_HERO — Full-bleed background video with poster fallback.
+// Poster image always renders, so an empty box is impossible when the
+// video URL is blank, blocked, or slow.
+// ============================================================
+function VideoHero(props: VariantProps) {
+  const display = getDisplayValues(props)
+  const ctaHref = getCtaHref()
+
+  // Fallback poster — if no DB poster, reuse heroImageUrl. The
+  // background-image on the wrapper ensures something is always visible
+  // even if the <video> never paints (e.g. blocked autoplay, slow CDN).
+  const posterUrl =
+    props.heroPosterUrl ||
+    props.heroImageUrl ||
+    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1600'
+
+  const videoUrl = props.heroVideoUrl || ''
+
+  const subPrimary = display.ctaPrimary
+  const subSecondary = display.ctaSecondary
+
+  return (
+    <section
+      className="relative w-full overflow-hidden min-h-[560px] sm:min-h-[640px] lg:min-h-[720px] flex items-center justify-center"
+      style={{
+        backgroundImage: cssUrl(posterUrl),
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundColor: '#000',
+      }}
+    >
+      {videoUrl && (
+        // eslint-disable-next-line jsx-a11y/media-has-caption
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster={posterUrl}
+          className="absolute inset-0 w-full h-full object-cover"
+          aria-hidden="true"
+        >
+          <source src={videoUrl} />
+        </video>
+      )}
+
+      {/* Dark gradient overlay so gold + white text stay readable */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.85) 100%)',
+        }}
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 w-full max-w-3xl mx-auto px-6 text-center">
+        <h1
+          className="mb-6"
+          style={{
+            color: 'var(--color-primary)',
+            fontFamily: 'var(--font-heading)',
+            fontSize: 'clamp(2.75rem, 6vw, 5.25rem)',
+            fontWeight: 700,
+            lineHeight: 1.05,
+            letterSpacing: '0.01em',
+          }}
+        >
+          {display.headline}
+        </h1>
+        <p
+          className="mx-auto mb-10 max-w-xl"
+          style={{
+            color: '#F4F1E8',
+            fontSize: 'clamp(1rem, 1.4vw, 1.125rem)',
+            lineHeight: 1.6,
+          }}
+        >
+          {display.subheadline}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
+          {props.phoneCtaLabel && props.phoneCtaHref ? (
+            <a
+              href={props.phoneCtaHref}
+              className="inline-flex items-center justify-center transition-all"
+              style={{
+                color: 'var(--color-primary)',
+                border: '1px solid var(--color-primary)',
+                padding: '14px 28px',
+                fontSize: '12px',
+                fontWeight: 700,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+              }}
+              aria-label={`Call ${props.phoneCtaLabel}`}
+            >
+              {props.phoneCtaLabel}
+            </a>
+          ) : (
+            <Link
+              href={ctaHref}
+              className="inline-flex items-center justify-center transition-all hover:bg-[color:var(--color-primary)] hover:text-black"
+              style={{
+                color: 'var(--color-primary)',
+                border: '1px solid var(--color-primary)',
+                padding: '14px 28px',
+                fontSize: '12px',
+                fontWeight: 700,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {subPrimary}
+            </Link>
+          )}
+          <Link
+            href="/services"
+            className="inline-flex items-center justify-center transition-all hover:text-[color:var(--color-primary)]"
+            style={{
+              color: '#F4F1E8',
+              border: '1px solid rgba(244,241,232,0.40)',
+              padding: '14px 28px',
+              fontSize: '12px',
+              fontWeight: 700,
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+            }}
+          >
+            {subSecondary}
+          </Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ============================================================
 // HeroSection — variant dispatcher
 // ============================================================
 export function HeroSection(props: HeroSectionProps) {
@@ -877,6 +1019,8 @@ export function HeroSection(props: HeroSectionProps) {
     state: props.state,
     phoneCtaLabel: props.phoneCtaLabel,
     phoneCtaHref: props.phoneCtaHref,
+    heroVideoUrl: props.heroVideoUrl,
+    heroPosterUrl: props.heroPosterUrl,
   }
 
   switch (activeVariant) {
@@ -894,6 +1038,8 @@ export function HeroSection(props: HeroSectionProps) {
       return <RoundedCardHero {...variantProps} />
     case 'terminal_hero':
       return <TerminalHero {...variantProps} />
+    case 'video_hero':
+      return <VideoHero {...variantProps} />
     case 'split':
     default:
       return <SplitHero {...variantProps} />

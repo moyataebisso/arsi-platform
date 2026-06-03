@@ -55,6 +55,7 @@ import { getEnabledModules } from '@/lib/enabled-modules'
 import { getCtaConfig } from '@/lib/cta'
 import { MissionValuesPhilosophy } from '@/components/sections/MissionValuesPhilosophy'
 import { JoinCareCommunity } from '@/components/sections/JoinCareCommunity'
+import { RestaurantCtasSection } from '@/components/sections/RestaurantCtasSection'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
 import { themeToCSS, type ResolvedTheme } from '@/lib/theme-resolver'
@@ -71,6 +72,7 @@ const HERO_VARIANTS: HeroVariant[] = [
   'block_hero',
   'rounded_card_hero',
   'terminal_hero',
+  'video_hero',
 ]
 
 // Quick local copy of the resolver's luma() so this preview mode follows the
@@ -164,6 +166,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   ])
   const services = await getHomeServicesContent()
   const heroImage = await getSiteSetting('hero_image_url')
+  // video_hero only — both keys swappable per tenant. Poster MUST always
+  // render so an empty hero is impossible when the video is blocked/slow.
+  const heroVideo = await getSiteSetting('hero_video_url')
+  const heroPoster = await getSiteSetting('hero_poster_url')
   const business = await getBusinessProfile()
   const enabledModules = await getEnabledModules()
   const cta = await getCtaConfig()
@@ -225,6 +231,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         ctaPrimary={content.hero_cta_primary}
         ctaSecondary={content.hero_cta_secondary}
         heroImageUrl={heroImage || undefined}
+        heroVideoUrl={heroVideo || undefined}
+        heroPosterUrl={heroPoster || undefined}
         variant={heroVariant}
         businessName={business.name}
         tagline={business.tagline}
@@ -395,6 +403,17 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         subhead={communitySubheadRaw || undefined}
       />
     ) : null,
+    // restaurant_ctas only injects when a RESTAURANT-specific flag is on
+    // (order_online or catering). Booking-only tenants like salons/clinics
+    // already have their own CTA flow and stay untouched.
+    restaurant_ctas:
+      enabledModules.order_online || enabledModules.catering ? (
+        <RestaurantCtasSection
+          showOrder={enabledModules.order_online}
+          showCatering={enabledModules.catering}
+          showReserve={enabledModules.booking}
+        />
+      ) : null,
   }
 
   // Inject add-on sections into the base sectionOrder based on enabled flags.
@@ -412,6 +431,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   }
   if (enabledModules.community_subscribe && !finalOrder.includes('community_subscribe')) {
     finalOrder.push('community_subscribe')
+  }
+  // Inject the restaurant CTA strip (Order / Catering / Reserve) right after
+  // the hero. Only when a RESTAURANT-specific flag is on so we don't push a
+  // strip onto unrelated booking-only tenants.
+  const anyRestaurantCta = enabledModules.order_online || enabledModules.catering
+  if (anyRestaurantCta && !finalOrder.includes('restaurant_ctas')) {
+    const heroIdx = finalOrder.indexOf('hero')
+    const insertAt = heroIdx >= 0 ? heroIdx + 1 : 0
+    finalOrder.splice(insertAt, 0, 'restaurant_ctas')
   }
 
   return (

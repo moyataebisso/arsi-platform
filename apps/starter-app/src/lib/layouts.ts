@@ -32,6 +32,7 @@ export type HeroVariant =
   | 'block_hero'
   | 'rounded_card_hero'
   | 'terminal_hero'
+  | 'video_hero'
 
 export type SectionId =
   | 'hero'
@@ -79,6 +80,8 @@ export type SectionId =
   // healthcare / residential care add-ons (gated by enabled_modules)
   | 'mission_values'
   | 'community_subscribe'
+  // restaurant add-ons (gated by enabled_modules)
+  | 'restaurant_ctas'
 
 export interface LayoutMeta {
   name: string

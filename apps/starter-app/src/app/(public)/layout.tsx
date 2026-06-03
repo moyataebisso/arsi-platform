@@ -19,6 +19,9 @@ export default async function PublicLayout({ children }: { children: React.React
       'active_layout',
       'selected_layout',
       'logo_url',
+      'promo_bar_text',
+      'promo_bar_cta_url',
+      'promo_bar_cta_label',
     ]),
     getEnabledModules(),
     getCtaConfig(),
@@ -48,6 +51,15 @@ export default async function PublicLayout({ children }: { children: React.React
           showOurHomes={enabledModules.our_homes}
           showReferrals={enabledModules.referrals}
           showResources={enabledModules.resources_page}
+          showDrinks={enabledModules.drinks}
+          showOrder={enabledModules.order_online}
+          showReserve={enabledModules.booking}
+          showParties={enabledModules.parties}
+          showCatering={enabledModules.catering}
+          showJobs={enabledModules.jobs}
+          promoBarText={settings.promo_bar_text}
+          promoBarCtaUrl={settings.promo_bar_cta_url}
+          promoBarCtaLabel={settings.promo_bar_cta_label}
           phoneCtaLabel={cta.phoneCtaLabel}
           phoneCtaHref={cta.phoneCtaHref}
         />
@@ -59,6 +71,12 @@ export default async function PublicLayout({ children }: { children: React.React
           showOurHomes={enabledModules.our_homes}
           showReferrals={enabledModules.referrals}
           showResources={enabledModules.resources_page}
+          showDrinks={enabledModules.drinks}
+          showOrder={enabledModules.order_online}
+          showReserve={enabledModules.booking}
+          showParties={enabledModules.parties}
+          showCatering={enabledModules.catering}
+          showJobs={enabledModules.jobs}
         />
       </div>
     </>

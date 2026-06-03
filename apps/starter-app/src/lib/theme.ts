@@ -199,6 +199,27 @@ export const themes = {
     headerBackground: '#FFFFFF',
     footerBackground: '#FFFFFF',
   },
+  // ── RESTAURANT — Adama (black + gold serif) ──────────────
+  adamaGold: {
+    primary: '#C9A227',
+    primaryHover: '#A78318',
+    secondary: '#8C6D14',
+    accent: '#E2C46A',
+    accentLight: '#1A1305',
+    background: '#0A0A0A',
+    surface: '#111111',
+    surfaceAlt: '#161616',
+    cardBg: '#0F0F0F',
+    text: '#F4F1E8',
+    textMuted: '#B8B0A0',
+    textLight: '#8A8270',
+    border: '#1F1F1F',
+    borderLight: '#161616',
+    heading: 'font-serif font-bold tracking-tight',
+    heroGradient: 'linear-gradient(135deg, #0A0A0A 0%, #1A1305 60%, #0A0A0A 100%)',
+    headerBackground: '#000000',
+    footerBackground: '#000000',
+  },
 
   // ── CLASSIC ──────────────────────────────────────────────
   warm: {
@@ -2227,6 +2248,15 @@ export const themeStyles: Partial<Record<ThemeName, ThemeStyle>> = {
     badgeStyle: 'bg-[#F2E8D5] text-[#7A1F2B] border border-[#C9A977]/40 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest',
     accentShape: 'radial-gradient(ellipse at 50% 0%, rgba(201,169,119,0.20) 0%, transparent 65%)',
   },
+  adamaGold: {
+    heroShape: 'none',
+    cardStyle: 'rounded-xl bg-[#0F0F0F] border border-[#1F1F1F] p-6',
+    cardHover: 'hover:border-[#C9A227]/60 hover:-translate-y-0.5 transition-all duration-200',
+    buttonStyle: 'bg-transparent text-[#C9A227] rounded-none px-7 py-3 font-semibold tracking-[0.18em] uppercase border border-[#C9A227] hover:bg-[#C9A227] hover:text-black',
+    sectionDivider: 'none',
+    badgeStyle: 'text-[#C9A227] border border-[#C9A227]/40 rounded-none px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em]',
+    accentShape: 'radial-gradient(ellipse at 50% 0%, rgba(201,162,39,0.18) 0%, transparent 65%)',
+  },
 }
 
 export function getThemeStyle(name: ThemeName): ThemeStyle {
@@ -2256,6 +2286,8 @@ export const themeCategories = {
     'evergreen',
     // Healthcare / Residential Care
     'entrustedMaroon',
+    // Restaurant
+    'adamaGold',
     // Layout-paired
     'arcticMin', 'editorial', 'vivid', 'pastel', 'nightshift',
   ] as ThemeName[],
@@ -2311,6 +2343,8 @@ export const themeLabels: Record<ThemeName, string> = {
   evergreen: 'Evergreen',
   // Healthcare / Residential Care
   entrustedMaroon: 'Entrusted Maroon',
+  // Restaurant
+  adamaGold: 'Adama Gold',
   // Layout-paired
   arcticMin: 'Arctic Minimal', editorial: 'Editorial', vivid: 'Vivid', pastel: 'Pastel', nightshift: 'Nightshift',
 }
