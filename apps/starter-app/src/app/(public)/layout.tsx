@@ -22,10 +22,24 @@ export default async function PublicLayout({ children }: { children: React.React
       'promo_bar_text',
       'promo_bar_cta_url',
       'promo_bar_cta_label',
+      'nav_variant',
+      'social_facebook',
+      'social_instagram',
+      'social_twitter',
+      'social_linkedin',
+      'social_google',
     ]),
     getEnabledModules(),
     getCtaConfig(),
   ])
+  const navVariant = settings.nav_variant === 'center_logo' ? 'center_logo' : 'default'
+  const navSocialLinks = [
+    { label: 'Facebook', url: settings.social_facebook || '' },
+    { label: 'Instagram', url: settings.social_instagram || '' },
+    { label: 'Google', url: settings.social_google || '' },
+    { label: 'Twitter', url: settings.social_twitter || '' },
+    { label: 'LinkedIn', url: settings.social_linkedin || '' },
+  ].filter(s => s.url.trim().length > 0)
   // Show the Menu nav link only on restaurant-style sites. Read the raw
   // setting (not validateSelection's fallback) so non-canonical values like
   // 'bistro' from older seed scripts also flip it on.
@@ -62,6 +76,8 @@ export default async function PublicLayout({ children }: { children: React.React
           promoBarCtaLabel={settings.promo_bar_cta_label}
           phoneCtaLabel={cta.phoneCtaLabel}
           phoneCtaHref={cta.phoneCtaHref}
+          navVariant={navVariant}
+          socialLinks={navSocialLinks}
         />
         <main className="flex-1">{children}</main>
         <Footer

@@ -49,13 +49,19 @@ import {
   getEditorialProcessSteps,
   getCallCTABullets,
 } from '@/lib/content/resolver'
-import { getSiteSetting } from '@/lib/settings'
+import { getSiteSetting, getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { getCtaConfig } from '@/lib/cta'
 import { MissionValuesPhilosophy } from '@/components/sections/MissionValuesPhilosophy'
 import { JoinCareCommunity } from '@/components/sections/JoinCareCommunity'
 import { RestaurantCtasSection } from '@/components/sections/RestaurantCtasSection'
+import { AboutSplitSection } from '@/components/sections/AboutSplitSection'
+import { OrderBandSection } from '@/components/sections/OrderBandSection'
+import { CateringBandSection } from '@/components/sections/CateringBandSection'
+import { ReservationsBandSection } from '@/components/sections/ReservationsBandSection'
+import { GalleryStripSection } from '@/components/sections/GalleryStripSection'
+import { NewsletterMapSection } from '@/components/sections/NewsletterMapSection'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
 import { themeToCSS, type ResolvedTheme } from '@/lib/theme-resolver'
@@ -173,6 +179,44 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const business = await getBusinessProfile()
   const enabledModules = await getEnabledModules()
   const cta = await getCtaConfig()
+
+  // restaurant_centered layout settings — pulled together so the home page
+  // can mount the new bands. All keys are optional; sections render their
+  // own defaults or noop when the data is missing.
+  const restaurantCenteredSettings = await getSiteSettings([
+    'about_split_eyebrow',
+    'about_split_headline',
+    'about_split_body',
+    'about_split_image_url',
+    'about_split_cta_label',
+    'about_split_cta_url',
+    'order_band_headline',
+    'order_band_subhead',
+    'order_band_cta_label',
+    'order_url',
+    'catering_headline',
+    'catering_body',
+    'catering_image_url',
+    'catering_band_cta_label',
+    'reservations_band_eyebrow',
+    'reservations_band_headline',
+    'reservations_band_subhead',
+    'reservations_band_cta_label',
+    'reservations_band_cta_url',
+    'gallery_strip_images',
+    'newsletter_headline',
+    'newsletter_intro',
+  ])
+  let galleryStripImages: string[] = []
+  try {
+    const raw = restaurantCenteredSettings.gallery_strip_images
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        galleryStripImages = parsed.filter((s): s is string => typeof s === 'string')
+      }
+    }
+  } catch { /* invalid JSON — silently fall through to empty */ }
 
   // Healthcare/residential-care section content from site_settings (optional).
   // If missing, components fall back to their built-in defaults.
@@ -414,6 +458,52 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           showReserve={enabledModules.booking}
         />
       ) : null,
+    // restaurant_centered layout bands. Each is data-driven; a section with
+    // no content noops itself.
+    about_split: (
+      <AboutSplitSection
+        eyebrow={restaurantCenteredSettings.about_split_eyebrow || business.name}
+        headline={restaurantCenteredSettings.about_split_headline || business.tagline}
+        body={restaurantCenteredSettings.about_split_body || business.story}
+        imageUrl={restaurantCenteredSettings.about_split_image_url}
+        ctaLabel={restaurantCenteredSettings.about_split_cta_label}
+        ctaUrl={restaurantCenteredSettings.about_split_cta_url}
+      />
+    ),
+    order_band: enabledModules.order_online ? (
+      <OrderBandSection
+        headline={restaurantCenteredSettings.order_band_headline}
+        subhead={restaurantCenteredSettings.order_band_subhead}
+        ctaLabel={restaurantCenteredSettings.order_band_cta_label}
+        ctaUrl={restaurantCenteredSettings.order_url || '/order'}
+      />
+    ) : null,
+    catering_band: enabledModules.catering ? (
+      <CateringBandSection
+        headline={restaurantCenteredSettings.catering_headline}
+        body={restaurantCenteredSettings.catering_body}
+        imageUrl={restaurantCenteredSettings.catering_image_url}
+        ctaLabel={restaurantCenteredSettings.catering_band_cta_label}
+      />
+    ) : null,
+    reservations_band: enabledModules.booking ? (
+      <ReservationsBandSection
+        eyebrow={restaurantCenteredSettings.reservations_band_eyebrow}
+        headline={restaurantCenteredSettings.reservations_band_headline}
+        subhead={restaurantCenteredSettings.reservations_band_subhead}
+        ctaLabel={restaurantCenteredSettings.reservations_band_cta_label}
+        ctaUrl={restaurantCenteredSettings.reservations_band_cta_url}
+      />
+    ) : null,
+    gallery_strip: <GalleryStripSection images={galleryStripImages} />,
+    newsletter_map: (
+      <NewsletterMapSection
+        headline={restaurantCenteredSettings.newsletter_headline}
+        intro={restaurantCenteredSettings.newsletter_intro}
+        googleMapsEmbed={business.googleMapsEmbed}
+        address={[business.address, business.city, business.state, business.zip].filter(Boolean).join(', ')}
+      />
+    ),
   }
 
   // Inject add-on sections into the base sectionOrder based on enabled flags.

@@ -4,9 +4,16 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { siteConfig } from '@config'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Facebook, Instagram, Twitter, Linkedin, Globe, type LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+
+export type NavVariant = 'default' | 'center_logo'
+
+export interface NavSocialLink {
+  label: string
+  url: string
+}
 
 interface HeaderProps {
   businessName?: string
@@ -35,6 +42,12 @@ interface HeaderProps {
   // leave these unset and keep the default Get-In-Touch button.
   phoneCtaLabel?: string
   phoneCtaHref?: string
+  // Nav structure variant. 'default' (existing) renders the current
+  // left-logo / right-CTA layout. 'center_logo' splits flag-gated nav items
+  // around a center logo, drops the auth / phone-CTA / About / Services /
+  // Contact widgets, and shows social icons on the far right.
+  navVariant?: NavVariant
+  socialLinks?: NavSocialLink[]
 }
 
 export function Header({
@@ -56,6 +69,8 @@ export function Header({
   promoBarCtaLabel,
   phoneCtaLabel,
   phoneCtaHref,
+  navVariant = 'default',
+  socialLinks,
 }: HeaderProps = {}) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -130,30 +145,220 @@ export function Header({
     return pathname.startsWith(href)
   }
 
+  // Center-logo nav splits flag-gated items into two columns around the logo.
+  // Only items the tenant explicitly enabled (Menu, Drinks, Order, Reserve on
+  // the left; Parties, Catering, Jobs on the right) make it in — About,
+  // Services, Contact, Shop, Blog, Sign In, phone CTA are intentionally
+  // dropped because the centered layout doesn't have room.
+  const centerLeftLinks = [
+    showMenuLink && { href: '/menu', label: 'Menu' },
+    showDrinks && { href: '/drinks', label: 'Drinks' },
+    showOrder && { href: '/order', label: 'Order' },
+    showReserve && { href: '/book', label: 'Reserve' },
+  ].filter(Boolean) as { href: string; label: string }[]
+  const centerRightLinks = [
+    showParties && { href: '/parties', label: 'Parties' },
+    showCatering && { href: '/catering', label: 'Catering' },
+    showJobs && { href: '/jobs', label: 'Jobs' },
+  ].filter(Boolean) as { href: string; label: string }[]
+
+  const validSocials = (socialLinks || []).filter(s => s.url && s.url.trim().length > 0)
+  function pickSocialIcon(label: string): LucideIcon {
+    const l = label.toLowerCase()
+    if (l.includes('facebook')) return Facebook
+    if (l.includes('instagram')) return Instagram
+    if (l.includes('twitter') || l === 'x') return Twitter
+    if (l.includes('linkedin')) return Linkedin
+    return Globe
+  }
+
   const showPromoBar = Boolean((promoBarText || '').trim())
   const promoBarHasCta = showPromoBar && Boolean((promoBarCtaUrl || '').trim())
 
   return (
     <>
       {showPromoBar && (
-        <div
-          className="w-full text-center text-[12px] tracking-[0.18em] uppercase py-2 px-4"
+        navVariant === 'center_logo' ? (
+          <div
+            className="w-full text-[12px] tracking-[0.18em] uppercase py-2 px-4 sm:px-6 flex items-center justify-between gap-4"
+            style={{ backgroundColor: 'var(--color-primary)', color: '#000' }}
+          >
+            <span className="font-semibold">{promoBarText}</span>
+            {promoBarHasCta && (
+              <a
+                href={promoBarCtaUrl}
+                className="font-semibold px-3 py-1 transition-colors hover:bg-black hover:text-[color:var(--color-primary)]"
+                style={{ border: '1px solid #000' }}
+              >
+                {promoBarCtaLabel || 'Book Table'}
+              </a>
+            )}
+          </div>
+        ) : (
+          <div
+            className="w-full text-center text-[12px] tracking-[0.18em] uppercase py-2 px-4"
+            style={{ backgroundColor: 'var(--color-primary)', color: '#000' }}
+          >
+            <span className="font-semibold">{promoBarText}</span>
+            {promoBarHasCta && (
+              <a
+                href={promoBarCtaUrl}
+                className="ml-3 underline underline-offset-4 hover:opacity-80"
+              >
+                {promoBarCtaLabel || 'Reserve Now'}
+              </a>
+            )}
+          </div>
+        )
+      )}
+      {navVariant === 'center_logo' && (
+        <header
+          className="sticky top-0 z-50 border-b transition-colors"
           style={{
-            backgroundColor: 'var(--color-primary)',
-            color: '#000',
+            backgroundColor: 'var(--color-header-bg, var(--color-background))',
+            borderColor: scrolled ? 'var(--color-border)' : 'transparent',
+            boxShadow: scrolled ? '0 1px 8px rgba(0,0,0,0.18)' : 'none',
           }}
         >
-          <span className="font-semibold">{promoBarText}</span>
-          {promoBarHasCta && (
-            <a
-              href={promoBarCtaUrl}
-              className="ml-3 underline underline-offset-4 hover:opacity-80"
-            >
-              {promoBarCtaLabel || 'Reserve Now'}
-            </a>
-          )}
-        </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="hidden md:grid grid-cols-[1fr_auto_1fr] items-center gap-6 h-20 lg:h-24">
+              {/* Left items */}
+              <nav className="flex items-center justify-end gap-5 lg:gap-7">
+                {centerLeftLinks.map(link => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="text-[12px] lg:text-[13px] font-semibold uppercase tracking-[0.22em] transition-colors whitespace-nowrap"
+                    style={{
+                      color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-text)',
+                      fontFamily: 'var(--font-heading)',
+                    }}
+                    onMouseEnter={e =>
+                      ((e.currentTarget as HTMLElement).style.color = 'var(--color-primary)')
+                    }
+                    onMouseLeave={e =>
+                      ((e.currentTarget as HTMLElement).style.color = isActive(link.href)
+                        ? 'var(--color-primary)'
+                        : 'var(--color-text)')
+                    }
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+
+              {/* Center logo — drops slightly below the bar like the reference */}
+              <Link
+                href="/"
+                aria-label={displayBusinessName}
+                className="relative flex items-center justify-center shrink-0"
+                style={{ transform: 'translateY(8px)' }}
+              >
+                {logoUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={logoUrl}
+                    alt={displayBusinessName}
+                    className="h-20 lg:h-24 w-auto"
+                    style={{
+                      borderRadius: '9999px',
+                      backgroundColor: 'var(--color-header-bg, var(--color-background))',
+                      padding: '4px',
+                    }}
+                  />
+                ) : (
+                  <span
+                    className="text-2xl lg:text-3xl font-bold uppercase tracking-wider whitespace-nowrap"
+                    style={{
+                      color: 'var(--color-primary)',
+                      fontFamily: 'var(--font-heading)',
+                    }}
+                  >
+                    {displayBusinessName}
+                  </span>
+                )}
+              </Link>
+
+              {/* Right items + social icons */}
+              <nav className="flex items-center justify-start gap-5 lg:gap-7">
+                {centerRightLinks.map(link => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="text-[12px] lg:text-[13px] font-semibold uppercase tracking-[0.22em] transition-colors whitespace-nowrap"
+                    style={{
+                      color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-text)',
+                      fontFamily: 'var(--font-heading)',
+                    }}
+                    onMouseEnter={e =>
+                      ((e.currentTarget as HTMLElement).style.color = 'var(--color-primary)')
+                    }
+                    onMouseLeave={e =>
+                      ((e.currentTarget as HTMLElement).style.color = isActive(link.href)
+                        ? 'var(--color-primary)'
+                        : 'var(--color-text)')
+                    }
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                {validSocials.length > 0 && (
+                  <div className="flex items-center gap-3 ml-auto" aria-label="Social media">
+                    {validSocials.map(s => {
+                      const Icon = pickSocialIcon(s.label)
+                      return (
+                        <a
+                          key={s.label}
+                          href={s.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={s.label}
+                          className="transition-colors"
+                          style={{ color: 'var(--color-text)' }}
+                          onMouseEnter={e =>
+                            ((e.currentTarget as HTMLElement).style.color = 'var(--color-primary)')
+                          }
+                          onMouseLeave={e =>
+                            ((e.currentTarget as HTMLElement).style.color = 'var(--color-text)')
+                          }
+                        >
+                          <Icon size={16} strokeWidth={2} />
+                        </a>
+                      )
+                    })}
+                  </div>
+                )}
+              </nav>
+            </div>
+
+            {/* Mobile bar */}
+            <div className="md:hidden flex items-center justify-between h-16">
+              <Link href="/" aria-label={displayBusinessName}>
+                {logoUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={logoUrl} alt={displayBusinessName} className="h-10 w-auto rounded-full" />
+                ) : (
+                  <span
+                    className="text-lg font-bold uppercase tracking-wider"
+                    style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}
+                  >
+                    {displayBusinessName}
+                  </span>
+                )}
+              </Link>
+              <button
+                className="p-2 rounded-xl"
+                style={{ color: 'var(--color-text)' }}
+                onClick={() => setMobileOpen(!mobileOpen)}
+                aria-label="Toggle menu"
+              >
+                {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
+          </div>
+        </header>
       )}
+      {navVariant !== 'center_logo' && (
       <header
         className="sticky top-0 z-50 backdrop-blur-md border-b transition-all duration-300"
         style={{
@@ -309,6 +514,7 @@ export function Header({
           </div>
         </div>
       </header>
+      )}
 
       {/* Mobile drawer overlay */}
       {mobileOpen && (
@@ -350,7 +556,7 @@ export function Header({
           </button>
         </div>
         <nav className="p-4 space-y-1">
-          {navLinks.map(link => (
+          {(navVariant === 'center_logo' ? [...centerLeftLinks, ...centerRightLinks] : navLinks).map(link => (
             <Link
               key={link.href}
               href={link.href}
@@ -364,28 +570,51 @@ export function Header({
               {link.label}
             </Link>
           ))}
-          <div className="pt-4">
-            {phoneCtaLabel && phoneCtaHref ? (
-              <a
-                href={phoneCtaHref}
-                onClick={() => setMobileOpen(false)}
-                className="block px-4 py-3 rounded-xl text-sm font-semibold text-white text-center transition-all"
-                style={{ backgroundColor: 'var(--color-primary)' }}
-                aria-label={`Call ${phoneCtaLabel}`}
-              >
-                {phoneCtaLabel}
-              </a>
-            ) : (
-              <Link
-                href="/contact"
-                onClick={() => setMobileOpen(false)}
-                className="block px-4 py-3 rounded-xl text-sm font-semibold text-white text-center transition-all"
-                style={{ backgroundColor: 'var(--color-primary)' }}
-              >
-                Get In Touch
-              </Link>
-            )}
-          </div>
+          {navVariant !== 'center_logo' && (
+            <div className="pt-4">
+              {phoneCtaLabel && phoneCtaHref ? (
+                <a
+                  href={phoneCtaHref}
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-4 py-3 rounded-xl text-sm font-semibold text-white text-center transition-all"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  aria-label={`Call ${phoneCtaLabel}`}
+                >
+                  {phoneCtaLabel}
+                </a>
+              ) : (
+                <Link
+                  href="/contact"
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-4 py-3 rounded-xl text-sm font-semibold text-white text-center transition-all"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                >
+                  Get In Touch
+                </Link>
+              )}
+            </div>
+          )}
+          {navVariant === 'center_logo' && validSocials.length > 0 && (
+            <div className="pt-4 flex items-center gap-4" aria-label="Social media">
+              {validSocials.map(s => {
+                const Icon = pickSocialIcon(s.label)
+                return (
+                  <a
+                    key={s.label}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="p-2"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    <Icon size={18} strokeWidth={2} />
+                  </a>
+                )
+              })}
+            </div>
+          )}
+          {navVariant !== 'center_logo' && (
           <div className="pt-3 mt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
             {user ? (
               <>
@@ -417,6 +646,7 @@ export function Header({
               </Link>
             )}
           </div>
+          )}
         </nav>
       </div>
     </>

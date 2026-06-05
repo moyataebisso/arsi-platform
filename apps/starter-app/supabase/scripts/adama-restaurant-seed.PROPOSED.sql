@@ -30,7 +30,7 @@ INSERT INTO site_settings (key, value_json) VALUES
   ('business_name',  '"Adama Restaurant"'),
   ('tagline',        '"Your Finest Ethiopian Cuisine"'),
   ('business_story', '"Adama Restaurant is a family-owned Ethiopian kitchen in Columbia Heights, serving traditional injera, doro wat, and fresh-roasted coffee since opening day. Every meal is made from scratch using recipes passed down through generations."'),
-  ('contact_email',  '"hello@adamarestaurant-mn.com"'),
+  ('contact_email',  '"adamarestaurantmn@gmail.com"'),
   ('phone',          '"763-220-2897"'),
   ('contact_phone',  '"763-220-2897"'),
   ('address',        '"3970 Central Ave NE"'),
@@ -52,8 +52,8 @@ ON CONFLICT (key) DO UPDATE SET value_json = EXCLUDED.value_json, updated_at = N
 
 -- ── 3. SOCIAL LINKS (footer "FIND US ON") ─────────────────
 INSERT INTO site_settings (key, value_json) VALUES
-  ('social_facebook',  '"https://www.facebook.com/adamarestaurantmn"'),
-  ('social_instagram', '"https://www.instagram.com/adamarestaurantmn"'),
+  ('social_facebook',  '"https://www.facebook.com/adamarestaurant/"'),
+  ('social_instagram', '"https://www.instagram.com/adamarestaurant"'),
   -- Add Google profile URL when known. Leaving empty hides the icon.
   ('social_twitter',   '""'),
   ('social_linkedin',  '""')
@@ -107,7 +107,7 @@ INSERT INTO site_settings (key, value_json) VALUES
 
   ('jobs_headline',      '"Work at Adama"'),
   ('jobs_body',          '"We are always looking for friendly, dependable people to join our kitchen and floor team. If that sounds like you, send us your resume."'),
-  ('jobs_apply_email',   '"hello@adamarestaurant-mn.com"'),
+  ('jobs_apply_email',   '"adamarestaurantmn@gmail.com"'),
   ('jobs_apply_url',     '""'),
   ('jobs_openings',      '[]')
 ON CONFLICT (key) DO UPDATE SET value_json = EXCLUDED.value_json, updated_at = NOW();

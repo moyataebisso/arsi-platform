@@ -10,6 +10,7 @@
 export const LAYOUT_IDS = [
   'fleet',
   'restaurant',
+  'restaurant_centered',
   'salon',
   'healthcare',
   'community',
@@ -82,6 +83,13 @@ export type SectionId =
   | 'community_subscribe'
   // restaurant add-ons (gated by enabled_modules)
   | 'restaurant_ctas'
+  // restaurant_centered layout sections (all DB-driven)
+  | 'about_split'
+  | 'order_band'
+  | 'catering_band'
+  | 'reservations_band'
+  | 'gallery_strip'
+  | 'newsletter_map'
 
 export interface LayoutMeta {
   name: string
@@ -108,6 +116,23 @@ export const LAYOUT_META: Record<LayoutId, LayoutMeta> = {
     defaultTheme: 'bistro',
     defaultHeroVariant: 'image_overlay',
     sectionOrder: ['hero', 'location_strip', 'menu_preview', 'about', 'services', 'location', 'contact'],
+  },
+  restaurant_centered: {
+    name: 'Restaurant — Centered Logo',
+    industry: 'Restaurants, cafés, food service',
+    description: 'Center-logo nav + stacked bands. Matches the SpotHopper-style aesthetic. Pair with adamaGold or any dark theme.',
+    defaultTheme: 'adamaGold',
+    defaultHeroVariant: 'video_hero',
+    sectionOrder: [
+      'hero',
+      'about_split',
+      'menu_preview',
+      'order_band',
+      'catering_band',
+      'reservations_band',
+      'gallery_strip',
+      'newsletter_map',
+    ],
   },
   salon: {
     name: 'Salon & Beauty',
