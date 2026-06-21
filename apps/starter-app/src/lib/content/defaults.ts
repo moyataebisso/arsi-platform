@@ -18,7 +18,10 @@ const safeFooterServingClause =
     : ''
 
 export const DEFAULTS: Record<string, string> = {
-  hero_headline: safeName ? `Welcome to ${safeName}` : 'Welcome',
+  // Empty here so HeroSection's fallback (business_name → 'Welcome') wins
+  // without prefixing 'Welcome to'. Tenants override per-tenant via
+  // site_settings.hero_headline.
+  hero_headline: safeName || '',
   hero_subheadline: safeTagline,
   hero_cta_primary: 'Get In Touch',
   hero_cta_secondary: 'Our Services',

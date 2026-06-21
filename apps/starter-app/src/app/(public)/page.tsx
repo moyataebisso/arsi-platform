@@ -172,6 +172,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   ])
   const services = await getHomeServicesContent()
   const heroImage = await getSiteSetting('hero_image_url')
+  // Optional second image rendered as a floating card overlapping the primary
+  // (SplitHero only). When the key is absent, no card renders — Adama and
+  // Entrusted stay byte-identical until they set this key themselves.
+  const heroImageSecondary = await getSiteSetting('hero_image_secondary')
   // video_hero only — both keys swappable per tenant. Poster MUST always
   // render so an empty hero is impossible when the video is blocked/slow.
   const heroVideo = await getSiteSetting('hero_video_url')
@@ -327,6 +331,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         ctaPrimary={content.hero_cta_primary}
         ctaSecondary={content.hero_cta_secondary}
         heroImageUrl={heroImage || undefined}
+        heroImageSecondary={heroImageSecondary || undefined}
         heroVideoUrl={heroVideo || undefined}
         heroPosterUrl={heroPoster || undefined}
         variant={heroVariant}

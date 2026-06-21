@@ -17,6 +17,10 @@ interface HeroSectionProps {
   ctaPrimary?: string
   ctaSecondary?: string
   heroImageUrl?: string
+  // Optional second image rendered as a floating card overlapping the primary
+  // image (SplitHero only). When absent, no card is rendered and the layout
+  // is byte-identical to before. site_settings key: hero_image_secondary.
+  heroImageSecondary?: string
   variant?: HeroVariant
   // DB-driven business profile passed from page.tsx
   businessName?: string
@@ -62,7 +66,10 @@ function getDisplayValues(props: VariantProps) {
   const name = resolveBusinessName(props.businessName)
   const tagline = resolveTagline(props.tagline)
   return {
-    headline: props.headline || (name ? `Welcome to ${name}` : 'Welcome'),
+    // Headline fallback chain: explicit prop → business_name → 'Welcome'.
+    // Previously prefixed with 'Welcome to' — dropped so the business name
+    // stands on its own when no explicit hero_headline is set.
+    headline: props.headline || name || 'Welcome',
     subheadline:
       props.subheadline ||
       tagline ||
@@ -189,7 +196,7 @@ function ImageOverlayHero(props: VariantProps) {
   const { line1, line2 } = splitHeadline(display.headline)
   const ctaHref = getCtaHref()
   const imageUrl =
-    props.heroImageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1600'
+    props.heroImageUrl || 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=1200&q=80'
 
   const locationLabel = getLocationLabel(props.city, props.state)
   const pillLabel = locationLabel || resolveTagline(props.tagline) || null
@@ -308,12 +315,12 @@ function SplitHero(props: VariantProps) {
     ? '/shop'
     : '/contact'
 
-  const displayHeadline = headline || (name ? `Welcome to ${name}` : 'Welcome')
+  const displayHeadline = headline || name || 'Welcome'
   const displaySubheadline = subheadline || tagline || 'We provide exceptional services tailored to your needs. Let us help you achieve your goals with our dedicated team of professionals.'
   const displayCtaPrimary = ctaPrimary || (modules.booking ? 'Book Appointment' : modules.ecommerce ? 'Shop Now' : 'Get In Touch')
   const displayCtaSecondary = ctaSecondary || 'Our Services'
 
-  const imageUrl = heroImageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800'
+  const imageUrl = heroImageUrl || 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=1200&q=80'
 
   console.log('[HeroSection] split heroImageUrl=', heroImageUrl, 'resolved=', imageUrl)
 
@@ -425,7 +432,7 @@ function SplitHero(props: VariantProps) {
             </div>
           </div>
 
-          {/* Right: Image */}
+          {/* Right: Image (with optional floating secondary card) */}
           <div className="animate-fade-in-up delay-400 relative">
             <div
               className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl"
@@ -435,6 +442,17 @@ function SplitHero(props: VariantProps) {
                 backgroundPosition: 'center',
               }}
             />
+            {props.heroImageSecondary && (
+              <div
+                aria-hidden="true"
+                className="hidden sm:block absolute -bottom-6 -left-6 lg:-bottom-8 lg:-left-8 w-32 h-40 sm:w-40 sm:h-52 lg:w-48 lg:h-60 rounded-xl overflow-hidden shadow-2xl ring-4 ring-[color:var(--color-card-bg)]"
+                style={{
+                  backgroundImage: cssUrl(props.heroImageSecondary),
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -509,7 +527,7 @@ function EditorialSplitHero(props: VariantProps) {
   const display = getDisplayValues(props)
   const ctaHref = getCtaHref()
   const imageUrl =
-    props.heroImageUrl || 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1200&q=80'
+    props.heroImageUrl || 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=1200&q=80'
   const eyebrow = resolveTagline(props.tagline) || 'Established practice'
 
   return (
@@ -637,7 +655,7 @@ function RoundedCardHero(props: VariantProps) {
   const display = getDisplayValues(props)
   const ctaHref = getCtaHref()
   const imageUrl =
-    props.heroImageUrl || 'https://images.unsplash.com/photo-1517022812141-23620dba5c23?w=1200&q=80'
+    props.heroImageUrl || 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=1200&q=80'
 
   return (
     <section
@@ -880,7 +898,7 @@ function VideoHero(props: VariantProps) {
   const posterUrl =
     props.heroPosterUrl ||
     props.heroImageUrl ||
-    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1600'
+    'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=1200&q=80'
 
   const videoUrl = props.heroVideoUrl || ''
 
@@ -1013,6 +1031,7 @@ export function HeroSection(props: HeroSectionProps) {
     ctaPrimary: props.ctaPrimary,
     ctaSecondary: props.ctaSecondary,
     heroImageUrl: props.heroImageUrl,
+    heroImageSecondary: props.heroImageSecondary,
     businessName: props.businessName,
     tagline: props.tagline,
     city: props.city,
