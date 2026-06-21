@@ -2,6 +2,7 @@ import { siteConfig } from '@config'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import type { HeroVariant } from '@/lib/layouts'
+import { displayBusinessName } from '@/lib/business'
 
 const PLACEHOLDER_NAME = 'Client Business Name'
 const PLACEHOLDER_TAGLINE = 'Your tagline here'
@@ -49,13 +50,71 @@ function cssUrl(raw: string): string {
   return `url('${safe}')`
 }
 
+// Split a paragraph into sentences on ". " followed by a capital letter so
+// long subheadlines render as multiple <p> tags instead of one wall of text.
+// Single-sentence input returns a single-element array — single-<p> rendering
+// behavior is unchanged for tenants whose hero_subheadline is one sentence.
+function splitSentences(text: string): string[] {
+  if (!text) return []
+  const out: string[] = []
+  let current = ''
+  for (let i = 0; i < text.length; i++) {
+    current += text[i]
+    if (
+      text[i] === '.' &&
+      i + 2 < text.length &&
+      text[i + 1] === ' ' &&
+      /[A-Z]/.test(text[i + 2])
+    ) {
+      out.push(current.trim())
+      current = ''
+      i++ // skip the matched space
+    }
+  }
+  if (current.trim()) out.push(current.trim())
+  return out.filter(Boolean)
+}
+
+// Render a subheadline as one <p> (single sentence) or a wrapping <div> of
+// stacked <p> elements (multi-sentence). className/style apply to the outer
+// element; text styling (size/color/line-height) cascades to children via
+// inheritance so each variant's existing typography is preserved.
+function Subheadline({
+  text,
+  className,
+  style,
+}: {
+  text?: string
+  className?: string
+  style?: React.CSSProperties
+}) {
+  if (!text) return null
+  const parts = splitSentences(text)
+  if (parts.length <= 1) {
+    return (
+      <p className={className} style={style}>
+        {text}
+      </p>
+    )
+  }
+  return (
+    <div className={`${className ?? ''} space-y-3`.trim()} style={style}>
+      {parts.map((p, i) => (
+        <p key={i}>{p}</p>
+      ))}
+    </div>
+  )
+}
+
 function getCtaHref() {
   const { modules } = siteConfig
   return modules.booking ? '/book' : modules.ecommerce ? '/shop' : '/contact'
 }
 
 function resolveBusinessName(propName?: string): string {
-  return propName || clean(siteConfig.business.name, PLACEHOLDER_NAME)
+  // Strip trailing " LLC" / " Inc." for hero display. Footer keeps full
+  // legal name; this only affects what's rendered inside the hero.
+  return displayBusinessName(propName || clean(siteConfig.business.name, PLACEHOLDER_NAME))
 }
 function resolveTagline(propTagline?: string): string {
   return propTagline || clean(siteConfig.business.tagline, PLACEHOLDER_TAGLINE)
@@ -142,12 +201,11 @@ function SolidColorHero(props: VariantProps) {
           )}
         </h1>
 
-        <p
+        <Subheadline
+          text={display.subheadline}
           className="text-sm sm:text-base text-center mx-auto mb-8 max-w-[460px]"
           style={{ color: 'rgba(255, 255, 255, 0.75)' }}
-        >
-          {display.subheadline}
-        </p>
+        />
 
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
           <Link
@@ -254,12 +312,11 @@ function ImageOverlayHero(props: VariantProps) {
           )}
         </h1>
 
-        <p
+        <Subheadline
+          text={display.subheadline}
           className="text-sm sm:text-base text-center mx-auto mb-8 max-w-[460px]"
           style={{ color: 'rgba(255, 255, 255, 0.75)' }}
-        >
-          {display.subheadline}
-        </p>
+        />
 
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
           <Link
@@ -393,12 +450,11 @@ function SplitHero(props: VariantProps) {
               }}
             />
 
-            <p
+            <Subheadline
+              text={displaySubheadline}
               className="animate-fade-in-up delay-200 text-lg sm:text-xl leading-relaxed mb-10 max-w-lg"
               style={{ color: 'var(--color-text-muted)' }}
-            >
-              {displaySubheadline}
-            </p>
+            />
 
             <div className="animate-fade-in-up delay-300 flex flex-col sm:flex-row gap-4">
               {props.phoneCtaLabel && props.phoneCtaHref ? (
@@ -494,12 +550,11 @@ function CenteredMinimalHero(props: VariantProps) {
           {display.headline}
         </h1>
 
-        <p
+        <Subheadline
+          text={display.subheadline}
           className="text-lg sm:text-xl max-w-xl mx-auto mb-10"
           style={{ color: 'var(--color-text-muted)' }}
-        >
-          {display.subheadline}
-        </p>
+        />
 
         <Link
           href={ctaHref}
@@ -556,12 +611,11 @@ function EditorialSplitHero(props: VariantProps) {
           >
             {display.headline}
           </h1>
-          <p
+          <Subheadline
+            text={display.subheadline}
             className="text-lg leading-relaxed mb-10 max-w-md"
             style={{ color: 'var(--color-text-muted)' }}
-          >
-            {display.subheadline}
-          </p>
+          />
           <Link
             href={ctaHref}
             className="inline-block transition-opacity hover:opacity-70"
@@ -616,16 +670,15 @@ function BlockHero(props: VariantProps) {
         >
           {display.headline}
         </h1>
-        <p
+        <Subheadline
+          text={display.subheadline}
           className="text-white max-w-2xl mb-12"
           style={{
             fontSize: 'clamp(1.25rem, 2vw, 1.5rem)',
             lineHeight: 1.4,
             fontWeight: 600,
           }}
-        >
-          {display.subheadline}
-        </p>
+        />
         <Link
           href={ctaHref}
           className="inline-block transition-transform hover:-translate-y-1 hover:translate-x-1"
@@ -690,9 +743,11 @@ function RoundedCardHero(props: VariantProps) {
               >
                 {display.headline}
               </h1>
-              <p className="text-base sm:text-lg leading-relaxed mb-8" style={{ color: '#64748b' }}>
-                {display.subheadline}
-              </p>
+              <Subheadline
+                text={display.subheadline}
+                className="text-base sm:text-lg leading-relaxed mb-8"
+                style={{ color: '#64748b' }}
+              />
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
                   href={ctaHref}
@@ -786,12 +841,11 @@ function TerminalHero(props: VariantProps) {
           >
             {display.headline}
           </h1>
-          <p
+          <Subheadline
+            text={display.subheadline}
             className="text-base sm:text-lg leading-relaxed mb-10 max-w-md"
             style={{ color: '#94a3b8' }}
-          >
-            {display.subheadline}
-          </p>
+          />
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href={ctaHref}
@@ -954,16 +1008,15 @@ function VideoHero(props: VariantProps) {
         >
           {display.headline}
         </h1>
-        <p
+        <Subheadline
+          text={display.subheadline}
           className="mx-auto mb-10 max-w-xl"
           style={{
             color: '#F4F1E8',
             fontSize: 'clamp(1rem, 1.4vw, 1.125rem)',
             lineHeight: 1.6,
           }}
-        >
-          {display.subheadline}
-        </p>
+        />
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
           {props.phoneCtaLabel && props.phoneCtaHref ? (
             <a

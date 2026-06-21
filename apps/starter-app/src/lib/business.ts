@@ -98,6 +98,15 @@ export async function getBusinessProfile(): Promise<BusinessProfile> {
   }
 }
 
+// Strip a trailing legal-entity suffix (LLC, L.L.C., Inc., Inc.) for use in
+// hero headlines, nav, and body copy where the conversational name reads
+// better. Footer keeps the full legal name (just don't pass through this
+// helper there). Idempotent — safe to apply twice.
+export function displayBusinessName(name: string | null | undefined): string {
+  if (!name) return ''
+  return name.replace(/[,\s]+(LLC|L\.L\.C\.|Inc\.?|Incorporated)\.?$/i, '').trim()
+}
+
 export function fullAddress(p: Pick<BusinessProfile, 'address' | 'city' | 'state' | 'zip'>): string {
   const parts: string[] = []
   if (p.address) parts.push(p.address)

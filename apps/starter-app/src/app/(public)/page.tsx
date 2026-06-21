@@ -50,7 +50,7 @@ import {
   getCallCTABullets,
 } from '@/lib/content/resolver'
 import { getSiteSetting, getSiteSettings } from '@/lib/settings'
-import { getBusinessProfile } from '@/lib/business'
+import { getBusinessProfile, displayBusinessName } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { getCtaConfig } from '@/lib/cta'
 import { MissionValuesPhilosophy } from '@/components/sections/MissionValuesPhilosophy'
@@ -185,6 +185,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const heroVideo = await getSiteSetting('hero_video_url')
   const heroPoster = await getSiteSetting('hero_poster_url')
   const business = await getBusinessProfile()
+  // Conversational display name for hero + About headlines and body — strips
+  // trailing " LLC" / " Inc.". Footer renders the raw business.name without
+  // this helper so the legal entity stays visible.
+  const displayedBusinessName = displayBusinessName(business.name)
   const enabledModules = await getEnabledModules()
   const cta = await getCtaConfig()
 
@@ -323,10 +327,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   })()
 
   // Ensure About heading uses live business_name when DB has it
-  // but no explicit about_headline override.
+  // but no explicit about_headline override. Uses the LLC-stripped
+  // display name so the heading reads "About El Roi Health Services"
+  // instead of "About El Roi Health Services LLC".
   const aboutHeadline =
     content.about_headline ||
-    (business.name ? `About ${business.name}` : '') ||
+    (displayedBusinessName ? `About ${displayedBusinessName}` : '') ||
     'About us'
 
   // BUG 1C: layout-aware How It Works defaults
@@ -364,7 +370,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroVideoUrl={heroVideo || undefined}
         heroPosterUrl={heroPoster || undefined}
         variant={heroVariant}
-        businessName={business.name}
+        businessName={displayedBusinessName}
         tagline={business.tagline}
         city={business.city}
         state={business.state}
@@ -385,7 +391,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         body={content.about_text || content.about_body}
         quote={content.about_quote}
         ctaText={content.about_cta_text}
-        businessName={business.name}
+        businessName={displayedBusinessName}
         city={business.city}
         state={business.state}
         image1={content.about_image_1 || content.about_image || undefined}

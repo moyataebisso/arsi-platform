@@ -7,6 +7,7 @@ import { siteConfig } from '@config'
 import { Menu, X, Facebook, Instagram, Twitter, Linkedin, Globe, type LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import { displayBusinessName as toDisplayName } from '@/lib/business'
 
 export type NavVariant = 'default' | 'center_logo'
 
@@ -79,9 +80,13 @@ export function Header({
   const router = useRouter()
   const pages = siteConfig.pages
   const modules = siteConfig.modules
-  const displayBusinessName =
+  // Conversational display name for the nav — strips trailing " LLC" /
+  // " Inc." so the header reads cleanly. Legal name stays intact in the
+  // footer (Footer.tsx renders businessName prop directly without this helper).
+  const rawBusinessName =
     businessName ||
     (siteConfig.business.name === 'Client Business Name' ? 'Welcome' : siteConfig.business.name)
+  const displayBusinessName = toDisplayName(rawBusinessName)
   const displayTagline =
     tagline ?? (siteConfig.business.tagline === 'Your tagline here' ? '' : siteConfig.business.tagline)
 
