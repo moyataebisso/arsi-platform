@@ -1,7 +1,7 @@
 import { siteConfig } from '@config'
 import { HeroSection } from '@/components/sections/HeroSection'
 import { ServicesSection } from '@/components/sections/ServicesSection'
-import { AboutSection } from '@/components/sections/AboutSection'
+import { AboutSection, type HomeAboutBlurb } from '@/components/sections/AboutSection'
 import { ContactSection } from '@/components/sections/ContactSection'
 import { LocationSection } from '@/components/sections/LocationSection'
 import { HowItWorksSection } from '@/components/sections/HowItWorksSection'
@@ -176,6 +176,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // (SplitHero only). When the key is absent, no card renders — Adama and
   // Entrusted stay byte-identical until they set this key themselves.
   const heroImageSecondary = await getSiteSetting('hero_image_secondary')
+  // Optional consolidated home-about blurb (jsonb). When missing, AboutSection
+  // falls through to the existing about_text/about_body/about_quote keys and
+  // their hardcoded fallbacks — Adama and Entrusted unaffected.
+  const homeAboutBlurbRaw = await getSiteSetting('home_about_blurb')
   // video_hero only — both keys swappable per tenant. Poster MUST always
   // render so an empty hero is impossible when the video is blocked/slow.
   const heroVideo = await getSiteSetting('hero_video_url')
@@ -293,6 +297,31 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const resolvedPhilosophy = philosophyContentRaw || missionValuesContent?.philosophy || undefined
   const resolvedValues = valuesFromAbout || missionValuesContent?.values || undefined
 
+  // Parse site_settings.home_about_blurb (jsonb object). Returns null if the
+  // key is missing or malformed so AboutSection falls through to its existing
+  // legacy props (about_text / about_body / about_quote) — Adama/Entrusted
+  // see no change.
+  const homeAboutBlurb: HomeAboutBlurb | null = (() => {
+    if (!homeAboutBlurbRaw) return null
+    try {
+      const parsed = JSON.parse(homeAboutBlurbRaw)
+      if (!parsed || typeof parsed !== 'object') return null
+      const r = parsed as Record<string, unknown>
+      const heading = typeof r.heading === 'string' ? r.heading.trim() : undefined
+      const quote = typeof r.quote === 'string' ? r.quote.trim() : undefined
+      const cta_label = typeof r.cta_label === 'string' ? r.cta_label.trim() : undefined
+      const cta_href = typeof r.cta_href === 'string' ? r.cta_href.trim() : undefined
+      const paragraphs = Array.isArray(r.paragraphs)
+        ? r.paragraphs.filter((p): p is string => typeof p === 'string' && p.trim().length > 0)
+        : undefined
+      // Bail to null when nothing useful parsed.
+      if (!heading && !quote && !cta_label && !cta_href && (!paragraphs || paragraphs.length === 0)) return null
+      return { heading, paragraphs, quote, cta_label, cta_href }
+    } catch {
+      return null
+    }
+  })()
+
   // Ensure About heading uses live business_name when DB has it
   // but no explicit about_headline override.
   const aboutHeadline =
@@ -361,6 +390,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         state={business.state}
         image1={content.about_image_1 || content.about_image || undefined}
         image2={content.about_image_2 || undefined}
+        blurb={homeAboutBlurb}
       />
     ),
     location: siteConfig.location.showMapOnHome ? (

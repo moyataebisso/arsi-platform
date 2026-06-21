@@ -4,6 +4,18 @@ import { siteConfig } from '@config'
 import Link from 'next/link'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
 
+// Consolidated jsonb shape stored at site_settings.home_about_blurb. Every
+// field is optional — present fields override the per-prop / hardcoded
+// fallbacks, missing fields fall through. Adama and Entrusted have no row
+// for this key → blurb is null → behavior is byte-identical to before.
+export interface HomeAboutBlurb {
+  heading?: string
+  paragraphs?: string[]
+  quote?: string
+  cta_label?: string
+  cta_href?: string
+}
+
 interface AboutSectionProps {
   headline?: string
   body?: string
@@ -17,6 +29,10 @@ interface AboutSectionProps {
   // to the existing unsplash stock photos when missing.
   image1?: string
   image2?: string
+  // Optional consolidated blurb from site_settings.home_about_blurb (jsonb).
+  // When set, individual fields override the legacy per-prop fallbacks;
+  // missing fields fall through. Null/undefined leaves prior behavior intact.
+  blurb?: HomeAboutBlurb | null
 }
 
 const DEFAULT_IMAGE_1 =
@@ -34,13 +50,13 @@ export function AboutSection({
   state,
   image1,
   image2,
+  blurb,
 }: AboutSectionProps) {
   const cfgName =
     siteConfig.business.name && siteConfig.business.name !== 'Client Business Name'
       ? siteConfig.business.name
       : ''
   const resolvedName = businessName || cfgName
-  const displayHeadline = headline || (resolvedName ? `About ${resolvedName}` : 'About us')
   const resolvedCity = city || siteConfig.business.city || ''
   const resolvedState = state || siteConfig.business.state || ''
   const cityStatePrefix =
@@ -49,13 +65,24 @@ export function AboutSection({
       : resolvedCity
       ? `Based in ${resolvedCity}, we`
       : 'We'
-  const displayBody =
+  const fallbackBody =
     body ||
     `${cityStatePrefix} have been serving our community with dedication and expertise. Our mission is to deliver outstanding results while building lasting relationships with every client.\n\nWhat sets us apart is our commitment to understanding your unique needs. We do not believe in one-size-fits-all solutions — every service is tailored to help you achieve your specific goals.`
-  const displayQuote = quote || 'Every person who walks through our doors becomes part of our story.'
-  const displayCtaText = ctaText || 'Our Story'
 
-  const bodyParagraphs = displayBody.split('\n').filter(p => p.trim())
+  // Resolution order, per-field: home_about_blurb → existing prop → fallback.
+  // The blurb wins one field at a time so a partially-populated jsonb still
+  // composes cleanly with the legacy about_text / about_body / about_quote.
+  const blurbParagraphs = (blurb?.paragraphs || []).filter((p): p is string => typeof p === 'string' && p.trim().length > 0)
+  const bodyParagraphs =
+    blurbParagraphs.length > 0
+      ? blurbParagraphs
+      : fallbackBody.split('\n').filter(p => p.trim())
+  const displayHeadline =
+    blurb?.heading || headline || (resolvedName ? `About ${resolvedName}` : 'About us')
+  const displayQuote =
+    blurb?.quote || quote || 'Every person who walks through our doors becomes part of our story.'
+  const displayCtaText = blurb?.cta_label || ctaText || 'Our Story'
+  const displayCtaHref = blurb?.cta_href || '/about'
 
   return (
     <section className="py-20 sm:py-28">
@@ -106,7 +133,7 @@ export function AboutSection({
 
             <ScrollReveal delay={400}>
               <Link
-                href="/about"
+                href={displayCtaHref}
                 className="inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200 hover:gap-3"
                 style={{ color: 'var(--color-primary)' }}
               >
