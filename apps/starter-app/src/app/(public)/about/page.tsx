@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { getBusinessProfile } from '@/lib/business'
 import { getContentMany } from '@/lib/content/resolver'
+import { FounderBio } from '@/components/sections/FounderBio'
 
 export const dynamic = 'force-dynamic'
 
@@ -272,6 +273,10 @@ export default async function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/* Founder bio — flag-gated by enabled_modules.founder_bio. Self-noops
+          when flag is off or site_settings.founder_bio is missing. */}
+      <FounderBio />
 
       {/* Team — only renders when team_members is set in site_settings */}
       {profile.team.length > 0 && (

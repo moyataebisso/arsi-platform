@@ -44,7 +44,7 @@ export const siteConfig = {
   //                    split         — Current 2-column text + image split
   // ------------------------------------------------------------
   branding: {
-    theme: "warm" as "warm" | "corporate" | "bold" | "nature" | "luxury" | "ocean" | "sunset" | "midnight" | "rose" | "slate" | "forest" | "sand" | "arctic" | "grape" | "mint" | "fire" | "sage" | "navyGold" | "charcoal" | "crimson" | "stripe" | "linear" | "vercel" | "notion" | "figma" | "loom" | "clinical" | "wellness" | "dental" | "therapy" | "law" | "bistro" | "bakery" | "vegan" | "cafe" | "foodtruck" | "boutique" | "sport" | "kids" | "studio" | "portfolio" | "photography" | "music" | "oromo" | "nonprofit" | "faith" | "edu" | "realty" | "modernRealty" | "transport" | "stripeLight" | "aurora" | "sunriseSaas" | "obsidian" | "meadow" | "midnightMesh" | "coralReef" | "glacier" | "neonCity" | "sandDune" | "deepSpace" | "paper" | "mango" | "frosted" | "ember" | "lavenderField" | "arcticChrome" | "terra" | "stealth" | "goldenHour" | "mintFresh" | "brutalist" | "sakura" | "forestNight" | "marketplace" | "evergreen" | "arcticMin" | "editorial" | "vivid" | "pastel" | "nightshift" | "entrustedMaroon" | "adamaGold",
+    theme: "warm" as "warm" | "corporate" | "bold" | "nature" | "luxury" | "ocean" | "sunset" | "midnight" | "rose" | "slate" | "forest" | "sand" | "arctic" | "grape" | "mint" | "fire" | "sage" | "navyGold" | "charcoal" | "crimson" | "stripe" | "linear" | "vercel" | "notion" | "figma" | "loom" | "clinical" | "wellness" | "dental" | "therapy" | "law" | "bistro" | "bakery" | "vegan" | "cafe" | "foodtruck" | "boutique" | "sport" | "kids" | "studio" | "portfolio" | "photography" | "music" | "oromo" | "nonprofit" | "faith" | "edu" | "realty" | "modernRealty" | "transport" | "stripeLight" | "aurora" | "sunriseSaas" | "obsidian" | "meadow" | "midnightMesh" | "coralReef" | "glacier" | "neonCity" | "sandDune" | "deepSpace" | "paper" | "mango" | "frosted" | "ember" | "lavenderField" | "arcticChrome" | "terra" | "stealth" | "goldenHour" | "mintFresh" | "brutalist" | "sakura" | "forestNight" | "marketplace" | "evergreen" | "arcticMin" | "editorial" | "vivid" | "pastel" | "nightshift" | "entrustedMaroon" | "adamaGold" | "elRoiNavy",
     layout: 'fleet' as 'fleet' | 'restaurant' | 'restaurant_centered' | 'salon' | 'healthcare' | 'community' | 'home_services' | 'modern_minimal' | 'editorial_premium' | 'bold_block' | 'friendly_soft' | 'tech_forward',
     heroVariant: 'split' as 'solid_color' | 'image_overlay' | 'split' | 'centered_minimal' | 'editorial_split' | 'block_hero' | 'rounded_card_hero' | 'terminal_hero' | 'video_hero',
     primaryColor: '#c2410c',
@@ -77,6 +77,7 @@ export const siteConfig = {
     referrals: false,           // /referrals form page + nav link
     resources_page: false,      // /resources external links page + nav link
     community_subscribe: false, // "Join Our Care Community" subscribe band on home
+    founder_bio: false,         // Founder profile block on /about (El Roi + future NP-led tenants)
     // Restaurant modules (Adama + future food tenants)
     drinks: false,              // /drinks page + nav link
     order_online: false,        // /order page + nav link (linkout or in-site)

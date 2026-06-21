@@ -25,6 +25,7 @@ export interface EnabledModules {
   referrals: boolean
   resources_page: boolean
   community_subscribe: boolean
+  founder_bio: boolean
   // Restaurant modules (Adama + future food tenants).
   // All default false so non-restaurant tenants are unaffected.
   drinks: boolean
@@ -54,6 +55,7 @@ function fromSiteConfig(): EnabledModules {
     referrals: m.referrals === true,
     resources_page: m.resources_page === true,
     community_subscribe: m.community_subscribe === true,
+    founder_bio: m.founder_bio === true,
     drinks: m.drinks === true,
     order_online: m.order_online === true,
     parties: m.parties === true,

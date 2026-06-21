@@ -220,6 +220,27 @@ export const themes = {
     headerBackground: '#000000',
     footerBackground: '#000000',
   },
+  // ── HEALTHCARE — El Roi (deep navy + teal accent, NP-led clinical) ───
+  elRoiNavy: {
+    primary: '#1B3A5C',
+    primaryHover: '#13283F',
+    secondary: '#13283F',
+    accent: '#2A9D8F',
+    accentLight: '#E0F2EE',
+    background: '#F8FAFB',
+    surface: '#FFFFFF',
+    surfaceAlt: '#EEF3F7',
+    cardBg: '#FFFFFF',
+    text: '#1A1A2E',
+    textMuted: '#4A5568',
+    textLight: '#718096',
+    border: '#D1DCE8',
+    borderLight: '#E4ECF3',
+    heading: 'font-serif font-bold tracking-tight',
+    heroGradient: 'linear-gradient(135deg, #F8FAFB 0%, #E4ECF3 50%, #D1DCE8 100%)',
+    headerBackground: '#FFFFFF',
+    footerBackground: '#1B3A5C',
+  },
 
   // ── CLASSIC ──────────────────────────────────────────────
   warm: {
@@ -2257,6 +2278,15 @@ export const themeStyles: Partial<Record<ThemeName, ThemeStyle>> = {
     badgeStyle: 'text-[#C9A227] border border-[#C9A227]/40 rounded-none px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em]',
     accentShape: 'radial-gradient(ellipse at 50% 0%, rgba(201,162,39,0.18) 0%, transparent 65%)',
   },
+  elRoiNavy: {
+    heroShape: 'none',
+    cardStyle: 'rounded-2xl bg-white shadow-[0_2px_15px_rgba(27,58,92,0.06)] border border-[#D1DCE8] p-6',
+    cardHover: 'hover:shadow-[0_8px_30px_rgba(27,58,92,0.12)] hover:-translate-y-0.5 transition-all duration-200',
+    buttonStyle: 'bg-[#1B3A5C] text-white rounded-xl px-8 py-3 font-semibold hover:bg-[#13283F] shadow-lg shadow-[rgba(27,58,92,0.18)]',
+    sectionDivider: 'none',
+    badgeStyle: 'bg-[#E0F2EE] text-[#1B3A5C] border border-[#2A9D8F]/40 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest',
+    accentShape: 'radial-gradient(ellipse at 50% 0%, rgba(42,157,143,0.18) 0%, transparent 65%)',
+  },
 }
 
 export function getThemeStyle(name: ThemeName): ThemeStyle {
@@ -2286,6 +2316,7 @@ export const themeCategories = {
     'evergreen',
     // Healthcare / Residential Care
     'entrustedMaroon',
+    'elRoiNavy',
     // Restaurant
     'adamaGold',
     // Layout-paired
@@ -2343,6 +2374,7 @@ export const themeLabels: Record<ThemeName, string> = {
   evergreen: 'Evergreen',
   // Healthcare / Residential Care
   entrustedMaroon: 'Entrusted Maroon',
+  elRoiNavy: 'El Roi Navy',
   // Restaurant
   adamaGold: 'Adama Gold',
   // Layout-paired
