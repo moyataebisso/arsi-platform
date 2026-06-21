@@ -35,10 +35,12 @@ interface AboutSectionProps {
   blurb?: HomeAboutBlurb | null
 }
 
+// Tenant-neutral healthcare fallbacks used when no DB about_image_1 /
+// about_image_2 is seeded. DB values still take precedence.
 const DEFAULT_IMAGE_1 =
-  'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600'
+  'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=800&q=80'
 const DEFAULT_IMAGE_2 =
-  'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600'
+  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80'
 
 export function AboutSection({
   headline,

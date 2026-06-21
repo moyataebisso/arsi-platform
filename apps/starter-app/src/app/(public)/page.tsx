@@ -608,28 +608,18 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   //   community_subscribe — at the end (just before footer)
   const finalOrder: SectionId[] = [...sectionOrder]
   if (enabledModules.mission_values && !finalOrder.includes('mission_values')) {
-    // Anchor selection:
-    //   * payment_cta tenants (El Roi-style): insert AFTER `about` so the
-    //     story-led narrative reads before the values columns.
-    //   * everyone else (Adama, Entrusted): legacy anchor at services + 1.
-    //     This keeps Entrusted's existing home order byte-identical and
-    //     scopes the reorder to tenants opted into the new El Roi shape.
+    // Default rule for every tenant: insert mission_values AFTER `about`
+    // when about is present in the layout — story-led narrative reads
+    // first, values band follows. Falls back to services + 1 (legacy
+    // anchor) only when about isn't part of the layout.
+    const aboutIdx = finalOrder.indexOf('about')
     const servicesIdx = finalOrder.indexOf('services')
     const contactIdx = finalOrder.indexOf('contact')
-    let insertAt: number
-    if (enabledModules.payment_cta) {
-      const aboutIdx = finalOrder.indexOf('about')
-      insertAt =
-        aboutIdx >= 0 ? aboutIdx + 1 :
-        servicesIdx >= 0 ? servicesIdx + 1 :
-        contactIdx >= 0 ? contactIdx :
-        finalOrder.length
-    } else {
-      insertAt =
-        servicesIdx >= 0 ? servicesIdx + 1 :
-        contactIdx >= 0 ? contactIdx :
-        finalOrder.length
-    }
+    const insertAt =
+      aboutIdx >= 0 ? aboutIdx + 1 :
+      servicesIdx >= 0 ? servicesIdx + 1 :
+      contactIdx >= 0 ? contactIdx :
+      finalOrder.length
     finalOrder.splice(insertAt, 0, 'mission_values')
   }
   if (enabledModules.community_subscribe && !finalOrder.includes('community_subscribe')) {
