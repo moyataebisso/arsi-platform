@@ -18,10 +18,11 @@ interface HeroSectionProps {
   ctaPrimary?: string
   ctaSecondary?: string
   heroImageUrl?: string
-  // Optional second image rendered as a floating card overlapping the primary
-  // image (SplitHero only). When absent, no card is rendered and the layout
-  // is byte-identical to before. site_settings key: hero_image_secondary.
-  heroImageSecondary?: string
+  // Optional one-line marketing strip rendered directly below the
+  // subheadline. site_settings key: hero_badge_text. Empty / missing →
+  // nothing renders. Used by El Roi for the service-list strip; other
+  // tenants are unaffected.
+  heroBadgeText?: string
   variant?: HeroVariant
   // DB-driven business profile passed from page.tsx
   businessName?: string
@@ -103,6 +104,26 @@ function Subheadline({
         <p key={i}>{p}</p>
       ))}
     </div>
+  )
+}
+
+// Optional one-line strip rendered directly under the subheadline.
+// Renders nothing when text is empty/missing so tenants without
+// site_settings.hero_badge_text see zero impact.
+function HeroBadge({
+  text,
+  className,
+  style,
+}: {
+  text?: string
+  className?: string
+  style?: React.CSSProperties
+}) {
+  if (!text) return null
+  return (
+    <p className={`text-sm mt-3 mb-6 ${className ?? ''}`.trim()} style={style}>
+      {text}
+    </p>
   )
 }
 
@@ -205,6 +226,11 @@ function SolidColorHero(props: VariantProps) {
           text={display.subheadline}
           className="text-sm sm:text-base text-center mx-auto mb-8 max-w-[460px]"
           style={{ color: 'rgba(255, 255, 255, 0.75)' }}
+        />
+        <HeroBadge
+          text={props.heroBadgeText}
+          className="text-center max-w-[520px] mx-auto"
+          style={{ color: 'rgba(255, 255, 255, 0.65)' }}
         />
 
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
@@ -316,6 +342,11 @@ function ImageOverlayHero(props: VariantProps) {
           text={display.subheadline}
           className="text-sm sm:text-base text-center mx-auto mb-8 max-w-[460px]"
           style={{ color: 'rgba(255, 255, 255, 0.75)' }}
+        />
+        <HeroBadge
+          text={props.heroBadgeText}
+          className="text-center max-w-[520px] mx-auto"
+          style={{ color: 'rgba(255, 255, 255, 0.65)' }}
         />
 
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
@@ -455,6 +486,11 @@ function SplitHero(props: VariantProps) {
               className="animate-fade-in-up delay-200 text-lg sm:text-xl leading-relaxed mb-10 max-w-lg"
               style={{ color: 'var(--color-text-muted)' }}
             />
+            <HeroBadge
+              text={props.heroBadgeText}
+              className="animate-fade-in-up delay-200 max-w-lg"
+              style={{ color: 'var(--color-text-light)' }}
+            />
 
             <div className="animate-fade-in-up delay-300 flex flex-col sm:flex-row gap-4">
               {props.phoneCtaLabel && props.phoneCtaHref ? (
@@ -488,7 +524,7 @@ function SplitHero(props: VariantProps) {
             </div>
           </div>
 
-          {/* Right: Image (with optional floating secondary card) */}
+          {/* Right: Image */}
           <div className="animate-fade-in-up delay-400 relative">
             <div
               className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl"
@@ -498,17 +534,6 @@ function SplitHero(props: VariantProps) {
                 backgroundPosition: 'center',
               }}
             />
-            {props.heroImageSecondary && (
-              <div
-                aria-hidden="true"
-                className="hidden sm:block absolute -bottom-6 -left-6 lg:-bottom-8 lg:-left-8 w-32 h-40 sm:w-40 sm:h-52 lg:w-48 lg:h-60 rounded-xl overflow-hidden shadow-2xl ring-4 ring-[color:var(--color-card-bg)]"
-                style={{
-                  backgroundImage: cssUrl(props.heroImageSecondary),
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}
-              />
-            )}
           </div>
         </div>
       </div>
@@ -554,6 +579,11 @@ function CenteredMinimalHero(props: VariantProps) {
           text={display.subheadline}
           className="text-lg sm:text-xl max-w-xl mx-auto mb-10"
           style={{ color: 'var(--color-text-muted)' }}
+        />
+        <HeroBadge
+          text={props.heroBadgeText}
+          className="text-center max-w-xl mx-auto"
+          style={{ color: 'var(--color-text-light)' }}
         />
 
         <Link
@@ -615,6 +645,11 @@ function EditorialSplitHero(props: VariantProps) {
             text={display.subheadline}
             className="text-lg leading-relaxed mb-10 max-w-md"
             style={{ color: 'var(--color-text-muted)' }}
+          />
+          <HeroBadge
+            text={props.heroBadgeText}
+            className="max-w-md"
+            style={{ color: 'var(--color-text-light)' }}
           />
           <Link
             href={ctaHref}
@@ -678,6 +713,11 @@ function BlockHero(props: VariantProps) {
             lineHeight: 1.4,
             fontWeight: 600,
           }}
+        />
+        <HeroBadge
+          text={props.heroBadgeText}
+          className="max-w-2xl"
+          style={{ color: 'rgba(255, 255, 255, 0.85)' }}
         />
         <Link
           href={ctaHref}
@@ -747,6 +787,10 @@ function RoundedCardHero(props: VariantProps) {
                 text={display.subheadline}
                 className="text-base sm:text-lg leading-relaxed mb-8"
                 style={{ color: '#64748b' }}
+              />
+              <HeroBadge
+                text={props.heroBadgeText}
+                style={{ color: '#94a3b8' }}
               />
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
@@ -845,6 +889,11 @@ function TerminalHero(props: VariantProps) {
             text={display.subheadline}
             className="text-base sm:text-lg leading-relaxed mb-10 max-w-md"
             style={{ color: '#94a3b8' }}
+          />
+          <HeroBadge
+            text={props.heroBadgeText}
+            className="max-w-md"
+            style={{ color: '#64748b' }}
           />
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
@@ -1017,6 +1066,11 @@ function VideoHero(props: VariantProps) {
             lineHeight: 1.6,
           }}
         />
+        <HeroBadge
+          text={props.heroBadgeText}
+          className="text-center max-w-xl mx-auto"
+          style={{ color: 'rgba(244, 241, 232, 0.65)' }}
+        />
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
           {props.phoneCtaLabel && props.phoneCtaHref ? (
             <a
@@ -1084,7 +1138,7 @@ export function HeroSection(props: HeroSectionProps) {
     ctaPrimary: props.ctaPrimary,
     ctaSecondary: props.ctaSecondary,
     heroImageUrl: props.heroImageUrl,
-    heroImageSecondary: props.heroImageSecondary,
+    heroBadgeText: props.heroBadgeText,
     businessName: props.businessName,
     tagline: props.tagline,
     city: props.city,

@@ -81,6 +81,7 @@ export type SectionId =
   // healthcare / residential care add-ons (gated by enabled_modules)
   | 'mission_values'
   | 'community_subscribe'
+  | 'payment_cta'
   // restaurant add-ons (gated by enabled_modules)
   | 'restaurant_ctas'
   // restaurant_centered layout sections (all DB-driven)

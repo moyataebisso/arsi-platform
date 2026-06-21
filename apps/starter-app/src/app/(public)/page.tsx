@@ -55,6 +55,7 @@ import { getEnabledModules } from '@/lib/enabled-modules'
 import { getCtaConfig } from '@/lib/cta'
 import { MissionValuesPhilosophy } from '@/components/sections/MissionValuesPhilosophy'
 import { JoinCareCommunity } from '@/components/sections/JoinCareCommunity'
+import { PaymentAndCTA } from '@/components/sections/PaymentAndCTA'
 import { RestaurantCtasSection } from '@/components/sections/RestaurantCtasSection'
 import { AboutSplitSection } from '@/components/sections/AboutSplitSection'
 import { OrderBandSection } from '@/components/sections/OrderBandSection'
@@ -172,10 +173,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   ])
   const services = await getHomeServicesContent()
   const heroImage = await getSiteSetting('hero_image_url')
-  // Optional second image rendered as a floating card overlapping the primary
-  // (SplitHero only). When the key is absent, no card renders — Adama and
-  // Entrusted stay byte-identical until they set this key themselves.
-  const heroImageSecondary = await getSiteSetting('hero_image_secondary')
+  // Optional one-line marketing strip under the hero subheadline. Empty/missing
+  // → nothing renders. Used by El Roi for the service-list strip.
+  const heroBadgeText = await getSiteSetting('hero_badge_text')
   // Optional consolidated home-about blurb (jsonb). When missing, AboutSection
   // falls through to the existing about_text/about_body/about_quote keys and
   // their hardcoded fallbacks — Adama and Entrusted unaffected.
@@ -366,7 +366,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         ctaPrimary={content.hero_cta_primary}
         ctaSecondary={content.hero_cta_secondary}
         heroImageUrl={heroImage || undefined}
-        heroImageSecondary={heroImageSecondary || undefined}
+        heroBadgeText={heroBadgeText || undefined}
         heroVideoUrl={heroVideo || undefined}
         heroPosterUrl={heroPoster || undefined}
         variant={heroVariant}
@@ -541,6 +541,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         subhead={communitySubheadRaw || undefined}
       />
     ) : null,
+    // payment_cta: flag-gated payment-methods + CTA band. Component
+    // self-noops when the flag is off or payment_cta_block jsonb is missing.
+    payment_cta: enabledModules.payment_cta ? <PaymentAndCTA /> : null,
     // restaurant_ctas only injects when a RESTAURANT-specific flag is on
     // (order_online or catering). Booking-only tenants like salons/clinics
     // already have their own CTA flow and stay untouched.
@@ -605,16 +608,46 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   //   community_subscribe — at the end (just before footer)
   const finalOrder: SectionId[] = [...sectionOrder]
   if (enabledModules.mission_values && !finalOrder.includes('mission_values')) {
+    // Anchor selection:
+    //   * payment_cta tenants (El Roi-style): insert AFTER `about` so the
+    //     story-led narrative reads before the values columns.
+    //   * everyone else (Adama, Entrusted): legacy anchor at services + 1.
+    //     This keeps Entrusted's existing home order byte-identical and
+    //     scopes the reorder to tenants opted into the new El Roi shape.
     const servicesIdx = finalOrder.indexOf('services')
     const contactIdx = finalOrder.indexOf('contact')
-    const insertAt =
-      servicesIdx >= 0 ? servicesIdx + 1 :
-      contactIdx >= 0 ? contactIdx :
-      finalOrder.length
+    let insertAt: number
+    if (enabledModules.payment_cta) {
+      const aboutIdx = finalOrder.indexOf('about')
+      insertAt =
+        aboutIdx >= 0 ? aboutIdx + 1 :
+        servicesIdx >= 0 ? servicesIdx + 1 :
+        contactIdx >= 0 ? contactIdx :
+        finalOrder.length
+    } else {
+      insertAt =
+        servicesIdx >= 0 ? servicesIdx + 1 :
+        contactIdx >= 0 ? contactIdx :
+        finalOrder.length
+    }
     finalOrder.splice(insertAt, 0, 'mission_values')
   }
   if (enabledModules.community_subscribe && !finalOrder.includes('community_subscribe')) {
     finalOrder.push('community_subscribe')
+  }
+  // Inject payment_cta right after mission_values when present, else before
+  // location/contact. Falls back to end-of-list so it never silently
+  // disappears for layouts without location/contact.
+  if (enabledModules.payment_cta && !finalOrder.includes('payment_cta')) {
+    const missionIdx = finalOrder.indexOf('mission_values')
+    const locationIdx = finalOrder.indexOf('location')
+    const contactIdx = finalOrder.indexOf('contact')
+    const insertAt =
+      missionIdx >= 0 ? missionIdx + 1 :
+      locationIdx >= 0 ? locationIdx :
+      contactIdx >= 0 ? contactIdx :
+      finalOrder.length
+    finalOrder.splice(insertAt, 0, 'payment_cta')
   }
   // Inject the restaurant CTA strip (Order / Catering / Reserve) right after
   // the hero. Only when a RESTAURANT-specific flag is on so we don't push a
