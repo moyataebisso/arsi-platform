@@ -38,9 +38,9 @@ interface AboutSectionProps {
 // Tenant-neutral healthcare fallbacks used when no DB about_image_1 /
 // about_image_2 is seeded. DB values still take precedence.
 const DEFAULT_IMAGE_1 =
-  'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=800&q=80'
+  'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80'
 const DEFAULT_IMAGE_2 =
-  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80'
+  'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&q=80'
 
 export function AboutSection({
   headline,
