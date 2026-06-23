@@ -8,6 +8,7 @@ import { Menu, X, Facebook, Instagram, Twitter, Linkedin, Globe, type LucideIcon
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { displayBusinessName as toDisplayName } from '@/lib/business'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 
 export type NavVariant = 'default' | 'center_logo'
 
@@ -87,6 +88,12 @@ export function Header({
     businessName ||
     (siteConfig.business.name === 'Client Business Name' ? 'Welcome' : siteConfig.business.name)
   const displayBusinessName = toDisplayName(rawBusinessName)
+  // BrandLogo is an El Roi-specific SVG placeholder. Other tenants without
+  // a logo_url keep their existing plain-text wordmark — flipping this on
+  // for them would render mis-branded copy ("El Roi" / "Health Services").
+  // When the tenant uploads a real logo (logo_url seeded), that wins
+  // regardless and BrandLogo never enters the fallback chain.
+  const showBrandLogo = /el\s*roi/i.test(displayBusinessName)
   const displayTagline =
     tagline ?? (siteConfig.business.tagline === 'Your tagline here' ? '' : siteConfig.business.tagline)
 
@@ -271,6 +278,8 @@ export function Header({
                       padding: '4px',
                     }}
                   />
+                ) : showBrandLogo ? (
+                  <BrandLogo businessName={displayBusinessName} height={56} />
                 ) : (
                   <span
                     className="text-2xl lg:text-3xl font-bold uppercase tracking-wider whitespace-nowrap"
@@ -342,6 +351,8 @@ export function Header({
                 {logoUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={logoUrl} alt={displayBusinessName} className="h-10 w-auto rounded-full" />
+                ) : showBrandLogo ? (
+                  <BrandLogo businessName={displayBusinessName} height={40} />
                 ) : (
                   <span
                     className="text-lg font-bold uppercase tracking-wider"
@@ -380,7 +391,7 @@ export function Header({
             <Link
               href="/"
               className={
-                logoUrl
+                logoUrl || showBrandLogo
                   ? 'flex items-center shrink-0 group'
                   : 'flex flex-col leading-tight shrink-0 group'
               }
@@ -393,6 +404,8 @@ export function Header({
                   alt={displayBusinessName}
                   className="h-10 sm:h-12 w-auto max-h-12"
                 />
+              ) : showBrandLogo ? (
+                <BrandLogo businessName={displayBusinessName} height={44} />
               ) : (
                 <>
                   <span
@@ -543,6 +556,8 @@ export function Header({
               alt={displayBusinessName}
               className="h-10 w-auto max-h-10"
             />
+          ) : showBrandLogo ? (
+            <BrandLogo businessName={displayBusinessName} height={40} />
           ) : (
             <span
               className="text-lg font-bold"
