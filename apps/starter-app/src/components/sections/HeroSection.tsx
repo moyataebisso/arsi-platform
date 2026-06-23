@@ -449,23 +449,6 @@ function SplitHero(props: VariantProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 sm:gap-20 lg:gap-24 xl:gap-28 items-center">
           {/* Left: Text content */}
           <div>
-            {/* Floating badge */}
-            <div
-              className="animate-fade-in-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-8"
-              style={{
-                backgroundColor: 'var(--color-card-bg)',
-                color: 'var(--color-primary)',
-                border: '1px solid var(--color-border)',
-                boxShadow: '0 2px 8px rgba(194, 65, 12, 0.08)',
-              }}
-            >
-              <span
-                className="w-2 h-2 rounded-full animate-float"
-                style={{ backgroundColor: 'var(--color-accent)' }}
-              />
-              Est. 2024
-            </div>
-
             <h1
               className="animate-fade-in-up delay-100 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
               style={{
