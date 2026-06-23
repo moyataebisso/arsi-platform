@@ -7,7 +7,6 @@ interface MissionValuesPhilosophyProps {
   mission?: string
   vision?: string
   values?: ValueItem[]
-  philosophy?: string
 }
 
 // Tenant-neutral fallback for the always-present Mission column. Vision,
@@ -21,28 +20,24 @@ export function MissionValuesPhilosophy({
   mission,
   vision,
   values,
-  philosophy,
 }: MissionValuesPhilosophyProps) {
   const displayMission = mission || DEFAULT_MISSION
   const displayValues = values && values.length > 0 ? values : []
   const displayVision = vision?.trim() || ''
-  const displayPhilosophy = philosophy?.trim() || ''
 
   const columns: { key: string; title: string; body?: string; values?: ValueItem[] }[] = [
     { key: 'mission', title: 'Our Mission', body: displayMission },
   ]
   if (displayVision) columns.push({ key: 'vision', title: 'Our Vision', body: displayVision })
   if (displayValues.length > 0) columns.push({ key: 'values', title: 'Our Values', values: displayValues })
-  if (displayPhilosophy) columns.push({ key: 'philosophy', title: 'Our Care Philosophy', body: displayPhilosophy })
 
   // Compose the section title from the columns the tenant actually shows.
   // El Roi (mission + vision) → "Our Mission & Vision". Entrusted
-  // (mission + values + philosophy) → "Mission, Values & Philosophy".
+  // (mission + values) → "Mission & Values".
   const labelFor: Record<string, string> = {
     mission: 'Mission',
     vision: 'Vision',
     values: 'Values',
-    philosophy: 'Philosophy',
   }
   const parts = columns.map(c => labelFor[c.key]).filter(Boolean)
   const sectionTitle =
@@ -52,12 +47,11 @@ export function MissionValuesPhilosophy({
       ? `Our ${parts[0]} & ${parts[1]}`
       : `${parts.slice(0, -1).join(', ')} & ${parts[parts.length - 1]}`
 
-  // Tailwind grid class for column count. Caps at 4.
+  // Tailwind grid class for column count.
   const gridCols =
     columns.length === 1 ? '' :
     columns.length === 2 ? 'md:grid-cols-2' :
-    columns.length === 3 ? 'md:grid-cols-3' :
-    'md:grid-cols-2 lg:grid-cols-4'
+    'md:grid-cols-3'
 
   return (
     <section className="py-20 sm:py-24" style={{ backgroundColor: 'var(--color-bg, var(--color-background))' }}>

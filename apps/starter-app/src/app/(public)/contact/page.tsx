@@ -1,9 +1,10 @@
 import { siteConfig } from '@config'
 import { ContactForm } from '@/components/forms/ContactForm'
-import { Mail, Phone, MapPin, Clock, Navigation } from 'lucide-react'
+import { Mail, Phone, MapPin, Clock, Navigation, Globe } from 'lucide-react'
 import { MapEmbed } from '@/components/shared/MapEmbed'
 import { getContentMany } from '@/lib/content/resolver'
 import { getBusinessProfile, fullAddress } from '@/lib/business'
+import { getSiteSetting } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,9 +18,11 @@ export default async function ContactPage() {
   const fullAddr = fullAddress(profile)
   const mapsUrl = fullAddr ? `https://maps.google.com/?q=${encodeURIComponent(fullAddr)}` : ''
 
-  const content = await getContentMany([
-    'contact_headline', 'contact_intro',
+  const [content, serviceAreaRaw] = await Promise.all([
+    getContentMany(['contact_headline', 'contact_intro']),
+    getSiteSetting('service_area'),
   ])
+  const serviceArea = (serviceAreaRaw || '').trim()
 
   return (
     <>
@@ -159,6 +162,24 @@ export default async function ContactPage() {
                             Get Directions
                           </a>
                         )}
+                      </div>
+                    </li>
+                  )}
+                  {serviceArea && (
+                    <li className="flex items-start gap-3">
+                      <div
+                        className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: 'var(--color-accent-light)' }}
+                      >
+                        <Globe size={16} style={{ color: 'var(--color-primary)' }} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                          Service Area
+                        </p>
+                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                          {serviceArea}
+                        </p>
                       </div>
                     </li>
                   )}

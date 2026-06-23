@@ -234,36 +234,31 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // If missing, components fall back to their built-in defaults.
   //
   // Resolution order for each MissionValuesPhilosophy field:
-  //   mission     → site_settings.mission_content   → mission_values_content.mission   → default
-  //   vision      → site_settings.vision_content    → (none — opt-in column)
-  //   philosophy  → site_settings.philosophy_content → mission_values_content.philosophy → (column hidden when empty)
-  //   values      → mission_values_content.values   → (column hidden when empty)
+  //   mission → site_settings.mission_content → mission_values_content.mission → default
+  //   vision  → site_settings.vision_content  → (opt-in column)
+  //   values  → mission_values_content.values → (opt-in column)
   //
-  // about_values is intentionally NOT read here — that key drives the /about
-  // page's values grid only. Keeping the home Mission band clean lets tenants
-  // like El Roi show just Mission + Vision without duplicating their value
-  // list across two sections. Entrusted's mission_values_content JSON still
-  // supplies values + philosophy on the home band as before.
+  // Philosophy is intentionally not read or rendered — removed from the
+  // home Mission band per product decision. mission_values_content.philosophy
+  // is kept as an unused field (Entrusted continues to seed it; reading it
+  // would put the column back). about_values is exclusive to the /about page.
   const [
     missionValuesRaw,
     communityHeadlineRaw,
     communitySubheadRaw,
     missionContentRaw,
     visionContentRaw,
-    philosophyContentRaw,
   ] = await Promise.all([
     getSiteSetting('mission_values_content'),
     getSiteSetting('community_subscribe_headline'),
     getSiteSetting('community_subscribe_subhead'),
     getSiteSetting('mission_content'),
     getSiteSetting('vision_content'),
-    getSiteSetting('philosophy_content'),
   ])
   let missionValuesContent: {
     mission?: string
     vision?: string
     values?: { title: string; body: string }[]
-    philosophy?: string
   } | null = null
   if (missionValuesRaw) {
     try {
@@ -274,7 +269,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const resolvedMission = missionContentRaw || missionValuesContent?.mission || undefined
   const resolvedVision = visionContentRaw || missionValuesContent?.vision || undefined
-  const resolvedPhilosophy = philosophyContentRaw || missionValuesContent?.philosophy || undefined
   const resolvedValues = missionValuesContent?.values || undefined
 
   // Parse site_settings.home_about_blurb (jsonb object). Returns null if the
@@ -508,7 +502,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         mission={resolvedMission}
         vision={resolvedVision}
         values={resolvedValues}
-        philosophy={resolvedPhilosophy}
       />
     ) : null,
     community_subscribe: enabledModules.community_subscribe ? (

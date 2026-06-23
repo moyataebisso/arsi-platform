@@ -79,6 +79,7 @@ export const siteConfig = {
     community_subscribe: false, // "Join Our Care Community" subscribe band on home
     founder_bio: false,         // Founder profile block on /about (El Roi + future NP-led tenants)
     payment_cta: false,         // Payment-methods + CTA band on home (El Roi + future care tenants)
+    why_choose_us: false,       // /why-choose-us page + nav link (El Roi + future care tenants)
     // Restaurant modules (Adama + future food tenants)
     drinks: false,              // /drinks page + nav link
     order_online: false,        // /order page + nav link (linkout or in-site)

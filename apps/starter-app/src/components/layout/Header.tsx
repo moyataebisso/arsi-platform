@@ -25,6 +25,7 @@ interface HeaderProps {
   showOurHomes?: boolean
   showReferrals?: boolean
   showResources?: boolean
+  showWhyChooseUs?: boolean
   // Restaurant nav extras. All default false so non-restaurant tenants are
   // unaffected and the existing nav is byte-identical to before.
   showDrinks?: boolean
@@ -60,6 +61,7 @@ export function Header({
   showOurHomes,
   showReferrals,
   showResources,
+  showWhyChooseUs,
   showDrinks,
   showOrder,
   showReserve,
@@ -140,6 +142,7 @@ export function Header({
     showOrder && { href: '/order', label: 'Order' },
     showReserve && { href: '/book', label: 'Reserve' },
     pages.services.enabled && { href: '/services', label: pages.services.title },
+    showWhyChooseUs && { href: '/why-choose-us', label: 'Why Choose Us' },
     showOurHomes && { href: '/our-homes', label: 'Our Homes' },
     showReferrals && { href: '/referrals', label: 'Referrals' },
     showParties && { href: '/parties', label: 'Parties' },

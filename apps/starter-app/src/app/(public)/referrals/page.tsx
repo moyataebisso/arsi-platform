@@ -41,9 +41,10 @@ export default async function ReferralsPage() {
   const enabled = await getEnabledModules()
   if (!enabled.referrals) return notFound()
 
-  const settings = await getSiteSettings(['referrals_intro', 'referrals_sources'])
+  const settings = await getSiteSettings(['referrals_intro', 'referrals_sources', 'referrals_cta'])
   const intro = (settings.referrals_intro || '').trim()
   const sources = parseSources(settings.referrals_sources)
+  const cta = (settings.referrals_cta || '').trim()
 
   return (
     <section className="py-20 sm:py-24" style={{ backgroundColor: 'var(--color-background)' }}>
@@ -95,7 +96,7 @@ export default async function ReferralsPage() {
               className="text-sm font-semibold uppercase tracking-widest mb-4"
               style={{ color: 'var(--color-text)' }}
             >
-              Who Refers To Us
+              We Welcome Referrals From
             </h2>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
               {sources.map((s) => (
@@ -110,6 +111,15 @@ export default async function ReferralsPage() {
               ))}
             </ul>
           </div>
+        )}
+
+        {cta && (
+          <p
+            className="text-center text-sm sm:text-base leading-relaxed mb-10 whitespace-pre-line"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            {cta}
+          </p>
         )}
 
         <ReferralForm />

@@ -13,6 +13,7 @@ interface FooterProps {
   showOurHomes?: boolean
   showReferrals?: boolean
   showResources?: boolean
+  showWhyChooseUs?: boolean
   // Restaurant nav extras. All default false so non-restaurant tenants stay
   // byte-identical.
   showDrinks?: boolean
@@ -37,6 +38,7 @@ export async function Footer({
   showOurHomes,
   showReferrals,
   showResources,
+  showWhyChooseUs,
   showDrinks,
   showOrder,
   showReserve,
@@ -77,6 +79,7 @@ export async function Footer({
     showOrder && { href: '/order', label: 'Order' },
     showReserve && { href: '/book', label: 'Reserve' },
     pages.services.enabled && { href: '/services', label: pages.services.title },
+    showWhyChooseUs && { href: '/why-choose-us', label: 'Why Choose Us' },
     showOurHomes && { href: '/our-homes', label: 'Our Homes' },
     showReferrals && { href: '/referrals', label: 'Referrals' },
     showParties && { href: '/parties', label: 'Parties' },

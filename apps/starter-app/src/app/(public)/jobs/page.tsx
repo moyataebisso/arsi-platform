@@ -42,6 +42,7 @@ export default async function JobsPage() {
     'jobs_body',
     'jobs_apply_url',
     'jobs_apply_email',
+    'jobs_apply_phone',
     'jobs_openings',
   ])
   const business = await getBusinessProfile()
@@ -54,6 +55,7 @@ export default async function JobsPage() {
     'We are always looking for friendly, dependable people to join our team. If that sounds like you, get in touch.'
   const applyUrl = (settings.jobs_apply_url || '').trim()
   const applyEmail = (settings.jobs_apply_email || '').trim()
+  const applyPhone = (settings.jobs_apply_phone || '').trim()
   const openings = parseJobs(settings.jobs_openings)
 
   return (
@@ -153,6 +155,24 @@ export default async function JobsPage() {
               }}
             >
               Email Your Resume
+            </a>
+          )}
+          {applyPhone && (
+            <a
+              href={`tel:${applyPhone.replace(/[^0-9+]/g, '')}`}
+              className="inline-flex items-center justify-center transition-all hover:opacity-90"
+              style={{
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
+                padding: '14px 28px',
+                fontSize: '12px',
+                fontWeight: 700,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+              }}
+              aria-label={`Call ${applyPhone}`}
+            >
+              Call {applyPhone}
             </a>
           )}
         </div>

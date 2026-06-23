@@ -65,6 +65,7 @@ export default async function PublicLayout({ children }: { children: React.React
           showOurHomes={enabledModules.our_homes}
           showReferrals={enabledModules.referrals}
           showResources={enabledModules.resources_page}
+          showWhyChooseUs={enabledModules.why_choose_us}
           showDrinks={enabledModules.drinks}
           showOrder={enabledModules.order_online}
           showReserve={enabledModules.booking}
@@ -87,6 +88,7 @@ export default async function PublicLayout({ children }: { children: React.React
           showOurHomes={enabledModules.our_homes}
           showReferrals={enabledModules.referrals}
           showResources={enabledModules.resources_page}
+          showWhyChooseUs={enabledModules.why_choose_us}
           showDrinks={enabledModules.drinks}
           showOrder={enabledModules.order_online}
           showReserve={enabledModules.booking}
