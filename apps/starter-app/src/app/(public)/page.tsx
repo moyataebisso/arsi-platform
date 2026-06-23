@@ -236,11 +236,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // Resolution order for each MissionValuesPhilosophy field:
   //   mission     → site_settings.mission_content   → mission_values_content.mission   → default
   //   vision      → site_settings.vision_content    → (none — opt-in column)
-  //   philosophy  → site_settings.philosophy_content → mission_values_content.philosophy → default
-  //   values      → site_settings.about_values      → mission_values_content.values    → none
+  //   philosophy  → site_settings.philosophy_content → mission_values_content.philosophy → (column hidden when empty)
+  //   values      → mission_values_content.values   → (column hidden when empty)
   //
-  // mission_values_content is preserved for Entrusted backward-compat — they
-  // already seed that one JSON blob and should keep rendering unchanged.
+  // about_values is intentionally NOT read here — that key drives the /about
+  // page's values grid only. Keeping the home Mission band clean lets tenants
+  // like El Roi show just Mission + Vision without duplicating their value
+  // list across two sections. Entrusted's mission_values_content JSON still
+  // supplies values + philosophy on the home band as before.
   const [
     missionValuesRaw,
     communityHeadlineRaw,
@@ -248,7 +251,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     missionContentRaw,
     visionContentRaw,
     philosophyContentRaw,
-    aboutValuesRaw,
   ] = await Promise.all([
     getSiteSetting('mission_values_content'),
     getSiteSetting('community_subscribe_headline'),
@@ -256,7 +258,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     getSiteSetting('mission_content'),
     getSiteSetting('vision_content'),
     getSiteSetting('philosophy_content'),
-    getSiteSetting('about_values'),
   ])
   let missionValuesContent: {
     mission?: string
@@ -271,35 +272,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     } catch { /* fall back to component defaults */ }
   }
 
-  // Parse about_values JSON (jsonb array of {title, body|description}) and
-  // normalize to the {title, body} shape the MissionValuesPhilosophy expects.
-  // Returns null if missing/invalid so caller falls back to mission_values_content.
-  const valuesFromAbout: { title: string; body: string }[] | null = (() => {
-    if (!aboutValuesRaw) return null
-    try {
-      const parsed = JSON.parse(aboutValuesRaw)
-      if (!Array.isArray(parsed)) return null
-      const out: { title: string; body: string }[] = []
-      for (const entry of parsed) {
-        if (!entry || typeof entry !== 'object') continue
-        const r = entry as Record<string, unknown>
-        const title = typeof r.title === 'string' ? r.title.trim() : ''
-        const body =
-          (typeof r.body === 'string' && r.body.trim()) ||
-          (typeof r.description === 'string' && r.description.trim()) ||
-          ''
-        if (title && body) out.push({ title, body })
-      }
-      return out.length > 0 ? out : null
-    } catch {
-      return null
-    }
-  })()
-
   const resolvedMission = missionContentRaw || missionValuesContent?.mission || undefined
   const resolvedVision = visionContentRaw || missionValuesContent?.vision || undefined
   const resolvedPhilosophy = philosophyContentRaw || missionValuesContent?.philosophy || undefined
-  const resolvedValues = valuesFromAbout || missionValuesContent?.values || undefined
+  const resolvedValues = missionValuesContent?.values || undefined
 
   // Parse site_settings.home_about_blurb (jsonb object). Returns null if the
   // key is missing or malformed so AboutSection falls through to its existing

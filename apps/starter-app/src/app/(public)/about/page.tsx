@@ -111,14 +111,37 @@ export default async function AboutPage() {
   })()
 
   // Story precedence:
-  //   1. site_settings.about_story   (new, accepted alias)
+  //   1. site_settings.about_story   (new, accepted alias — accepts either a
+  //                                   newline-separated string OR a jsonb
+  //                                   array of paragraph strings)
   //   2. site_settings.business_story (existing, exposed via profile.story)
   //   3. NEUTRAL fallback prose (industry-agnostic)
+  //
+  // jsonb arrays arrive here pre-stringified ('["a","b"]') from
+  // getSiteSettings, which is why naive newline splitting renders the raw
+  // brackets as a single visible paragraph. Detect the JSON-array shape
+  // up front and parse it; fall through to the newline split for plain
+  // multiline strings.
   const aboutStoryOverride = content.about_story?.trim() || ''
   const resolvedStory = aboutStoryOverride || profile.story || ''
-  const storyParagraphs = resolvedStory
-    ? resolvedStory.split(/\n+/).map(p => p.trim()).filter(Boolean)
-    : null
+  const storyParagraphs: string[] | null = (() => {
+    if (!resolvedStory) return null
+    const trimmed = resolvedStory.trim()
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        if (Array.isArray(parsed)) {
+          const items = parsed
+            .filter((s): s is string => typeof s === 'string')
+            .map(s => s.trim())
+            .filter(Boolean)
+          if (items.length > 0) return items
+        }
+      } catch { /* fall through to newline split */ }
+    }
+    const split = trimmed.split(/\n+/).map(p => p.trim()).filter(Boolean)
+    return split.length > 0 ? split : null
+  })()
 
   // Values precedence:
   //   1. site_settings.about_values  (JSON array)
