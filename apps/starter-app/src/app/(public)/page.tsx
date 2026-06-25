@@ -176,6 +176,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // Optional one-line marketing strip under the hero subheadline. Empty/missing
   // → nothing renders. Used by El Roi for the service-list strip.
   const heroBadgeText = await getSiteSetting('hero_badge_text')
+  // Optional small italic note above the office-hours table on the location
+  // section. Renders nothing when the key is absent.
+  const hoursNote = await getSiteSetting('hours_note')
   // Optional consolidated home-about blurb (jsonb). When missing, AboutSection
   // falls through to the existing about_text/about_body/about_quote keys and
   // their hardcoded fallbacks — Adama and Entrusted unaffected.
@@ -376,6 +379,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         state={business.state}
         zip={business.zip}
         hours={business.hours}
+        hoursNote={hoursNote || undefined}
         googleMapsEmbed={business.googleMapsEmbed}
       />
     ) : null,

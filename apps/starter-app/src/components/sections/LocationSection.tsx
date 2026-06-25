@@ -10,7 +10,12 @@ interface LocationSectionProps {
   state?: string
   zip?: string
   hours?: { day: string; hours: string }[]
+  hoursNote?: string
   googleMapsEmbed?: string
+}
+
+function isClosedDay(value: string): boolean {
+  return value.trim().toLowerCase() === 'closed'
 }
 
 export function LocationSection({
@@ -19,6 +24,7 @@ export function LocationSection({
   state,
   zip,
   hours,
+  hoursNote,
   googleMapsEmbed,
 }: LocationSectionProps = {}) {
   const cfg = siteConfig.location
@@ -124,23 +130,34 @@ export function LocationSection({
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
-                    Hours
+                    Office Hours
                   </h3>
+                  {hoursNote && (
+                    <p className="text-xs italic mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                      {hoursNote}
+                    </p>
+                  )}
                   <table className="w-full text-sm">
                     <tbody>
-                      {location.hours.map(h => (
-                        <tr key={h.day}>
-                          <td className="py-1.5 pr-4" style={{ color: 'var(--color-text-muted)' }}>
-                            {h.day}
-                          </td>
-                          <td
-                            className="py-1.5 text-right font-medium"
-                            style={{ color: 'var(--color-text)' }}
-                          >
-                            {h.hours}
-                          </td>
-                        </tr>
-                      ))}
+                      {location.hours.map(h => {
+                        const closed = isClosedDay(h.hours)
+                        return (
+                          <tr key={h.day}>
+                            <td
+                              className="py-1.5 pr-4"
+                              style={{ color: closed ? 'var(--color-text-light)' : 'var(--color-text-muted)' }}
+                            >
+                              {h.day}
+                            </td>
+                            <td
+                              className="py-1.5 text-right font-medium"
+                              style={{ color: closed ? 'var(--color-text-light)' : 'var(--color-text)' }}
+                            >
+                              {h.hours}
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>

@@ -54,7 +54,9 @@ export async function Footer({
     'social_linkedin',
     'social_instagram',
     'social_twitter',
+    'hours_note',
   ])
+  const hoursNote = (socialSettings.hours_note || '').trim()
 
   // DB-driven social icons. Built per-tenant so Adama (no keys set) renders
   // no icons row and the footer is byte-identical to before.
@@ -225,13 +227,41 @@ export async function Footer({
               )}
             </ul>
             {profile.hours.length > 0 && (
-              <div className="mt-4 space-y-1.5 text-sm">
-                {profile.hours.map(h => (
-                  <div key={h.day} className="flex justify-between gap-4">
-                    <span style={{ color: 'var(--color-footer-muted)' }}>{h.day}</span>
-                    <span style={{ color: 'var(--color-footer-heading)' }}>{h.hours}</span>
-                  </div>
-                ))}
+              <div className="mt-5">
+                <h5
+                  className="text-xs font-semibold uppercase tracking-wider mb-2"
+                  style={{ color: 'var(--color-footer-heading)' }}
+                >
+                  Office Hours
+                </h5>
+                {hoursNote && (
+                  <p
+                    className="text-xs italic mb-2"
+                    style={{ color: 'var(--color-footer-muted)' }}
+                  >
+                    {hoursNote}
+                  </p>
+                )}
+                <div className="space-y-1.5 text-sm">
+                  {profile.hours.map(h => {
+                    const closed = h.hours.trim().toLowerCase() === 'closed'
+                    return (
+                      <div key={h.day} className="flex justify-between gap-4">
+                        <span style={{ color: 'var(--color-footer-muted)', opacity: closed ? 0.6 : 1 }}>
+                          {h.day}
+                        </span>
+                        <span
+                          style={{
+                            color: closed ? 'var(--color-footer-muted)' : 'var(--color-footer-heading)',
+                            opacity: closed ? 0.6 : 1,
+                          }}
+                        >
+                          {h.hours}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>

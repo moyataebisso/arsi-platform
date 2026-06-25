@@ -18,11 +18,13 @@ export default async function ContactPage() {
   const fullAddr = fullAddress(profile)
   const mapsUrl = fullAddr ? `https://maps.google.com/?q=${encodeURIComponent(fullAddr)}` : ''
 
-  const [content, serviceAreaRaw] = await Promise.all([
+  const [content, serviceAreaRaw, hoursNoteRaw] = await Promise.all([
     getContentMany(['contact_headline', 'contact_intro']),
     getSiteSetting('service_area'),
+    getSiteSetting('hours_note'),
   ])
   const serviceArea = (serviceAreaRaw || '').trim()
+  const hoursNote = (hoursNoteRaw || '').trim()
 
   return (
     <>
@@ -193,14 +195,27 @@ export default async function ContactPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                          Hours
+                          Office Hours
                         </p>
-                        <div className="text-sm space-y-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                          {profile.hours.map(h => (
-                            <p key={h.day}>
-                              {h.day}: {h.hours}
-                            </p>
-                          ))}
+                        {hoursNote && (
+                          <p className="text-xs italic mt-0.5 mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                            {hoursNote}
+                          </p>
+                        )}
+                        <div className="text-sm space-y-0.5">
+                          {profile.hours.map(h => {
+                            const closed = h.hours.trim().toLowerCase() === 'closed'
+                            return (
+                              <p
+                                key={h.day}
+                                style={{
+                                  color: closed ? 'var(--color-text-light)' : 'var(--color-text-muted)',
+                                }}
+                              >
+                                {h.day}: {h.hours}
+                              </p>
+                            )
+                          })}
                         </div>
                       </div>
                     </li>
@@ -232,15 +247,35 @@ export default async function ContactPage() {
                   }}
                 >
                   <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
-                    Business Hours
+                    Office Hours
                   </h4>
+                  {hoursNote && (
+                    <p className="text-xs italic mb-3" style={{ color: 'var(--color-text-muted)' }}>
+                      {hoursNote}
+                    </p>
+                  )}
                   <div className="space-y-1.5 text-sm">
-                    {profile.hours.map(h => (
-                      <div key={h.day} className="flex justify-between gap-4">
-                        <span style={{ color: 'var(--color-text-muted)' }}>{h.day}</span>
-                        <span style={{ color: 'var(--color-text)' }}>{h.hours}</span>
-                      </div>
-                    ))}
+                    {profile.hours.map(h => {
+                      const closed = h.hours.trim().toLowerCase() === 'closed'
+                      return (
+                        <div key={h.day} className="flex justify-between gap-4">
+                          <span
+                            style={{
+                              color: closed ? 'var(--color-text-light)' : 'var(--color-text-muted)',
+                            }}
+                          >
+                            {h.day}
+                          </span>
+                          <span
+                            style={{
+                              color: closed ? 'var(--color-text-light)' : 'var(--color-text)',
+                            }}
+                          >
+                            {h.hours}
+                          </span>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}
