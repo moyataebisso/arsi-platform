@@ -18,6 +18,12 @@ interface HeroSectionProps {
   ctaPrimary?: string
   ctaSecondary?: string
   heroImageUrl?: string
+  // Optional full-bleed background image rendered on the SplitHero
+  // wrapper. When set, the original animated gradient + accent shapes
+  // are suppressed and a 75% white overlay sits on top for text
+  // readability. Other variants ignore this prop. site_settings key:
+  // hero_background_url. Absent / empty → zero change for other tenants.
+  heroBackgroundUrl?: string
   // Optional one-line marketing strip rendered directly below the
   // subheadline. site_settings key: hero_badge_text. Empty / missing →
   // nothing renders. Used by El Roi for the service-list strip; other
@@ -412,38 +418,62 @@ function SplitHero(props: VariantProps) {
 
   console.log('[HeroSection] split heroImageUrl=', heroImageUrl, 'resolved=', imageUrl)
 
+  const backgroundUrl = props.heroBackgroundUrl?.trim() || ''
   return (
-    <section className="relative overflow-hidden min-h-screen flex items-center">
-      {/* Animated gradient background */}
-      <div
-        className="absolute inset-0 animate-hero-gradient"
-        style={{
-          background: 'var(--color-hero-gradient)',
-          backgroundSize: '200% 200%',
-        }}
-      />
-
-      {/* Decorative accent shapes */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+    <section
+      className="relative overflow-hidden min-h-screen flex items-center"
+      style={
+        backgroundUrl
+          ? {
+              backgroundImage: cssUrl(backgroundUrl),
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }
+          : undefined
+      }
+    >
+      {backgroundUrl ? (
+        /* 75% white overlay sits above the bg image, below content, to keep
+           the headline/body fully readable on photo-based heroes. */
         <div
-          style={{ background: 'var(--theme-accent-shape)' }}
-          className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-60 blur-3xl"
+          className="absolute inset-0"
+          style={{ backgroundColor: 'rgba(255, 255, 255, 0.75)' }}
+          aria-hidden="true"
         />
-        <div
-          style={{ background: 'var(--color-hero-gradient)' }}
-          className="absolute top-20 right-0 w-[800px] h-[600px] opacity-40 blur-2xl"
-        />
-      </div>
+      ) : (
+        <>
+          {/* Animated gradient background */}
+          <div
+            className="absolute inset-0 animate-hero-gradient"
+            style={{
+              background: 'var(--color-hero-gradient)',
+              backgroundSize: '200% 200%',
+            }}
+          />
 
-      {/* Subtle texture overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle at 25% 25%, var(--color-primary) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
+          {/* Decorative accent shapes */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+            <div
+              style={{ background: 'var(--theme-accent-shape)' }}
+              className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-60 blur-3xl"
+            />
+            <div
+              style={{ background: 'var(--color-hero-gradient)' }}
+              className="absolute top-20 right-0 w-[800px] h-[600px] opacity-40 blur-2xl"
+            />
+          </div>
+
+          {/* Subtle texture overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 25% 25%, var(--color-primary) 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
+            }}
+          />
+        </>
+      )}
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 sm:gap-20 lg:gap-24 xl:gap-28 items-center">
@@ -1121,6 +1151,7 @@ export function HeroSection(props: HeroSectionProps) {
     ctaPrimary: props.ctaPrimary,
     ctaSecondary: props.ctaSecondary,
     heroImageUrl: props.heroImageUrl,
+    heroBackgroundUrl: props.heroBackgroundUrl,
     heroBadgeText: props.heroBadgeText,
     businessName: props.businessName,
     tagline: props.tagline,

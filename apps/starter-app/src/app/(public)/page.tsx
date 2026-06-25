@@ -173,6 +173,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   ])
   const services = await getHomeServicesContent()
   const heroImage = await getSiteSetting('hero_image_url')
+  // Optional full-bleed background photo for the SplitHero. When set, the
+  // animated gradient is suppressed and a 75% white overlay keeps text
+  // readable. Absent / empty → existing gradient hero unchanged.
+  const heroBackgroundUrl = await getSiteSetting('hero_background_url')
   // Optional one-line marketing strip under the hero subheadline. Empty/missing
   // → nothing renders. Used by El Roi for the service-list strip.
   const heroBadgeText = await getSiteSetting('hero_badge_text')
@@ -339,6 +343,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         ctaPrimary={content.hero_cta_primary}
         ctaSecondary={content.hero_cta_secondary}
         heroImageUrl={heroImage || undefined}
+        heroBackgroundUrl={heroBackgroundUrl || undefined}
         heroBadgeText={heroBadgeText || undefined}
         heroVideoUrl={heroVideo || undefined}
         heroPosterUrl={heroPoster || undefined}
