@@ -274,8 +274,8 @@ export function Header({
                   <img
                     src={logoUrl}
                     alt={displayBusinessName}
-                    height={40}
-                    width={130}
+                    height={36}
+                    width={120}
                     className="object-contain"
                     style={{
                       borderRadius: '9999px',
@@ -355,7 +355,7 @@ export function Header({
               <Link href="/" aria-label={displayBusinessName}>
                 {logoUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={logoUrl} alt={displayBusinessName} height={40} width={130} className="object-contain rounded-full" />
+                  <img src={logoUrl} alt={displayBusinessName} height={36} width={120} className="object-contain rounded-full" />
                 ) : showBrandLogo ? (
                   <BrandLogo businessName={displayBusinessName} height={40} />
                 ) : (
@@ -407,8 +407,8 @@ export function Header({
                 <img
                   src={logoUrl}
                   alt={displayBusinessName}
-                  height={40}
-                  width={130}
+                  height={36}
+                  width={120}
                   className="object-contain"
                 />
               ) : showBrandLogo ? (
@@ -561,8 +561,8 @@ export function Header({
             <img
               src={logoUrl}
               alt={displayBusinessName}
-              height={40}
-              width={130}
+              height={36}
+              width={120}
               className="object-contain"
             />
           ) : showBrandLogo ? (
