@@ -97,25 +97,39 @@ const themeFontMap: Record<string, string> = {
 const siteUrl = siteConfig.siteUrl
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings(['business_name', 'tagline', 'meta_description', 'logo_url'])
+  const settings = await getSiteSettings([
+    'business_name',
+    'tagline',
+    'meta_description',
+    'logo_url',
+    'seo_title',
+    'seo_description',
+    'seo_keywords',
+  ])
   const fallbackName =
     siteConfig.business.name === 'Client Business Name' ? 'Waji Site' : siteConfig.business.name
   const businessName = settings.business_name || fallbackName
+  // seo_title → business_name. seo_description → meta_description → tagline.
+  // All DB-driven; siteConfig.seo.defaultDescription is only used when nothing
+  // in site_settings is populated (bare-metal seed / dev).
+  const seoTitle = settings.seo_title || businessName
   const description =
+    settings.seo_description ||
     settings.meta_description ||
     settings.tagline ||
     (siteConfig.seo.defaultDescription === 'Your business description here'
       ? ''
       : siteConfig.seo.defaultDescription)
+  const keywords = (settings.seo_keywords || '').trim() || undefined
   const logoUrl = settings.logo_url
 
   return {
     title: {
-      default: businessName,
+      default: seoTitle,
       template: `%s | ${businessName}`,
     },
     description,
-    keywords: siteConfig.seo.keywords,
+    ...(keywords ? { keywords } : {}),
     authors: [{ name: businessName }],
     creator: businessName,
     metadataBase: new URL(siteUrl),
@@ -129,7 +143,7 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: 'en_US',
       url: siteUrl,
       siteName: businessName,
-      title: businessName,
+      title: seoTitle,
       description,
       images: [
         {
@@ -142,7 +156,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: businessName,
+      title: seoTitle,
       description,
       images: [siteConfig.seo.ogImage || '/og-image.jpg'],
     },

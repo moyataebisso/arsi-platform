@@ -1,13 +1,16 @@
-import { siteConfig } from '@config'
 import { getSiteSetting } from '@/lib/settings'
 
 // Single source of truth for "where do form-notification emails go?".
-// Reads site_settings.notification_emails (JSON array of email strings) when
-// present; otherwise falls back to the prior single-recipient logic used by
-// /api/contact, /api/referrals, and /api/newsletter/subscribe.
 //
-// Tenants without notification_emails (e.g. Adama) keep the existing
-// single-recipient routing — byte-equivalent to the prior code path.
+// Resolution order (all site_settings reads are scoped to the current
+// tenant via SUPABASE_SCHEMA in getAdminClient — different tenant
+// deployments read from different schemas, so routing is isolated):
+//   1. notification_emails (JSON array) — multi-recipient override
+//   2. contact_email (single string) — the tenant's primary inbox
+//   3. arsitechgroup@gmail.com — safe operator fallback if a tenant
+//      has neither key seeded. Never falls through to another tenant.
+const DEFAULT_FALLBACK = 'arsitechgroup@gmail.com'
+
 function isValidEmail(s: unknown): s is string {
   return typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
 }
@@ -32,9 +35,6 @@ function parseEmails(raw: string | null): string[] {
   }
 }
 
-// Returns the list of admin notification recipients. Always at least one
-// entry — falls through to the prior single-address logic when the tenant
-// hasn't set site_settings.notification_emails.
 export async function getNotificationRecipients(): Promise<string[]> {
   try {
     const raw = await getSiteSetting('notification_emails')
@@ -42,10 +42,11 @@ export async function getNotificationRecipients(): Promise<string[]> {
     if (list.length > 0) return list
   } catch { /* fall through */ }
 
-  // Prior behavior preserved: when RESEND_FROM_EMAIL is set we route to the
-  // Arsi inbox; otherwise to whatever siteConfig.notifications.adminEmail is.
-  const fallback = process.env.RESEND_FROM_EMAIL
-    ? 'arsitechgroup@gmail.com'
-    : siteConfig.notifications.adminEmail
-  return [fallback]
+  try {
+    const raw = await getSiteSetting('contact_email')
+    const value = (raw || '').trim()
+    if (isValidEmail(value)) return [value]
+  } catch { /* fall through */ }
+
+  return [DEFAULT_FALLBACK]
 }
