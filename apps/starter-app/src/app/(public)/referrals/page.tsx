@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getEnabledModules } from '@/lib/enabled-modules'
-import { getBusinessProfile } from '@/lib/business'
-import { getSiteSettings } from '@/lib/settings'
+import { getSiteSetting, getSiteSettings } from '@/lib/settings'
 import { ReferralForm } from '@/components/forms/ReferralForm'
 
 export const dynamic = 'force-dynamic'
@@ -131,10 +130,9 @@ export default async function ReferralsPage() {
 export async function generateMetadata() {
   const enabled = await getEnabledModules()
   if (!enabled.referrals) return {}
-  const business = await getBusinessProfile()
-  const name = business.name || 'Referrals'
+  const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
   return {
-    title: `Make a Referral | ${name}`,
-    description: `Refer someone to ${name} for person-centered care.`,
+    title: { absolute: `Referrals | ${brand}` },
+    description: `Refer clients to ${brand}. We accept referrals from hospitals, clinics, case managers, social workers, and families.`,
   }
 }

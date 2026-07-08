@@ -1,16 +1,16 @@
 import { notFound } from 'next/navigation'
-import { getSiteSettings } from '@/lib/settings'
+import { getSiteSetting, getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
-import { getContentMany } from '@/lib/content/resolver'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
-  const { meta_home_title } = await getContentMany(['meta_home_title'])
-  const business = await getBusinessProfile()
-  const brand = business.name || meta_home_title || 'Careers'
-  return { title: `Careers | ${brand}` }
+  const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
+  return {
+    title: { absolute: `Careers | Join Our Team | ${brand}` },
+    description: `Join the ${brand} team. We are hiring RNs, LPNs, HHAs, DSPs, caregivers, and administrative staff in Minnesota.`,
+  }
 }
 
 interface JobOpening {

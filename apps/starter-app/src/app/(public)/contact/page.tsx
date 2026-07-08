@@ -9,8 +9,11 @@ import { getSiteSetting } from '@/lib/settings'
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
-  const { meta_contact_title } = await getContentMany(['meta_contact_title'])
-  return { title: meta_contact_title }
+  const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
+  return {
+    title: { absolute: `Contact Us | ${brand}` },
+    description: `Contact ${brand} at (763) 516-7420. Located at 1871 130th Lane NW, Coon Rapids, MN 55448.`,
+  }
 }
 
 export default async function ContactPage() {

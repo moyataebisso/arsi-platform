@@ -116,9 +116,15 @@ function buildPreviewThemeCSS(themeName: ThemeName): string {
 }
 
 export async function generateMetadata() {
-  const content = await getContentMany(['meta_home_title', 'meta_home_description'])
+  const [bn, content] = await Promise.all([
+    getSiteSetting('business_name'),
+    getContentMany(['meta_home_description']),
+  ])
+  const brand = (bn || '').trim() || 'Our Business'
   return {
-    title: content.meta_home_title,
+    // absolute prevents the root layout template (`%s | {business_name}`)
+    // from appending a second brand at the end.
+    title: { absolute: `${brand} | Home Care & HCBS Agency in Minnesota` },
     description: content.meta_home_description,
   }
 }

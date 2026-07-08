@@ -5,13 +5,17 @@ import {
 } from 'lucide-react'
 import { getBusinessProfile } from '@/lib/business'
 import { getContentMany } from '@/lib/content/resolver'
+import { getSiteSetting } from '@/lib/settings'
 import { FounderBio } from '@/components/sections/FounderBio'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
-  const { meta_about_title } = await getContentMany(['meta_about_title'])
-  return { title: meta_about_title }
+  const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
+  return {
+    title: { absolute: `About Us | ${brand}` },
+    description: `Learn about ${brand}, led by Furtu Anota DNP, APRN, FNP-BC. Minnesota-licensed home care agency with HCBS designation.`,
+  }
 }
 
 // Lucide icons addressable by string name from site_settings.about_values JSON.

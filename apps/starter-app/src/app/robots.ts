@@ -1,7 +1,11 @@
 import type { MetadataRoute } from 'next'
-import { siteConfig } from '@config'
+
+// Per-tenant robots.txt. NEXT_PUBLIC_SITE_URL is set per Vercel project so
+// each tenant's sitemap URL points at their own canonical host.
+const DEFAULT_BASE_URL = 'https://elroihealthservices.com'
 
 export default function robots(): MetadataRoute.Robots {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_BASE_URL
   return {
     rules: [
       {
@@ -10,6 +14,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin/', '/api/', '/dashboard/'],
       },
     ],
-    sitemap: `${siteConfig.siteUrl}/sitemap.xml`,
+    sitemap: `${baseUrl}/sitemap.xml`,
   }
 }

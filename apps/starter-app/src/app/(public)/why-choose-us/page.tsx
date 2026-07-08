@@ -40,11 +40,10 @@ function parseItems(raw: string | null): string[] {
 export async function generateMetadata() {
   const enabled = await getEnabledModules()
   if (!enabled.why_choose_us) return {}
-  const business = await getBusinessProfile()
-  const name = displayBusinessName(business.name) || 'Why Choose Us'
+  const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
   return {
-    title: `Why Choose ${name}`,
-    description: `Reasons to choose ${name} for compassionate, professional care.`,
+    title: { absolute: `Why Choose Us | ${brand}` },
+    description: `Discover why families and case managers choose ${brand} for home care and HCBS services in Minnesota.`,
   }
 }
 

@@ -7,14 +7,17 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
-import { getContentMany, getServicesContent } from '@/lib/content/resolver'
+import { getServicesContent } from '@/lib/content/resolver'
 import { getSiteSetting } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
-  const { meta_services_title } = await getContentMany(['meta_services_title'])
-  return { title: meta_services_title }
+  const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
+  return {
+    title: { absolute: `Our Services | Skilled Nursing, HCBS & Home Care | ${brand}` },
+    description: `Explore skilled nursing, personal care, HCBS, homemaker, and respite services provided by ${brand} throughout Minnesota.`,
+  }
 }
 
 // Structured services-page content shape stored at site_settings.services_page_content.
