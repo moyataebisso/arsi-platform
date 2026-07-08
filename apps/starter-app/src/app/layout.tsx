@@ -102,6 +102,7 @@ export async function generateMetadata(): Promise<Metadata> {
     'tagline',
     'meta_description',
     'logo_url',
+    'favicon_url',
     'seo_title',
     'seo_description',
     'seo_keywords',
@@ -121,7 +122,11 @@ export async function generateMetadata(): Promise<Metadata> {
       ? ''
       : siteConfig.seo.defaultDescription)
   const keywords = (settings.seo_keywords || '').trim() || undefined
-  const logoUrl = settings.logo_url
+  // Favicon precedence:
+  //   1. site_settings.favicon_url  (tenant-specific favicon override)
+  //   2. site_settings.logo_url     (existing behaviour — legacy fallback)
+  //   3. Neither set → Next.js file convention auto-serves /app/icon.svg
+  const faviconUrl = (settings.favicon_url || '').trim() || settings.logo_url
 
   return {
     title: {
@@ -133,10 +138,11 @@ export async function generateMetadata(): Promise<Metadata> {
     authors: [{ name: businessName }],
     creator: businessName,
     metadataBase: new URL(siteUrl),
-    // When a customer has logo_url set, use it as the favicon. Otherwise
-    // Next.js auto-serves /app/icon.svg (Waji default) from the file convention.
-    ...(logoUrl
-      ? { icons: { icon: logoUrl, apple: logoUrl } }
+    // When a customer has favicon_url (or legacy logo_url) set, use it as the
+    // favicon. Otherwise Next.js auto-serves /app/icon.svg (Waji default)
+    // from the file convention.
+    ...(faviconUrl
+      ? { icons: { icon: faviconUrl, apple: faviconUrl } }
       : {}),
     openGraph: {
       type: 'website',
