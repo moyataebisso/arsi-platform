@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { sendEmail } from '@/lib/email/sender'
 import { getNotificationRecipients } from '@/lib/email/recipients'
-import { siteConfig } from '@config'
+import { getSiteSetting } from '@/lib/settings'
 import { getEnabledModules } from '@/lib/enabled-modules'
 
 export async function POST(request: NextRequest) {
@@ -22,19 +22,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
     }
 
-    if (siteConfig.notifications.notifyOnNewLead) {
-      try {
-        const recipients = await getNotificationRecipients()
-        await sendEmail({
-          to: recipients,
-          replyTo: email,
-          subject: `New care community subscriber: ${email}`,
-          html: `<p>New subscriber to <strong>${siteConfig.business.name}</strong> care community:</p><p><a href="mailto:${email}">${email}</a></p>`,
-          text: `New subscriber to ${siteConfig.business.name} care community: ${email}`,
-        })
-      } catch (emailError) {
-        console.error('Failed to send subscribe notification:', emailError)
-      }
+    // Notify the tenant's operator inbox. getNotificationRecipients reads
+    // notification_emails → contact_email → arsitechgroup@gmail.com from the
+    // current SUPABASE_SCHEMA, so El Roi lands at furtuandfamily@yahoo.com
+    // and Adama / Entrusted land at their own contact_email. No DB write —
+    // the email address is not persisted anywhere.
+    try {
+      const [recipients, businessNameRaw] = await Promise.all([
+        getNotificationRecipients(),
+        getSiteSetting('business_name'),
+      ])
+      const brand = (businessNameRaw || '').trim() || 'our care community'
+      await sendEmail({
+        to: recipients,
+        replyTo: email,
+        subject: `New newsletter subscriber — ${brand}`,
+        html: `<p>Someone subscribed to updates from <strong>${brand}</strong>.</p><p>Email: <a href="mailto:${email}">${email}</a></p>`,
+        text: `Someone subscribed to updates from ${brand}. Email: ${email}`,
+      })
+    } catch (emailError) {
+      console.error('Failed to send subscribe notification:', emailError)
     }
 
     return NextResponse.json({ success: true })
