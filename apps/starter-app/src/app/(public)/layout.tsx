@@ -19,6 +19,7 @@ export default async function PublicLayout({ children }: { children: React.React
       'active_layout',
       'selected_layout',
       'logo_url',
+      'logo_alt',
       'promo_bar_text',
       'promo_bar_cta_url',
       'promo_bar_cta_label',
@@ -61,6 +62,7 @@ export default async function PublicLayout({ children }: { children: React.React
           businessName={settings.business_name}
           tagline={settings.tagline}
           logoUrl={settings.logo_url || undefined}
+          logoAlt={settings.logo_alt || undefined}
           showMenuLink={showMenuLink}
           showOurHomes={enabledModules.our_homes}
           showReferrals={enabledModules.referrals}
@@ -84,6 +86,7 @@ export default async function PublicLayout({ children }: { children: React.React
         <Footer
           businessName={settings.business_name}
           logoUrl={settings.logo_url || undefined}
+          logoAlt={settings.logo_alt || undefined}
           showMenuLink={showMenuLink}
           showOurHomes={enabledModules.our_homes}
           showReferrals={enabledModules.referrals}

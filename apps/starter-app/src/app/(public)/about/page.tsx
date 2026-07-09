@@ -3,6 +3,7 @@ import {
   Star, Target, Users,
   type LucideIcon,
 } from 'lucide-react'
+import Link from 'next/link'
 import { getBusinessProfile } from '@/lib/business'
 import { getContentMany } from '@/lib/content/resolver'
 import { getSiteSetting } from '@/lib/settings'
@@ -94,7 +95,7 @@ export default async function AboutPage() {
   // supabase call internally) was the only surface still showing the unsplash
   // fallback for the uploaded image — unifying the call shape eliminates any
   // subtle divergence.
-  const [profile, content] = await Promise.all([
+  const [profile, content, aboutImage1Alt] = await Promise.all([
     getBusinessProfile(),
     getContentMany([
       'about_values',
@@ -102,6 +103,7 @@ export default async function AboutPage() {
       'about_image',
       'about_image_1',
     ]),
+    getSiteSetting('about_image_1_alt'),
   ])
 
   const headlineName = profile.name || 'us'
@@ -204,6 +206,8 @@ export default async function AboutPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div
+              role="img"
+              aria-label={(aboutImage1Alt || '').trim() || (profile.name ? `${profile.name} — team photo` : 'Team photo')}
               className="aspect-[4/3] rounded-2xl shadow-md"
               style={{
                 backgroundImage: `url(${storyImage})`,
@@ -348,6 +352,32 @@ export default async function AboutPage() {
           </div>
         </section>
       )}
+
+      {/* Internal linking — helps Google understand site structure and keeps
+          users engaged. Hardcoded hrefs; labels are generic and safe for any
+          tenant. */}
+      <section className="py-14 sm:py-16" style={{ backgroundColor: 'var(--color-background)' }}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+            <Link
+              href="/services"
+              className="inline-flex items-center gap-2 text-base font-semibold underline-offset-4 hover:underline"
+              style={{ color: 'var(--color-accent)' }}
+            >
+              Explore our services
+              <span aria-hidden="true">&rarr;</span>
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 text-base font-semibold underline-offset-4 hover:underline"
+              style={{ color: 'var(--color-accent)' }}
+            >
+              Contact us today
+              <span aria-hidden="true">&rarr;</span>
+            </Link>
+          </div>
+        </div>
+      </section>
     </>
   )
 }

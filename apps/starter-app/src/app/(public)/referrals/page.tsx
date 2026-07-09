@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { getSiteSetting, getSiteSettings } from '@/lib/settings'
@@ -40,10 +41,17 @@ export default async function ReferralsPage() {
   const enabled = await getEnabledModules()
   if (!enabled.referrals) return notFound()
 
-  const settings = await getSiteSettings(['referrals_intro', 'referrals_sources', 'referrals_cta'])
+  const settings = await getSiteSettings([
+    'referrals_intro',
+    'referrals_sources',
+    'referrals_cta',
+    'referrals_headline',
+  ])
   const intro = (settings.referrals_intro || '').trim()
   const sources = parseSources(settings.referrals_sources)
   const cta = (settings.referrals_cta || '').trim()
+  // H1 override — falls back to prior text so Adama/Entrusted are unchanged.
+  const h1 = (settings.referrals_headline || '').trim() || 'Make a Referral'
 
   return (
     <section className="py-20 sm:py-24" style={{ backgroundColor: 'var(--color-background)' }}>
@@ -71,7 +79,7 @@ export default async function ReferralsPage() {
               letterSpacing: '-0.02em',
             }}
           >
-            Make a Referral
+            {h1}
           </h1>
           <p className="text-base max-w-xl mx-auto whitespace-pre-line" style={{ color: 'var(--color-text-muted)' }}>
             {intro || 'Use this form to refer someone who could benefit from our care. We will follow up with you directly to discuss next steps.'}
@@ -122,6 +130,17 @@ export default async function ReferralsPage() {
         )}
 
         <ReferralForm />
+
+        <div className="mt-12 text-center">
+          <Link
+            href="/services"
+            className="inline-flex items-center gap-2 text-base font-semibold underline-offset-4 hover:underline"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            View our full services list
+            <span aria-hidden="true">&rarr;</span>
+          </Link>
+        </div>
       </div>
     </section>
   )

@@ -179,6 +179,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   ])
   const services = await getHomeServicesContent()
   const heroImage = await getSiteSetting('hero_image_url')
+  const heroImageAlt = await getSiteSetting('hero_image_alt')
+  const aboutImage1Alt = await getSiteSetting('about_image_1_alt')
+  const aboutImage2Alt = await getSiteSetting('about_image_2_alt')
   // Optional full-bleed background photo for the SplitHero. When set, the
   // animated gradient is suppressed and a 75% white overlay keeps text
   // readable. Absent / empty → existing gradient hero unchanged.
@@ -353,6 +356,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroBadgeText={heroBadgeText || undefined}
         heroVideoUrl={heroVideo || undefined}
         heroPosterUrl={heroPoster || undefined}
+        heroImageAlt={heroImageAlt || undefined}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}
@@ -380,6 +384,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         state={business.state}
         image1={content.about_image_1 || content.about_image || undefined}
         image2={content.about_image_2 || undefined}
+        image1Alt={aboutImage1Alt || undefined}
+        image2Alt={aboutImage2Alt || undefined}
         blurb={homeAboutBlurb}
       />
     ),

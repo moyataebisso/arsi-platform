@@ -21,6 +21,10 @@ interface HeaderProps {
   businessName?: string
   tagline?: string
   logoUrl?: string
+  // Descriptive alt text for the logo <img>. site_settings key: logo_alt.
+  // Falls back to `${businessName} logo` when not seeded so screen readers
+  // and search engines always get something more useful than the bare name.
+  logoAlt?: string
   showMenuLink?: boolean
   showOurHomes?: boolean
   showReferrals?: boolean
@@ -57,6 +61,7 @@ export function Header({
   businessName,
   tagline,
   logoUrl,
+  logoAlt,
   showMenuLink,
   showOurHomes,
   showReferrals,
@@ -90,6 +95,7 @@ export function Header({
     businessName ||
     (siteConfig.business.name === 'Client Business Name' ? 'Welcome' : siteConfig.business.name)
   const displayBusinessName = toDisplayName(rawBusinessName)
+  const resolvedLogoAlt = (logoAlt || '').trim() || `${displayBusinessName} logo`
   // BrandLogo is an El Roi-specific SVG placeholder. Other tenants without
   // a logo_url keep their existing plain-text wordmark — flipping this on
   // for them would render mis-branded copy ("El Roi" / "Health Services").
@@ -273,7 +279,7 @@ export function Header({
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={logoUrl}
-                    alt={displayBusinessName}
+                    alt={resolvedLogoAlt}
                     height={32}
                     width={110}
                     className="object-contain"
@@ -355,7 +361,7 @@ export function Header({
               <Link href="/" aria-label={displayBusinessName}>
                 {logoUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={logoUrl} alt={displayBusinessName} height={32} width={110} className="object-contain rounded-full" />
+                  <img src={logoUrl} alt={resolvedLogoAlt} height={32} width={110} className="object-contain rounded-full" />
                 ) : showBrandLogo ? (
                   <BrandLogo businessName={displayBusinessName} height={40} />
                 ) : (
@@ -406,7 +412,7 @@ export function Header({
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={logoUrl}
-                  alt={displayBusinessName}
+                  alt={resolvedLogoAlt}
                   height={32}
                   width={110}
                   className="object-contain"
@@ -560,7 +566,7 @@ export function Header({
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={logoUrl}
-              alt={displayBusinessName}
+              alt={resolvedLogoAlt}
               height={32}
               width={110}
               className="object-contain"

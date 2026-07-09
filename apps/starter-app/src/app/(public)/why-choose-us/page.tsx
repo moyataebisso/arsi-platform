@@ -110,14 +110,22 @@ export default async function WhyChooseUsPage() {
           </p>
         )}
 
-        <div className="mt-14 text-center">
+        <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/contact"
             className="inline-flex items-center gap-2 rounded-xl px-7 py-3 text-sm font-semibold text-white transition-all hover:shadow-md hover:-translate-y-0.5"
             style={{ backgroundColor: 'var(--color-primary)' }}
           >
-            Get In Touch
+            Contact us to get started
             <ArrowRight size={16} strokeWidth={2.5} />
+          </Link>
+          <Link
+            href="/services"
+            className="inline-flex items-center gap-2 text-sm font-semibold underline-offset-4 hover:underline"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            View our services
+            <span aria-hidden="true">&rarr;</span>
           </Link>
         </div>
       </div>

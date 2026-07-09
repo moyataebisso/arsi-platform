@@ -29,6 +29,11 @@ interface AboutSectionProps {
   // to the existing unsplash stock photos when missing.
   image1?: string
   image2?: string
+  // Descriptive aria-labels for the two CSS-background image cards. Read
+  // from site_settings.about_image_1_alt / about_image_2_alt in page.tsx.
+  // Missing → generic tenant-safe fallback so a11y still surfaces something.
+  image1Alt?: string
+  image2Alt?: string
   // Optional consolidated blurb from site_settings.home_about_blurb (jsonb).
   // When set, individual fields override the legacy per-prop fallbacks;
   // missing fields fall through. Null/undefined leaves prior behavior intact.
@@ -52,6 +57,8 @@ export function AboutSection({
   state,
   image1,
   image2,
+  image1Alt,
+  image2Alt,
   blurb,
 }: AboutSectionProps) {
   const cfgName =
@@ -85,6 +92,10 @@ export function AboutSection({
     blurb?.quote || quote || 'Every person who walks through our doors becomes part of our story.'
   const displayCtaText = blurb?.cta_label || ctaText || 'Our Story'
   const displayCtaHref = blurb?.cta_href || '/about'
+
+  const genericAlt = resolvedName ? `${resolvedName} — team photo` : 'Team photo'
+  const resolvedImage1Alt = (image1Alt || '').trim() || genericAlt
+  const resolvedImage2Alt = (image2Alt || '').trim() || genericAlt
 
   return (
     <section className="py-20 sm:py-28">
@@ -134,14 +145,24 @@ export function AboutSection({
             </ScrollReveal>
 
             <ScrollReveal delay={400}>
-              <Link
-                href={displayCtaHref}
-                className="inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200 hover:gap-3"
-                style={{ color: 'var(--color-primary)' }}
-              >
-                {displayCtaText}
-                <span aria-hidden="true">&rarr;</span>
-              </Link>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <Link
+                  href={displayCtaHref}
+                  className="inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200 hover:gap-3"
+                  style={{ color: 'var(--color-primary)' }}
+                >
+                  {displayCtaText}
+                  <span aria-hidden="true">&rarr;</span>
+                </Link>
+                <Link
+                  href="/about"
+                  className="inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200 hover:gap-3"
+                  style={{ color: 'var(--color-accent)' }}
+                >
+                  Learn about our founder
+                  <span aria-hidden="true">&rarr;</span>
+                </Link>
+              </div>
             </ScrollReveal>
           </div>
 
@@ -151,6 +172,8 @@ export function AboutSection({
               <div className="relative h-[400px]">
                 {/* Background card */}
                 <div
+                  role="img"
+                  aria-label={resolvedImage1Alt}
                   className="absolute top-0 right-0 w-[85%] h-[75%] rounded-2xl overflow-hidden shadow-md"
                   style={{
                     transform: 'rotate(3deg)',
@@ -161,6 +184,8 @@ export function AboutSection({
                 />
                 {/* Foreground card */}
                 <div
+                  role="img"
+                  aria-label={resolvedImage2Alt}
                   className="absolute bottom-0 left-0 w-[75%] h-[65%] rounded-2xl overflow-hidden shadow-xl"
                   style={{
                     transform: 'rotate(-2deg)',

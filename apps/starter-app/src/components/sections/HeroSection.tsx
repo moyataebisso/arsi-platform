@@ -45,6 +45,11 @@ interface HeroSectionProps {
   // is blocked, slow, or absent.
   heroVideoUrl?: string
   heroPosterUrl?: string
+  // Descriptive text applied as aria-label on the CSS-background hero image
+  // wrappers so screen readers and content-aware crawlers get the same
+  // context they would from an alt attribute on an <img>. site_settings key:
+  // hero_image_alt. Falls back to a neutral generic label.
+  heroImageAlt?: string
 }
 
 type VariantProps = Omit<HeroSectionProps, 'variant'>
@@ -180,6 +185,16 @@ function getLocationLabel(propCity?: string, propState?: string): string | null 
   return `Serving ${city}, ${state}`
 }
 
+// aria-label for the CSS-background hero image wrapper. Falls back to a
+// neutral, tenant-safe generic when hero_image_alt isn't seeded, so Adama
+// / Entrusted see the same behaviour as before with a slightly better a11y
+// label instead of nothing.
+function resolveHeroImageAlt(explicit: string | undefined, name: string): string {
+  const trimmed = (explicit || '').trim()
+  if (trimmed) return trimmed
+  return name ? `${name} — business photo` : 'Business photo'
+}
+
 // ============================================================
 // SOLID_COLOR — Bold, copy-forward, flat color block
 // ============================================================
@@ -290,6 +305,7 @@ function ImageOverlayHero(props: VariantProps) {
 
   const locationLabel = getLocationLabel(props.city, props.state)
   const pillLabel = locationLabel || resolveTagline(props.tagline) || null
+  const imageAriaLabel = resolveHeroImageAlt(props.heroImageAlt, resolveBusinessName(props.businessName))
 
   // Surface the resolved hero image URL in Vercel logs so we can confirm
   // whether the customer's DB hero_image_url is reaching the renderer.
@@ -297,6 +313,8 @@ function ImageOverlayHero(props: VariantProps) {
 
   return (
     <section
+      role="img"
+      aria-label={imageAriaLabel}
       className="relative w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-28 min-h-[440px] sm:min-h-[480px] lg:min-h-[520px] overflow-hidden"
       style={{
         backgroundImage: cssUrl(imageUrl),
@@ -540,6 +558,8 @@ function SplitHero(props: VariantProps) {
           {/* Right: Image */}
           <div className="animate-fade-in-up delay-400 relative">
             <div
+              role="img"
+              aria-label={resolveHeroImageAlt(props.heroImageAlt, name)}
               className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl"
               style={{
                 backgroundImage: cssUrl(imageUrl),
@@ -681,6 +701,8 @@ function EditorialSplitHero(props: VariantProps) {
         </div>
 
         <div
+          role="img"
+          aria-label={resolveHeroImageAlt(props.heroImageAlt, resolveBusinessName(props.businessName))}
           className="aspect-[4/5]"
           style={{
             backgroundImage: cssUrl(imageUrl),
@@ -839,6 +861,8 @@ function RoundedCardHero(props: VariantProps) {
             </div>
 
             <div
+              role="img"
+              aria-label={resolveHeroImageAlt(props.heroImageAlt, resolveBusinessName(props.businessName))}
               className="aspect-square rounded-[32px] overflow-hidden"
               style={{
                 backgroundImage: cssUrl(imageUrl),
@@ -1161,6 +1185,7 @@ export function HeroSection(props: HeroSectionProps) {
     phoneCtaHref: props.phoneCtaHref,
     heroVideoUrl: props.heroVideoUrl,
     heroPosterUrl: props.heroPosterUrl,
+    heroImageAlt: props.heroImageAlt,
   }
 
   switch (activeVariant) {

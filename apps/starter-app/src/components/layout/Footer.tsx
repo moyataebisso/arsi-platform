@@ -9,6 +9,9 @@ import { getSiteSettings } from '@/lib/settings'
 interface FooterProps {
   businessName?: string
   logoUrl?: string
+  // Descriptive alt text for the logo <img>. site_settings key: logo_alt.
+  // Falls back to `${businessName} logo` when unseeded.
+  logoAlt?: string
   showMenuLink?: boolean
   showOurHomes?: boolean
   showReferrals?: boolean
@@ -34,6 +37,7 @@ function trimToTwoSentences(text: string): string {
 export async function Footer({
   businessName,
   logoUrl,
+  logoAlt,
   showMenuLink,
   showOurHomes,
   showReferrals,
@@ -68,6 +72,7 @@ export async function Footer({
   ].filter(s => s.url.length > 0)
 
   const resolvedName = businessName || profile.name || 'Welcome'
+  const resolvedLogoAlt = (logoAlt || '').trim() || `${resolvedName} logo`
   const footerBlurb =
     trimToTwoSentences(profile.story) ||
     content.footer_tagline ||
@@ -120,7 +125,7 @@ export async function Footer({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={logoUrl}
-                alt={resolvedName}
+                alt={resolvedLogoAlt}
                 className="h-12 w-auto max-h-14 mb-4"
               />
             ) : (

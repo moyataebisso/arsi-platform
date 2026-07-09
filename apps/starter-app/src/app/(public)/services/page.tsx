@@ -91,8 +91,16 @@ export default async function ServicesPage() {
   // New structured content path — when site_settings.services_page_content is set,
   // render the rich sections/subsections layout. Otherwise fall through to the
   // legacy service-card grid so Adama / Entrusted / older tenants stay byte-identical.
-  const structuredRaw = await getSiteSetting('services_page_content')
+  const [structuredRaw, servicesHeadlineRaw, businessNameRaw] = await Promise.all([
+    getSiteSetting('services_page_content'),
+    getSiteSetting('services_headline'),
+    getSiteSetting('business_name'),
+  ])
   const structured = parseServicesPageContent(structuredRaw)
+  // H1 override — keyword-rich per-tenant heading. Falls back to 'Our Services'
+  // so Adama and Entrusted are unchanged.
+  const h1 = (servicesHeadlineRaw || '').trim() || 'Our Services'
+  const brand = (businessNameRaw || '').trim() || 'us'
 
   return (
     <>
@@ -113,7 +121,7 @@ export default async function ServicesPage() {
                 fontFamily: 'var(--font-playfair)',
               }}
             >
-              Our Services
+              {h1}
             </h1>
             <p
               className="text-lg leading-relaxed"
@@ -127,6 +135,32 @@ export default async function ServicesPage() {
       </section>
 
       {structured ? <StructuredServices content={structured} /> : <LegacyServicesGrid ctaHref={ctaHref} ctaText={ctaText} />}
+
+      {/* Bottom CTA + cross-link to why-choose-us. Static labels; brand
+          interpolated from site_settings so Adama/Entrusted read cleanly. */}
+      <section className="py-16 sm:py-20" style={{ backgroundColor: 'var(--color-surface)' }}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-base sm:text-lg leading-relaxed mb-6" style={{ color: 'var(--color-text-muted)' }}>
+            Ready to get started?{' '}
+            <Link
+              href="/contact"
+              className="font-semibold underline-offset-4 hover:underline"
+              style={{ color: 'var(--color-accent)' }}
+            >
+              Contact {brand}
+            </Link>{' '}
+            today to schedule a consultation.
+          </p>
+          <Link
+            href="/why-choose-us"
+            className="inline-flex items-center gap-2 text-base font-semibold underline-offset-4 hover:underline"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            Learn why families choose us
+            <span aria-hidden="true">&rarr;</span>
+          </Link>
+        </div>
+      </section>
     </>
   )
 }
