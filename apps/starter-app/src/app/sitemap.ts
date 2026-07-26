@@ -1,60 +1,66 @@
 import type { MetadataRoute } from 'next'
-import { siteConfig } from '@config'
+import { resolveBaseUrl } from '@/lib/site-url'
+import { getEnabledModules, type EnabledModules } from '@/lib/enabled-modules'
 
-// Per-tenant sitemap. The base URL comes from NEXT_PUBLIC_SITE_URL (set per
-// Vercel project) so every tenant emits its own canonical URLs. Fallback is
-// a neutral placeholder — tenants without NEXT_PUBLIC_SITE_URL get an
-// obviously-wrong sitemap rather than one silently pointing at another tenant.
-const DEFAULT_BASE_URL = 'https://example.com'
+export const dynamic = 'force-dynamic'
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]['changeFrequency']>
 
-interface CorePage {
+interface RouteEntry {
   path: string
   priority: number
   changeFrequency: ChangeFrequency
 }
 
-const CORE_PAGES: CorePage[] = [
-  { path: '/',              priority: 1.0, changeFrequency: 'weekly'  },
-  { path: '/about',         priority: 0.8, changeFrequency: 'monthly' },
-  { path: '/services',      priority: 0.9, changeFrequency: 'monthly' },
-  { path: '/why-choose-us', priority: 0.7, changeFrequency: 'monthly' },
-  { path: '/referrals',     priority: 0.8, changeFrequency: 'monthly' },
-  { path: '/jobs',          priority: 0.7, changeFrequency: 'monthly' },
-  { path: '/contact',       priority: 0.9, changeFrequency: 'monthly' },
+const ALWAYS_PAGES: RouteEntry[] = [
+  { path: '/',         priority: 1.0, changeFrequency: 'weekly'  },
+  { path: '/about',    priority: 0.8, changeFrequency: 'monthly' },
+  { path: '/services', priority: 0.9, changeFrequency: 'monthly' },
+  { path: '/contact',  priority: 0.9, changeFrequency: 'monthly' },
 ]
 
-// Ecommerce / content pages — only included when the tenant has them enabled
-// in siteConfig.pages. Adama and Entrusted keep their existing coverage here.
-const OPTIONAL_PAGES: Array<[keyof typeof siteConfig.pages, string]> = [
-  ['shop',    '/shop'],
-  ['book',    '/book'],
-  ['blog',    '/blog'],
-  ['events',  '/events'],
-  ['reviews', '/reviews'],
-  ['gallery', '/gallery'],
-  ['faq',     '/faq'],
+interface FlagGatedRoute extends RouteEntry {
+  flag: keyof EnabledModules
+}
+
+const FLAG_GATED_PAGES: FlagGatedRoute[] = [
+  { flag: 'why_choose_us',  path: '/why-choose-us', priority: 0.7, changeFrequency: 'monthly' },
+  { flag: 'referrals',      path: '/referrals',     priority: 0.8, changeFrequency: 'monthly' },
+  { flag: 'jobs',           path: '/jobs',          priority: 0.7, changeFrequency: 'monthly' },
+  { flag: 'our_homes',      path: '/our-homes',     priority: 0.7, changeFrequency: 'monthly' },
+  { flag: 'resources_page', path: '/resources',     priority: 0.7, changeFrequency: 'monthly' },
+  { flag: 'order_online',   path: '/order',         priority: 0.6, changeFrequency: 'weekly'  },
+  { flag: 'drinks',         path: '/drinks',        priority: 0.6, changeFrequency: 'weekly'  },
+  { flag: 'parties',        path: '/parties',       priority: 0.6, changeFrequency: 'weekly'  },
+  { flag: 'catering',       path: '/catering',      priority: 0.6, changeFrequency: 'weekly'  },
+  { flag: 'ecommerce',      path: '/shop',          priority: 0.6, changeFrequency: 'weekly'  },
+  { flag: 'booking',        path: '/book',          priority: 0.6, changeFrequency: 'weekly'  },
+  { flag: 'blog',           path: '/blog',          priority: 0.6, changeFrequency: 'weekly'  },
+  { flag: 'events',         path: '/events',        priority: 0.6, changeFrequency: 'weekly'  },
+  { flag: 'reviews',        path: '/reviews',       priority: 0.6, changeFrequency: 'weekly'  },
+  { flag: 'gallery',        path: '/gallery',       priority: 0.6, changeFrequency: 'weekly'  },
+  { flag: 'faq',            path: '/faq',           priority: 0.6, changeFrequency: 'weekly'  },
 ]
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_BASE_URL
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = resolveBaseUrl()
+  const enabled = await getEnabledModules()
   const now = new Date()
 
-  const routes: MetadataRoute.Sitemap = CORE_PAGES.map((p) => ({
+  const routes: MetadataRoute.Sitemap = ALWAYS_PAGES.map((p) => ({
     url: `${baseUrl}${p.path === '/' ? '' : p.path}`,
     lastModified: now,
     changeFrequency: p.changeFrequency,
     priority: p.priority,
   }))
 
-  for (const [key, path] of OPTIONAL_PAGES) {
-    if (siteConfig.pages[key]?.enabled) {
+  for (const r of FLAG_GATED_PAGES) {
+    if (enabled[r.flag]) {
       routes.push({
-        url: `${baseUrl}${path}`,
+        url: `${baseUrl}${r.path}`,
         lastModified: now,
-        changeFrequency: 'weekly',
-        priority: 0.6,
+        changeFrequency: r.changeFrequency,
+        priority: r.priority,
       })
     }
   }
