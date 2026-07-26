@@ -35,6 +35,7 @@ export interface EnabledModules {
   parties: boolean
   catering: boolean
   jobs: boolean
+  jobs_application_form: boolean
 }
 
 function fromSiteConfig(): EnabledModules {
@@ -65,6 +66,7 @@ function fromSiteConfig(): EnabledModules {
     parties: m.parties === true,
     catering: m.catering === true,
     jobs: m.jobs === true,
+    jobs_application_form: m.jobs_application_form === true,
   }
 }
 

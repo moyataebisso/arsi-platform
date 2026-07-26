@@ -2,8 +2,23 @@ import { notFound } from 'next/navigation'
 import { getSiteSetting, getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
+import { JobApplicationForm } from '@/components/forms/JobApplicationForm'
 
 export const dynamic = 'force-dynamic'
+
+function parseRoles(raw: string | undefined): string[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((s): s is string => typeof s === 'string')
+      .map((s) => s.trim())
+      .filter(Boolean)
+  } catch {
+    return []
+  }
+}
 
 export async function generateMetadata() {
   const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
@@ -44,6 +59,7 @@ export default async function JobsPage() {
     'jobs_apply_email',
     'jobs_apply_phone',
     'jobs_openings',
+    'jobs_roles',
   ])
   const business = await getBusinessProfile()
   const brand = business.name || ''
@@ -57,6 +73,8 @@ export default async function JobsPage() {
   const applyEmail = (settings.jobs_apply_email || '').trim()
   const applyPhone = (settings.jobs_apply_phone || '').trim()
   const openings = parseJobs(settings.jobs_openings)
+  const parsedRoles = parseRoles(settings.jobs_roles)
+  const applicationRoles = parsedRoles.length > 0 ? parsedRoles : ['General Interest']
 
   return (
     <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--color-background)' }}>
@@ -176,6 +194,23 @@ export default async function JobsPage() {
             </a>
           )}
         </div>
+
+        {modules.jobs_application_form && (
+          <div className="mt-14">
+            <h2
+              className="mb-6"
+              style={{
+                color: 'var(--color-text)',
+                fontFamily: 'var(--font-heading)',
+                fontSize: '1.75rem',
+                fontWeight: 700,
+              }}
+            >
+              Apply now
+            </h2>
+            <JobApplicationForm roles={applicationRoles} />
+          </div>
+        )}
       </div>
     </section>
   )
