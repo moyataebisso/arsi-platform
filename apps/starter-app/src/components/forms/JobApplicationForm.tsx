@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 interface JobApplicationFormState {
   fullName: string
@@ -27,6 +27,9 @@ const INITIAL: JobApplicationFormState = {
 const AVAILABILITY_OPTIONS = ['Full-time', 'Part-time', 'Overnights', 'Weekends', 'Flexible'] as const
 const YEARS_OPTIONS = ['None', 'Less than 1', '1-3', '3-5', '5+'] as const
 
+const MAX_RESUME_BYTES = 4 * 1024 * 1024
+const ACCEPTED_RESUME_EXTENSIONS = ['.pdf', '.doc', '.docx']
+
 interface JobApplicationFormProps {
   roles: string[]
 }
@@ -35,9 +38,41 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
   const [data, setData] = useState<JobApplicationFormState>(INITIAL)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const [file, setFile] = useState<File | null>(null)
+  const [fileError, setFileError] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   function set<K extends keyof JobApplicationFormState>(key: K, value: JobApplicationFormState[K]) {
     setData((d) => ({ ...d, [key]: value }))
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setFileError('')
+    const f = e.target.files?.[0] ?? null
+    if (!f) {
+      setFile(null)
+      return
+    }
+    if (f.size > MAX_RESUME_BYTES) {
+      setFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      setFileError('That file is too large (4 MB max). Please email your resume to us instead.')
+      return
+    }
+    const lower = f.name.toLowerCase()
+    if (!ACCEPTED_RESUME_EXTENSIONS.some((ext) => lower.endsWith(ext))) {
+      setFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      setFileError('Only PDF, DOC, or DOCX files are accepted.')
+      return
+    }
+    setFile(f)
+  }
+
+  function clearFile() {
+    setFile(null)
+    setFileError('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -45,13 +80,19 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
     setStatus('loading')
     setErrorMessage('')
     try {
+      const fd = new FormData()
+      for (const [k, v] of Object.entries(data)) {
+        fd.append(k, v)
+      }
+      if (file) fd.append('resume', file, file.name)
+
       const res = await fetch('/api/jobs/apply', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: fd,
       })
       if (res.ok) {
         setData(INITIAL)
+        clearFile()
         setStatus('success')
       } else {
         const body = await res.json().catch(() => ({}))
@@ -236,6 +277,43 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
           className={`${inputClass} resize-none`}
           style={inputStyle}
         />
+      </div>
+
+      <div>
+        <label className={labelClass} style={labelStyle}>
+          Resume {optionalMark}
+        </label>
+        {file ? (
+          <div
+            className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm"
+            style={inputStyle}
+          >
+            <span className="truncate" style={{ color: 'var(--color-text)' }}>{file.name}</span>
+            <button
+              type="button"
+              onClick={clearFile}
+              className="text-xs font-semibold uppercase tracking-wider hover:opacity-80"
+              style={{ color: 'var(--color-primary)' }}
+            >
+              Clear
+            </button>
+          </div>
+        ) : (
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx"
+            onChange={handleFileChange}
+            className={`${inputClass} file:mr-3 file:rounded-md file:border-0 file:bg-transparent file:text-sm file:font-medium file:cursor-pointer`}
+            style={inputStyle}
+          />
+        )}
+        <p className="mt-1.5 text-xs" style={{ color: 'var(--color-text-light)' }}>
+          PDF, DOC, or DOCX. Max 4 MB.
+        </p>
+        {fileError && (
+          <p className="mt-1.5 text-sm text-red-600">{fileError}</p>
+        )}
       </div>
 
       <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, overflow: 'hidden' }}>
