@@ -6,16 +6,23 @@ import {
 import Link from 'next/link'
 import { getBusinessProfile } from '@/lib/business'
 import { getContentMany } from '@/lib/content/resolver'
-import { getSiteSetting } from '@/lib/settings'
+import { getSiteSetting, getSiteSettings } from '@/lib/settings'
 import { FounderBio } from '@/components/sections/FounderBio'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
-  const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
+  const s = await getSiteSettings(['business_name', 'city', 'state', 'meta_description'])
+  const biz = (s.business_name || '').trim() || 'Our Practice'
+  const city = (s.city || '').trim()
+  const state = (s.state || '').trim()
+  const place = [city, state].filter(Boolean).join(', ')
+  const description =
+    (s.meta_description || '').trim() ||
+    `Learn about ${biz}${place ? `, serving ${place}` : ''}.`
   return {
-    title: { absolute: `About Us | ${brand}` },
-    description: `Learn about ${brand}, led by Furtu Anota DNP, APRN, FNP-BC. Minnesota-licensed home care agency with HCBS designation.`,
+    title: { absolute: `About Us | ${biz}` },
+    description,
   }
 }
 

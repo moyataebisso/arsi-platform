@@ -2,9 +2,10 @@ import type { MetadataRoute } from 'next'
 import { siteConfig } from '@config'
 
 // Per-tenant sitemap. The base URL comes from NEXT_PUBLIC_SITE_URL (set per
-// Vercel project) so Adama, Entrusted, and El Roi each emit their own
-// canonical URLs. Default is El Roi so a bare-metal dev/preview still works.
-const DEFAULT_BASE_URL = 'https://elroihealthservices.com'
+// Vercel project) so every tenant emits its own canonical URLs. Fallback is
+// a neutral placeholder — tenants without NEXT_PUBLIC_SITE_URL get an
+// obviously-wrong sitemap rather than one silently pointing at another tenant.
+const DEFAULT_BASE_URL = 'https://example.com'
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]['changeFrequency']>
 

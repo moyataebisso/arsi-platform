@@ -4,15 +4,24 @@ import { Mail, Phone, MapPin, Clock, Navigation, Globe } from 'lucide-react'
 import { MapEmbed } from '@/components/shared/MapEmbed'
 import { getContentMany } from '@/lib/content/resolver'
 import { getBusinessProfile, fullAddress } from '@/lib/business'
-import { getSiteSetting } from '@/lib/settings'
+import { getSiteSetting, getSiteSettings } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
-  const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
+  const s = await getSiteSettings(['business_name', 'phone', 'address', 'city', 'state'])
+  const biz = (s.business_name || '').trim() || 'Our Practice'
+  const phone = (s.phone || '').trim()
+  const address = (s.address || '').trim()
+  const city = (s.city || '').trim()
+  const state = (s.state || '').trim()
+  const cityState = [city, state].filter(Boolean).join(', ')
+  const location = [address, cityState].filter(Boolean).join(', ')
+  const description =
+    `Contact ${biz}${phone ? ` at ${phone}` : ''}${location ? `. Located at ${location}` : ''}.`
   return {
-    title: { absolute: `Contact Us | ${brand}` },
-    description: `Contact ${brand} at (763) 516-7420. Located at 1871 130th Lane NW, Coon Rapids, MN 55448.`,
+    title: { absolute: `Contact Us | ${biz}` },
+    description,
   }
 }
 
