@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile, fullAddress } from '@/lib/business'
@@ -58,6 +58,12 @@ function googleMapsHref(addr: string): string {
 
 export default async function OurHomesPage() {
   const enabled = await getEnabledModules()
+  // MN Ch. 144G / Ch. 245D compliance: /our-homes lists every location in a
+  // single `locations` array with no license distinction, which is a
+  // violation for tenants that have opted into license separation. 308 so
+  // search engines drop the old URL and follow the license-scoped route.
+  // Tenants without the flag keep the existing /our-homes page unchanged.
+  if (enabled.license_separated_nav) permanentRedirect('/assisted-living/homes')
   if (!enabled.our_homes) return notFound()
 
   const [settings, business] = await Promise.all([
