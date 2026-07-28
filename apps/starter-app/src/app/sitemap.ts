@@ -42,6 +42,18 @@ const FLAG_GATED_PAGES: FlagGatedRoute[] = [
   { flag: 'faq',            path: '/faq',           priority: 0.6, changeFrequency: 'weekly'  },
 ]
 
+// MN 144G / 245D routes. Only appear when the tenant flips
+// license_separated_nav on. When they do, /our-homes is removed below so the
+// sitemap does not point crawlers at the un-scoped homes page.
+const LICENSE_SEPARATED_PAGES: RouteEntry[] = [
+  { path: '/assisted-living',          priority: 0.8, changeFrequency: 'monthly' },
+  { path: '/assisted-living/homes',    priority: 0.7, changeFrequency: 'monthly' },
+  { path: '/assisted-living/services', priority: 0.7, changeFrequency: 'monthly' },
+  { path: '/hcbs',                     priority: 0.8, changeFrequency: 'monthly' },
+  { path: '/hcbs/homes',               priority: 0.7, changeFrequency: 'monthly' },
+  { path: '/hcbs/services',            priority: 0.7, changeFrequency: 'monthly' },
+]
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = resolveBaseUrl()
   const enabled = await getEnabledModules()
@@ -55,12 +67,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   for (const r of FLAG_GATED_PAGES) {
+    // Suppress /our-homes when the tenant has opted into license-separated nav;
+    // the license-scoped /assisted-living/homes and /hcbs/homes replace it.
+    if (r.flag === 'our_homes' && enabled.license_separated_nav) continue
     if (enabled[r.flag]) {
       routes.push({
         url: `${baseUrl}${r.path}`,
         lastModified: now,
         changeFrequency: r.changeFrequency,
         priority: r.priority,
+      })
+    }
+  }
+
+  if (enabled.license_separated_nav) {
+    for (const p of LICENSE_SEPARATED_PAGES) {
+      routes.push({
+        url: `${baseUrl}${p.path}`,
+        lastModified: now,
+        changeFrequency: p.changeFrequency,
+        priority: p.priority,
       })
     }
   }

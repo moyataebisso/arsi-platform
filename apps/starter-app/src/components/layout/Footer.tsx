@@ -25,6 +25,12 @@ interface FooterProps {
   showParties?: boolean
   showCatering?: boolean
   showJobs?: boolean
+  // Mirrors the Header prop. When true, /our-homes is dropped from Quick
+  // Links and the license-scoped routes (/assisted-living, /assisted-living/
+  // homes, /assisted-living/services, /hcbs, /hcbs/homes, /hcbs/services) are
+  // added in the same order as the header dropdowns. Off by default so every
+  // non-opted-in tenant renders the existing footer unchanged.
+  showLicenseSeparatedNav?: boolean
 }
 
 function trimToTwoSentences(text: string): string {
@@ -49,6 +55,7 @@ export async function Footer({
   showParties,
   showCatering,
   showJobs,
+  showLicenseSeparatedNav,
 }: FooterProps = {}) {
   const { integrations, pages, modules } = siteConfig
   const profile = await getBusinessProfile()
@@ -78,26 +85,41 @@ export async function Footer({
     content.footer_tagline ||
     'Dedicated to serving our community.'
 
-  const navLinks = [
-    pages.home.enabled && { href: '/', label: pages.home.title },
-    pages.about.enabled && { href: '/about', label: pages.about.title },
-    showMenuLink && { href: '/menu', label: 'Menu' },
-    showDrinks && { href: '/drinks', label: 'Drinks' },
-    showOrder && { href: '/order', label: 'Order' },
-    showReserve && { href: '/book', label: 'Reserve' },
-    pages.services.enabled && { href: '/services', label: pages.services.title },
-    showWhyChooseUs && { href: '/why-choose-us', label: 'Why Choose Us' },
-    showOurHomes && { href: '/our-homes', label: 'Our Homes' },
-    showReferrals && { href: '/referrals', label: 'Referrals' },
-    showParties && { href: '/parties', label: 'Parties' },
-    showCatering && { href: '/catering', label: 'Catering' },
-    showJobs && { href: '/jobs', label: 'Jobs' },
-    (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
-    !showReserve && (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
-    (pages.blog.enabled || modules.blog) && { href: '/blog', label: pages.blog.title },
-    pages.contact.enabled && { href: '/contact', label: pages.contact.title },
-    showResources && { href: '/resources', label: 'Resources' },
-  ].filter(Boolean) as { href: string; label: string }[]
+  const navLinks = showLicenseSeparatedNav
+    ? ([
+        pages.home.enabled && { href: '/', label: pages.home.title },
+        pages.about.enabled && { href: '/about', label: pages.about.title },
+        { href: '/assisted-living', label: 'Assisted Living' },
+        { href: '/assisted-living/homes', label: 'Assisted Living — Our Homes' },
+        { href: '/assisted-living/services', label: 'Assisted Living — Services' },
+        { href: '/hcbs', label: 'HCBS / Waiver Services' },
+        { href: '/hcbs/homes', label: 'HCBS — Our Homes' },
+        { href: '/hcbs/services', label: 'HCBS — Services' },
+        showReferrals && { href: '/referrals', label: 'Referrals' },
+        showJobs && { href: '/jobs', label: 'Jobs' },
+        showResources && { href: '/resources', label: 'Resources' },
+        pages.contact.enabled && { href: '/contact', label: pages.contact.title },
+      ].filter(Boolean) as { href: string; label: string }[])
+    : ([
+        pages.home.enabled && { href: '/', label: pages.home.title },
+        pages.about.enabled && { href: '/about', label: pages.about.title },
+        showMenuLink && { href: '/menu', label: 'Menu' },
+        showDrinks && { href: '/drinks', label: 'Drinks' },
+        showOrder && { href: '/order', label: 'Order' },
+        showReserve && { href: '/book', label: 'Reserve' },
+        pages.services.enabled && { href: '/services', label: pages.services.title },
+        showWhyChooseUs && { href: '/why-choose-us', label: 'Why Choose Us' },
+        showOurHomes && { href: '/our-homes', label: 'Our Homes' },
+        showReferrals && { href: '/referrals', label: 'Referrals' },
+        showParties && { href: '/parties', label: 'Parties' },
+        showCatering && { href: '/catering', label: 'Catering' },
+        showJobs && { href: '/jobs', label: 'Jobs' },
+        (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
+        !showReserve && (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
+        (pages.blog.enabled || modules.blog) && { href: '/blog', label: pages.blog.title },
+        pages.contact.enabled && { href: '/contact', label: pages.contact.title },
+        showResources && { href: '/resources', label: 'Resources' },
+      ].filter(Boolean) as { href: string; label: string }[])
 
   const socialLinks = ([
     integrations.instagram && { href: integrations.instagram, label: 'Instagram' },

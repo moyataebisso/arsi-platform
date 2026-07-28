@@ -36,6 +36,11 @@ export interface EnabledModules {
   catering: boolean
   jobs: boolean
   jobs_application_form: boolean
+  // Splits the public nav into Assisted Living (144G) and HCBS / Waiver
+  // Services (245D) sections with their own /homes and /services routes.
+  // Off by default so El Roi, Adama, and every other tenant render byte-
+  // identically to before. Only tenants that opt in get the new structure.
+  license_separated_nav: boolean
 }
 
 function fromSiteConfig(): EnabledModules {
@@ -67,6 +72,7 @@ function fromSiteConfig(): EnabledModules {
     catering: m.catering === true,
     jobs: m.jobs === true,
     jobs_application_form: m.jobs_application_form === true,
+    license_separated_nav: m.license_separated_nav === true,
   }
 }
 

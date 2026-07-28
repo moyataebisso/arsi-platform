@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { siteConfig } from '@config'
-import { Menu, X, Facebook, Instagram, Twitter, Linkedin, Globe, type LucideIcon } from 'lucide-react'
+import { Menu, X, ChevronDown, Facebook, Instagram, Twitter, Linkedin, Globe, type LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { displayBusinessName as toDisplayName } from '@/lib/business'
@@ -38,6 +38,11 @@ interface HeaderProps {
   showParties?: boolean
   showCatering?: boolean
   showJobs?: boolean
+  // MN license separation. When true, the healthcare nav replaces its
+  // /our-homes + /services links with two dropdown top-level items pointing
+  // to /assisted-living and /hcbs. Kept off by default so El Roi and every
+  // non-opted-in tenant render the existing flat nav unchanged.
+  showLicenseSeparatedNav?: boolean
   // Thin promo bar above the nav. Both must be non-empty to render; an empty
   // promo_bar_text site_setting keeps the existing chrome unchanged for every
   // tenant that does not opt in.
@@ -73,6 +78,7 @@ export function Header({
   showParties,
   showCatering,
   showJobs,
+  showLicenseSeparatedNav,
   promoBarText,
   promoBarCtaUrl,
   promoBarCtaLabel,
@@ -140,26 +146,57 @@ export function Header({
     setMobileOpen(false)
   }, [pathname])
 
-  const navLinks = [
-    pages.home.enabled && { href: '/', label: pages.home.title },
-    pages.about.enabled && { href: '/about', label: pages.about.title },
-    showMenuLink && { href: '/menu', label: 'Menu' },
-    showDrinks && { href: '/drinks', label: 'Drinks' },
-    showOrder && { href: '/order', label: 'Order' },
-    showReserve && { href: '/book', label: 'Reserve' },
-    pages.services.enabled && { href: '/services', label: pages.services.title },
-    showWhyChooseUs && { href: '/why-choose-us', label: 'Why Choose Us' },
-    showOurHomes && { href: '/our-homes', label: 'Our Homes' },
-    showReferrals && { href: '/referrals', label: 'Referrals' },
-    showParties && { href: '/parties', label: 'Parties' },
-    showCatering && { href: '/catering', label: 'Catering' },
-    showJobs && { href: '/jobs', label: 'Jobs' },
-    (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
-    !showReserve && (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
-    (pages.blog.enabled || modules.blog) && { href: '/blog', label: pages.blog.title },
-    pages.contact.enabled && { href: '/contact', label: pages.contact.title },
-    showResources && { href: '/resources', label: 'Resources' },
-  ].filter(Boolean) as { href: string; label: string }[]
+  type NavLink = { href: string; label: string; children?: { href: string; label: string }[] }
+
+  // MN Ch. 144G / Ch. 245D nav. When the flag is on, /our-homes and /services
+  // are dropped from the top level and replaced with two dropdown sections
+  // (Assisted Living and HCBS / Waiver Services) whose children point at
+  // license-scoped subroutes. Only rendered when the tenant opts in.
+  const navLinks: NavLink[] = showLicenseSeparatedNav
+    ? ([
+        pages.home.enabled && { href: '/', label: pages.home.title },
+        pages.about.enabled && { href: '/about', label: pages.about.title },
+        {
+          href: '/assisted-living',
+          label: 'Assisted Living',
+          children: [
+            { href: '/assisted-living/homes', label: 'Our Homes' },
+            { href: '/assisted-living/services', label: 'Services' },
+          ],
+        },
+        {
+          href: '/hcbs',
+          label: 'HCBS / Waiver Services',
+          children: [
+            { href: '/hcbs/homes', label: 'Our Homes' },
+            { href: '/hcbs/services', label: 'Services' },
+          ],
+        },
+        showReferrals && { href: '/referrals', label: 'Referrals' },
+        showJobs && { href: '/jobs', label: 'Jobs' },
+        showResources && { href: '/resources', label: 'Resources' },
+        pages.contact.enabled && { href: '/contact', label: pages.contact.title },
+      ].filter(Boolean) as NavLink[])
+    : ([
+        pages.home.enabled && { href: '/', label: pages.home.title },
+        pages.about.enabled && { href: '/about', label: pages.about.title },
+        showMenuLink && { href: '/menu', label: 'Menu' },
+        showDrinks && { href: '/drinks', label: 'Drinks' },
+        showOrder && { href: '/order', label: 'Order' },
+        showReserve && { href: '/book', label: 'Reserve' },
+        pages.services.enabled && { href: '/services', label: pages.services.title },
+        showWhyChooseUs && { href: '/why-choose-us', label: 'Why Choose Us' },
+        showOurHomes && { href: '/our-homes', label: 'Our Homes' },
+        showReferrals && { href: '/referrals', label: 'Referrals' },
+        showParties && { href: '/parties', label: 'Parties' },
+        showCatering && { href: '/catering', label: 'Catering' },
+        showJobs && { href: '/jobs', label: 'Jobs' },
+        (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
+        !showReserve && (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
+        (pages.blog.enabled || modules.blog) && { href: '/blog', label: pages.blog.title },
+        pages.contact.enabled && { href: '/contact', label: pages.contact.title },
+        showResources && { href: '/resources', label: 'Resources' },
+      ].filter(Boolean) as NavLink[])
 
   function isActive(href: string) {
     if (href === '/') return pathname === '/'
@@ -444,30 +481,40 @@ export function Header({
 
             {/* Desktop nav — every link nowrap so multi-word labels stay on one line */}
             <nav className="hidden md:flex items-center gap-0.5 lg:gap-1">
-              {navLinks.map(link => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`nav-link-underline px-2 lg:px-2.5 py-2 text-[13px] lg:text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
-                    isActive(link.href) ? 'active' : ''
-                  }`}
-                  style={{
-                    color: isActive(link.href)
-                      ? 'var(--color-primary)'
-                      : 'var(--color-text-muted)',
-                  }}
-                  onMouseEnter={e => {
-                    if (!isActive(link.href))
-                      (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'
-                  }}
-                  onMouseLeave={e => {
-                    if (!isActive(link.href))
-                      (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)'
-                  }}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {navLinks.map(link =>
+                link.children && link.children.length > 0 ? (
+                  <NavDropdown
+                    key={link.href}
+                    href={link.href}
+                    label={link.label}
+                    items={link.children}
+                    isActive={isActive}
+                  />
+                ) : (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`nav-link-underline px-2 lg:px-2.5 py-2 text-[13px] lg:text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
+                      isActive(link.href) ? 'active' : ''
+                    }`}
+                    style={{
+                      color: isActive(link.href)
+                        ? 'var(--color-primary)'
+                        : 'var(--color-text-muted)',
+                    }}
+                    onMouseEnter={e => {
+                      if (!isActive(link.href))
+                        (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'
+                    }}
+                    onMouseLeave={e => {
+                      if (!isActive(link.href))
+                        (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)'
+                    }}
+                  >
+                    {link.label}
+                  </Link>
+                ),
+              )}
               {phoneCtaLabel && phoneCtaHref ? (
                 <a
                   href={phoneCtaHref}
@@ -591,20 +638,35 @@ export function Header({
           </button>
         </div>
         <nav className="p-4 space-y-1">
-          {(navVariant === 'center_logo' ? [...centerLeftLinks, ...centerRightLinks] : navLinks).map(link => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              className="block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200"
-              style={{
-                color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                backgroundColor: isActive(link.href) ? 'var(--color-surface)' : 'transparent',
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {(navVariant === 'center_logo'
+            ? ([...centerLeftLinks, ...centerRightLinks] as NavLink[])
+            : navLinks
+          ).map(link => {
+            const kids = link.children
+            return kids && kids.length > 0 ? (
+              <MobileAccordionItem
+                key={link.href}
+                href={link.href}
+                label={link.label}
+                items={kids}
+                isActive={isActive}
+                onNavigate={() => setMobileOpen(false)}
+              />
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className="block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200"
+                style={{
+                  color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                  backgroundColor: isActive(link.href) ? 'var(--color-surface)' : 'transparent',
+                }}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
           {navVariant !== 'center_logo' && (
             <div className="pt-4">
               {phoneCtaLabel && phoneCtaHref ? (
@@ -685,5 +747,189 @@ export function Header({
         </nav>
       </div>
     </>
+  )
+}
+
+// Desktop-only two-level nav item. The top-level Link navigates to `href`
+// (Assisted Living / HCBS overview pages) and also acts as the dropdown
+// trigger — hover opens on desktop, focus opens for keyboard users, Escape
+// closes and returns focus to the trigger. Only rendered when a nav entry
+// carries a `children` list, so tenants without license_separated_nav never
+// see any of this markup.
+function NavDropdown({
+  href,
+  label,
+  items,
+  isActive,
+}: {
+  href: string
+  label: string
+  items: { href: string; label: string }[]
+  isActive: (href: string) => boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLAnchorElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        triggerRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
+
+  const anyChildActive = items.some(c => isActive(c.href))
+  const highlighted = isActive(href) || anyChildActive
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={e => {
+        if (!containerRef.current?.contains(e.relatedTarget as Node | null)) {
+          setOpen(false)
+        }
+      }}
+    >
+      <Link
+        ref={triggerRef}
+        href={href}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={`nav-link-underline inline-flex items-center gap-1 px-2 lg:px-2.5 py-2 text-[13px] lg:text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
+          highlighted ? 'active' : ''
+        }`}
+        style={{
+          color: highlighted ? 'var(--color-primary)' : 'var(--color-text-muted)',
+        }}
+        onMouseEnter={e => {
+          if (!highlighted) (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'
+        }}
+        onMouseLeave={e => {
+          if (!highlighted) (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)'
+        }}
+      >
+        {label}
+        <ChevronDown size={14} aria-hidden="true" />
+      </Link>
+      {open && (
+        <ul
+          role="menu"
+          aria-label={label}
+          className="absolute left-0 top-full mt-1 min-w-[200px] rounded-xl border py-2 shadow-lg z-50"
+          style={{
+            backgroundColor: 'var(--color-header-bg, var(--color-background))',
+            borderColor: 'var(--color-border)',
+          }}
+        >
+          {items.map(child => (
+            <li key={child.href} role="none">
+              <Link
+                role="menuitem"
+                href={child.href}
+                className="block px-4 py-2 text-sm whitespace-nowrap transition-colors"
+                style={{
+                  color: isActive(child.href)
+                    ? 'var(--color-primary)'
+                    : 'var(--color-text)',
+                }}
+                onMouseEnter={e =>
+                  ((e.currentTarget as HTMLElement).style.color = 'var(--color-primary)')
+                }
+                onMouseLeave={e =>
+                  ((e.currentTarget as HTMLElement).style.color = isActive(child.href)
+                    ? 'var(--color-primary)'
+                    : 'var(--color-text)')
+                }
+              >
+                {child.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+// Mobile drawer version of the two-level nav item. Renders as an expandable
+// accordion — tap the row to toggle, tap the label to navigate. The parent
+// mobile drawer already closes on route change (see the pathname-effect near
+// the top of Header), so onNavigate is enough to close it on tap for cases
+// where the user is already on the target route.
+function MobileAccordionItem({
+  href,
+  label,
+  items,
+  isActive,
+  onNavigate,
+}: {
+  href: string
+  label: string
+  items: { href: string; label: string }[]
+  isActive: (href: string) => boolean
+  onNavigate: () => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const anyChildActive = items.some(c => isActive(c.href))
+  const highlighted = isActive(href) || anyChildActive
+
+  return (
+    <div>
+      <div className="flex items-center">
+        <Link
+          href={href}
+          onClick={onNavigate}
+          className="flex-1 block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200"
+          style={{
+            color: highlighted ? 'var(--color-primary)' : 'var(--color-text-muted)',
+            backgroundColor: highlighted ? 'var(--color-surface)' : 'transparent',
+          }}
+        >
+          {label}
+        </Link>
+        <button
+          type="button"
+          onClick={() => setExpanded(e => !e)}
+          aria-expanded={expanded}
+          aria-label={expanded ? `Collapse ${label}` : `Expand ${label}`}
+          className="p-3 rounded-xl transition-transform"
+          style={{
+            color: 'var(--color-text-muted)',
+            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+          }}
+        >
+          <ChevronDown size={18} aria-hidden="true" />
+        </button>
+      </div>
+      {expanded && (
+        <ul className="pl-4 space-y-1 mt-1">
+          {items.map(child => (
+            <li key={child.href}>
+              <Link
+                href={child.href}
+                onClick={onNavigate}
+                className="block px-4 py-2 rounded-xl text-sm transition-all duration-200"
+                style={{
+                  color: isActive(child.href)
+                    ? 'var(--color-primary)'
+                    : 'var(--color-text-muted)',
+                }}
+              >
+                {child.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
