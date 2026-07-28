@@ -9,11 +9,6 @@ export const LICENSE_LABEL: Record<LicenseType, string> = {
   hcbs: 'HCBS / Waiver Services',
 }
 
-export const LICENSE_STATUTE: Record<LicenseType, string> = {
-  assisted_living: 'Minnesota Statutes Chapter 144G',
-  hcbs: 'Minnesota Statutes Chapter 245D',
-}
-
 export interface LicenseHome {
   name: string
   address: string

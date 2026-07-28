@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { LICENSE_LABEL, LICENSE_STATUTE, type LicenseType } from '@/lib/licenses'
+import { LICENSE_LABEL, type LicenseType } from '@/lib/licenses'
 
 interface LicenseOverviewProps {
   licenseType: LicenseType
@@ -13,24 +13,10 @@ interface LicenseOverviewProps {
 // heading, card, or section.
 export function LicenseOverview({ licenseType, intro, homesHref, servicesHref }: LicenseOverviewProps) {
   const label = LICENSE_LABEL[licenseType]
-  const statute = LICENSE_STATUTE[licenseType]
 
   return (
     <section className="py-16 sm:py-24" style={{ backgroundColor: 'var(--color-background)' }}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <span
-          className="inline-block mb-6 px-3 py-1.5 rounded-full"
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            color: 'var(--color-primary)',
-            fontSize: '11px',
-            fontWeight: 700,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-          }}
-        >
-          {statute}
-        </span>
         <h1
           className="text-3xl sm:text-4xl lg:text-5xl mb-6"
           style={{
