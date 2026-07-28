@@ -1,4 +1,4 @@
-import { LICENSE_LABEL, homeFullAddress, type LicenseHome, type LicenseType } from '@/lib/licenses'
+import { LICENSE_LABEL, LICENSE_STATUTE, homeFullAddress, type LicenseHome, type LicenseType } from '@/lib/licenses'
 
 interface LicenseHomesSectionProps {
   licenseType: LicenseType
@@ -12,12 +12,26 @@ interface LicenseHomesSectionProps {
 // license badge with the license type and license number.
 export function LicenseHomesSection({ licenseType, homes }: LicenseHomesSectionProps) {
   const label = LICENSE_LABEL[licenseType]
+  const statute = LICENSE_STATUTE[licenseType]
   const scoped = homes.filter(h => h.license_type === licenseType)
 
   return (
     <section className="py-16 sm:py-24" style={{ backgroundColor: 'var(--color-background)' }}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-10">
+          <span
+            className="inline-block mb-4 px-3 py-1.5 rounded-full"
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              color: 'var(--color-primary)',
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+            }}
+          >
+            {statute}
+          </span>
           <h1
             className="text-3xl sm:text-4xl mb-4"
             style={{
