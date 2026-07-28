@@ -125,7 +125,11 @@ export async function generateMetadata(): Promise<Metadata> {
   // Favicon precedence:
   //   1. site_settings.favicon_url  (tenant-specific favicon override)
   //   2. site_settings.logo_url     (existing behaviour — legacy fallback)
-  //   3. Neither set → Next.js file convention auto-serves /app/icon.svg
+  //   3. Neither set → no icons key emitted; browser uses its default.
+  //
+  // The old app/icon.svg file-convention icon was moved to
+  // public/wajii-default-icon.svg so it no longer auto-injects and override
+  // tenants that only have a logo_url uploaded.
   const faviconUrl = (settings.favicon_url || '').trim() || settings.logo_url
 
   return {
@@ -139,8 +143,8 @@ export async function generateMetadata(): Promise<Metadata> {
     creator: businessName,
     metadataBase: new URL(siteUrl),
     // When a customer has favicon_url (or legacy logo_url) set, use it as the
-    // favicon. Otherwise Next.js auto-serves /app/icon.svg (Waji default)
-    // from the file convention.
+    // favicon. Otherwise no icons key is emitted and the browser falls back
+    // to its own default (globe / blank).
     ...(faviconUrl
       ? { icons: { icon: faviconUrl, apple: faviconUrl } }
       : {}),
