@@ -1,4 +1,3 @@
-import { siteConfig } from '@config'
 import {
   buildShell,
   paragraph,
@@ -17,8 +16,12 @@ export function referralNotificationEmail(params: {
   phone?: string
   residentName?: string
   notes: string
+  // Tenant brand from runtime site_settings.business_name — caller resolves
+  // it so the template never falls through to the build-time siteConfig
+  // constant.
+  business: string
 }): { subject: string; html: string; text: string } {
-  const business = siteConfig.business.name
+  const business = params.business
   const subject = `New referral from ${params.organization}`
 
   const rows: { label: string; value: string }[] = [

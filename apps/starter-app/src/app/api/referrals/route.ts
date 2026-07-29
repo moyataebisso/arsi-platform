@@ -4,6 +4,7 @@ import { getAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/sender'
 import { referralNotificationEmail } from '@/lib/email/templates/referral-notification'
 import { getNotificationRecipients } from '@/lib/email/recipients'
+import { getSiteSetting } from '@/lib/settings'
 import { siteConfig } from '@config'
 import { getEnabledModules } from '@/lib/enabled-modules'
 
@@ -60,6 +61,10 @@ export async function POST(request: NextRequest) {
     if (siteConfig.notifications.notifyOnNewLead) {
       try {
         const recipients = await getNotificationRecipients()
+        // Prefer runtime site_settings.business_name over the build-time
+        // siteConfig constant so tenant renames take effect immediately.
+        const businessNameRaw = await getSiteSetting('business_name')
+        const business = (businessNameRaw || '').trim() || siteConfig.business.name
         const template = referralNotificationEmail({
           referrerName,
           organization,
@@ -68,6 +73,7 @@ export async function POST(request: NextRequest) {
           phone: phone || undefined,
           residentName: residentName || undefined,
           notes,
+          business,
         })
         await sendEmail({ to: recipients, replyTo: email, ...template })
       } catch (emailError) {

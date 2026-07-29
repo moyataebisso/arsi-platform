@@ -33,14 +33,25 @@ export async function sendEmail(params: {
   text?: string
   replyTo?: string
 }) {
-  const { data, error } = await getResend().emails.send({
-    from: fromAddress(),
-    to: params.to,
-    subject: params.subject,
-    html: params.html,
-    ...(params.text ? { text: params.text } : {}),
-    replyTo: params.replyTo || defaultReplyTo(),
-  })
-  if (error) throw new Error(error.message)
-  return data
+  const recipients = Array.isArray(params.to) ? params.to : [params.to]
+  // Fan out one Resend call per recipient so each person's email lists ONLY
+  // their own address in the To: header. Previously we passed the whole
+  // notification_emails array in a single call, which exposed every other
+  // operator inbox to every recipient — a privacy leak for multi-recipient
+  // tenants. Doing the split here (not per route) means every current and
+  // future sendEmail caller inherits the guarantee automatically.
+  let lastData: unknown = null
+  for (const recipient of recipients) {
+    const { data, error } = await getResend().emails.send({
+      from: fromAddress(),
+      to: [recipient],
+      subject: params.subject,
+      html: params.html,
+      ...(params.text ? { text: params.text } : {}),
+      replyTo: params.replyTo || defaultReplyTo(),
+    })
+    if (error) throw new Error(error.message)
+    lastData = data
+  }
+  return lastData
 }

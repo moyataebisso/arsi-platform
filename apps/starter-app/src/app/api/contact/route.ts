@@ -4,6 +4,7 @@ import { getAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/sender'
 import { leadNotificationEmail } from '@/lib/email/templates/lead-notification'
 import { getNotificationRecipients } from '@/lib/email/recipients'
+import { getSiteSetting } from '@/lib/settings'
 import { siteConfig } from '@config'
 
 export async function POST(request: NextRequest) {
@@ -38,7 +39,20 @@ export async function POST(request: NextRequest) {
     if (siteConfig.notifications.notifyOnNewLead) {
       try {
         const recipients = await getNotificationRecipients()
-        const template = leadNotificationEmail({ name, email, phone, message, sourcePage: sourcePage || '/contact' })
+        // Prefer runtime site_settings.business_name so a tenant rename
+        // (e.g. "Entrusted Home Healthcare" → "Entrusted Care Residence")
+        // takes effect without a rebuild. Only falls back to the build-time
+        // siteConfig constant when the DB row is unset.
+        const businessNameRaw = await getSiteSetting('business_name')
+        const business = (businessNameRaw || '').trim() || siteConfig.business.name
+        const template = leadNotificationEmail({
+          name,
+          email,
+          phone,
+          message,
+          sourcePage: sourcePage || '/contact',
+          business,
+        })
         // replyTo override: admin's reply goes straight to the lead.
         await sendEmail({ to: recipients, replyTo: email, ...template })
       } catch (emailError) {

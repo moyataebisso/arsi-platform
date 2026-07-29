@@ -1,4 +1,3 @@
-import { siteConfig } from '@config'
 import {
   buildShell,
   paragraph,
@@ -15,8 +14,13 @@ export function leadNotificationEmail(params: {
   phone?: string
   message: string
   sourcePage: string
+  // Tenant brand from runtime site_settings.business_name — caller resolves
+  // it so the template never falls through to the build-time siteConfig
+  // constant (which is what left "Entrusted Home Healthcare" stale in
+  // deployed builds after the DB was renamed to "Entrusted Care Residence").
+  business: string
 }): { subject: string; html: string; text: string } {
-  const business = siteConfig.business.name
+  const business = params.business
   const subject = `New Lead: ${params.name}`
 
   const rows: { label: string; value: string }[] = [
