@@ -224,7 +224,7 @@ export function ReferralForm() {
 
       <div>
         <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text)' }}>
-          Resident situation / notes <span style={{ color: 'var(--color-primary)' }}>*</span>
+          Message / notes <span style={{ color: 'var(--color-primary)' }}>*</span>
         </label>
         <textarea
           rows={5}

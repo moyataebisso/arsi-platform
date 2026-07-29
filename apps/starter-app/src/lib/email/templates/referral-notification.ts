@@ -52,7 +52,7 @@ export function referralNotificationEmail(params: {
   const bodyHtml = `
 ${paragraph(`A new referral came in on <strong>${escapeHtml(business)}</strong>.`)}
 ${infoTable(rows)}
-${callout('Situation / Notes', nl2br(params.notes))}
+${callout('Message / notes', nl2br(params.notes))}
 ${paragraph(
   `Reply to this email to reach <strong>${escapeHtml(params.referrerName)}</strong> directly — Reply-To is set to their address.`,
   16
@@ -66,7 +66,7 @@ Organization:          ${params.organization}${params.role ? `\nRole:           
 Email:                 ${params.email}${params.phone ? `\nPhone:                 ${params.phone}` : ''}
 Care sought for:       ${params.careSeekerType}${params.residentName ? `\nIndividual seeking care: ${params.residentName}` : ''}
 
-Situation / Notes:
+Message / notes:
 ${params.notes}${textFooter()}`
 
   return {
