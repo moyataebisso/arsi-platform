@@ -24,6 +24,11 @@ export interface LicenseHome {
   license_number: string
   description: string
   image_url: string
+  // Optional gallery. Always defined for downstream rendering (empty when the
+  // input is missing or malformed) — the caller checks `.length > 0` to
+  // decide gallery vs. single-image vs. no image. Malformed input never
+  // drops the whole home; parseHomes just yields [] and image_url wins.
+  images: string[]
 }
 
 export interface LicenseService {
@@ -42,6 +47,9 @@ export function parseHomes(raw: string | undefined | null): LicenseHome[] {
       const e = entry as Record<string, unknown>
       const licenseTypeRaw = typeof e.license_type === 'string' ? e.license_type : ''
       if (licenseTypeRaw !== 'assisted_living' && licenseTypeRaw !== 'hcbs') continue
+      const images = Array.isArray(e.images)
+        ? e.images.filter((u): u is string => typeof u === 'string' && u.trim().length > 0)
+        : []
       out.push({
         name: typeof e.name === 'string' ? e.name : '',
         address: typeof e.address === 'string' ? e.address : '',
@@ -52,6 +60,7 @@ export function parseHomes(raw: string | undefined | null): LicenseHome[] {
         license_number: typeof e.license_number === 'string' ? e.license_number : '',
         description: typeof e.description === 'string' ? e.description : '',
         image_url: typeof e.image_url === 'string' ? e.image_url : '',
+        images,
       })
     }
     return out

@@ -13,6 +13,10 @@ interface GalleryCarouselProps {
 
 const DEFAULT_INTERVAL = 5000
 const TRANSITION_MS = 700
+// Minimum horizontal travel (px) that counts as a deliberate swipe. Below
+// this we treat the touch as a tap/scroll and do nothing so accidental
+// finger drift inside a card does not flip slides.
+const SWIPE_THRESHOLD_PX = 40
 
 export function GalleryCarousel({
   images,
@@ -23,6 +27,7 @@ export function GalleryCarousel({
   const [paused, setPaused] = useState(false)
   const total = images.length
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const touchStartX = useRef<number | null>(null)
 
   const next = useCallback(() => {
     setIndex((i) => (i + 1) % Math.max(total, 1))
@@ -62,6 +67,32 @@ export function GalleryCarousel({
     )
   }
 
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0]?.clientX ?? null
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return
+    const endX = e.changedTouches[0]?.clientX
+    const start = touchStartX.current
+    touchStartX.current = null
+    if (typeof endX !== 'number') return
+    const delta = endX - start
+    if (Math.abs(delta) < SWIPE_THRESHOLD_PX) return
+    // Right-swipe (finger moves right, delta > 0) shows the PREVIOUS slide,
+    // matching the OS / mobile convention where content follows the finger.
+    if (delta > 0) prev()
+    else next()
+  }
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault()
+      prev()
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      next()
+    }
+  }
+
   return (
     <div
       className={`relative ${className ?? ''}`}
@@ -70,6 +101,13 @@ export function GalleryCarousel({
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      onKeyDown={onKeyDown}
+      // Focusable so keyboard users can tab straight to the carousel and use
+      // ArrowLeft / ArrowRight to move between slides. The prev/next buttons
+      // remain independently focusable inside for Enter/Space activation.
+      tabIndex={0}
       role="region"
       aria-roledescription="carousel"
       aria-label="Featured Our Homes photos"

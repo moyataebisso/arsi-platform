@@ -1,4 +1,5 @@
 import { LICENSE_LABEL, LICENSE_STATUTE, homeFullAddress, type LicenseHome, type LicenseType } from '@/lib/licenses'
+import { GalleryCarousel } from '@/components/our-homes/GalleryCarousel'
 
 interface LicenseHomesSectionProps {
   licenseType: LicenseType
@@ -76,7 +77,12 @@ export function LicenseHomesSection({ licenseType, homes }: LicenseHomesSectionP
                     boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
                   }}
                 >
-                  {home.image_url && (
+                  {home.images.length > 0 ? (
+                    <GalleryCarousel
+                      images={home.images}
+                      className="w-full aspect-[16/9]"
+                    />
+                  ) : home.image_url ? (
                     <div
                       className="w-full aspect-[16/9]"
                       style={{
@@ -87,7 +93,7 @@ export function LicenseHomesSection({ licenseType, homes }: LicenseHomesSectionP
                       role="img"
                       aria-label={`${displayName} photo`}
                     />
-                  )}
+                  ) : null}
                   <div className="p-6 flex flex-col flex-1">
                     <span
                       className="inline-block self-start mb-3 px-2.5 py-1 rounded-full"
