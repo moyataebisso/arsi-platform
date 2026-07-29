@@ -7,7 +7,7 @@ interface JobApplicationFormState {
   email: string
   phone: string
   position: string
-  availability: string
+  availability: string[]
   yearsExperience: string
   message: string
   website: string
@@ -18,13 +18,21 @@ const INITIAL: JobApplicationFormState = {
   email: '',
   phone: '',
   position: '',
-  availability: '',
+  availability: [],
   yearsExperience: '',
   message: '',
   website: '',
 }
 
-const AVAILABILITY_OPTIONS = ['Full-time', 'Part-time', 'Overnights', 'Weekends', 'Flexible'] as const
+const AVAILABILITY_OPTIONS = [
+  '7am - 3pm',
+  '3pm - 11pm',
+  '11pm - 7am',
+  'Weekends',
+  'Part-Time',
+  'Full-Time',
+  'Flexible',
+] as const
 const YEARS_OPTIONS = ['None', 'Less than 1', '1-3', '3-5', '5+'] as const
 
 const MAX_RESUME_BYTES = 4 * 1024 * 1024
@@ -81,9 +89,14 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
     setErrorMessage('')
     try {
       const fd = new FormData()
-      for (const [k, v] of Object.entries(data)) {
+      const { availability, ...rest } = data
+      for (const [k, v] of Object.entries(rest)) {
         fd.append(k, v)
       }
+      // Multi-select checkbox group joined into the same single `availability`
+      // string field the server already parses. Empty selection sends '' so the
+      // server's `availability || null` insert branch still stores NULL.
+      fd.append('availability', availability.join(', '))
       if (file) fd.append('resume', file, file.name)
 
       const res = await fetch('/api/jobs/apply', {
@@ -227,43 +240,68 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <div>
-          <label className={labelClass} style={labelStyle}>
-            Availability {optionalMark}
-          </label>
-          <select
-            value={data.availability}
-            onChange={(e) => set('availability', e.target.value)}
-            className={inputClass}
-            style={inputStyle}
-          >
-            <option value="">No preference</option>
-            {AVAILABILITY_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
+      <fieldset>
+        <legend className={labelClass} style={labelStyle}>
+          Availability {optionalMark}
+        </legend>
+        <p className="text-xs mb-2" style={{ color: 'var(--color-text-light)' }}>
+          Check all that apply
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+          {AVAILABILITY_OPTIONS.map((opt) => {
+            const checked = data.availability.includes(opt)
+            return (
+              <label
+                key={opt}
+                className="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-offset-1"
+                style={{
+                  borderColor: checked ? 'var(--color-primary)' : 'var(--color-border)',
+                  backgroundColor: 'var(--color-background)',
+                  color: 'var(--color-text)',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  value={opt}
+                  checked={checked}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked
+                    setData((d) => ({
+                      ...d,
+                      availability: isChecked
+                        ? d.availability.includes(opt)
+                          ? d.availability
+                          : [...d.availability, opt]
+                        : d.availability.filter((v) => v !== opt),
+                    }))
+                  }}
+                  className="h-4 w-4 cursor-pointer"
+                  style={{ accentColor: 'var(--color-primary)' }}
+                />
+                <span>{opt}</span>
+              </label>
+            )
+          })}
         </div>
-        <div>
-          <label className={labelClass} style={labelStyle}>
-            Years of experience {optionalMark}
-          </label>
-          <select
-            value={data.yearsExperience}
-            onChange={(e) => set('yearsExperience', e.target.value)}
-            className={inputClass}
-            style={inputStyle}
-          >
-            <option value="">Prefer not to say</option>
-            {YEARS_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
-        </div>
+      </fieldset>
+
+      <div>
+        <label className={labelClass} style={labelStyle}>
+          Years of experience {optionalMark}
+        </label>
+        <select
+          value={data.yearsExperience}
+          onChange={(e) => set('yearsExperience', e.target.value)}
+          className={inputClass}
+          style={inputStyle}
+        >
+          <option value="">Prefer not to say</option>
+          {YEARS_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div>

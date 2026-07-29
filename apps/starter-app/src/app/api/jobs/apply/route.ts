@@ -213,12 +213,20 @@ export async function POST(request: NextRequest) {
 
     try {
       const recipients = await getNotificationRecipients()
+      // Availability arrives as a ", "-joined string from the checkbox group;
+      // split it back so each selected slot renders on its own line (the td's
+      // white-space:pre-wrap turns \n into a visible line break).
+      const availabilityValues = availability
+        ? availability.split(',').map((v) => v.trim()).filter(Boolean)
+        : []
+      const availabilityDisplay =
+        availabilityValues.length > 0 ? availabilityValues.join('\n') : '—'
       const rows: Array<[string, string]> = [
         ['Name', fullName],
         ['Email', email],
         ['Phone', phone],
         ['Position', position],
-        ['Availability', availability || '—'],
+        ['Availability', availabilityDisplay],
         ['Years of experience', yearsExperience || '—'],
         ['Message', message || '—'],
       ]
