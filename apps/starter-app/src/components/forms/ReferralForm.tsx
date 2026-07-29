@@ -2,13 +2,23 @@
 
 import { useState } from 'react'
 
+// Fixed set of care-seeker options. Kept as a constant so the server-side
+// validator in /api/referrals can reuse the same list — any drift would let
+// invalid values through client-side and be rejected server-side.
+const CARE_SEEKER_OPTIONS = ['Myself', 'A loved one', 'I am a referring professional'] as const
+type CareSeekerOption = typeof CARE_SEEKER_OPTIONS[number]
+
 interface ReferralFormState {
   referrerName: string
   organization: string
   role: string
   email: string
   phone: string
+  // Internal key kept as-is for backwards compatibility with the existing
+  // API payload / form_submissions.data_json rows. The user-facing label
+  // moved from "Resident name" to "Individual seeking care".
   residentName: string
+  careSeekerType: '' | CareSeekerOption
   notes: string
 }
 
@@ -19,6 +29,7 @@ const INITIAL: ReferralFormState = {
   email: '',
   phone: '',
   residentName: '',
+  careSeekerType: '',
   notes: '',
 }
 
@@ -164,9 +175,43 @@ export function ReferralForm() {
         </div>
       </div>
 
+      <fieldset>
+        <legend className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text)' }}>
+          Are you seeking care for yourself or a loved one? <span style={{ color: 'var(--color-primary)' }}>*</span>
+        </legend>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {CARE_SEEKER_OPTIONS.map((opt) => {
+            const checked = data.careSeekerType === opt
+            return (
+              <label
+                key={opt}
+                className="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-offset-1"
+                style={{
+                  borderColor: checked ? 'var(--color-primary)' : 'var(--color-border)',
+                  backgroundColor: 'var(--color-background)',
+                  color: 'var(--color-text)',
+                }}
+              >
+                <input
+                  type="radio"
+                  name="careSeekerType"
+                  value={opt}
+                  checked={checked}
+                  required
+                  onChange={() => set('careSeekerType', opt)}
+                  className="h-4 w-4 cursor-pointer"
+                  style={{ accentColor: 'var(--color-primary)' }}
+                />
+                <span>{opt}</span>
+              </label>
+            )
+          })}
+        </div>
+      </fieldset>
+
       <div>
         <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text)' }}>
-          Resident name <span style={{ color: 'var(--color-text-light)' }}>(optional)</span>
+          Individual seeking care <span style={{ color: 'var(--color-text-light)' }}>(optional)</span>
         </label>
         <input
           type="text"

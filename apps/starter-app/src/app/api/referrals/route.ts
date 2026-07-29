@@ -23,10 +23,22 @@ export async function POST(request: NextRequest) {
     const phone = body.phone ? String(body.phone).trim() : ''
     const residentName = body.residentName ? String(body.residentName).trim() : ''
     const notes = String(body.notes || '').trim()
+    const careSeekerType = String(body.careSeekerType || '').trim()
+
+    // Whitelist mirrors the radio options in ReferralForm — reject anything
+    // else so a hand-rolled request cannot smuggle arbitrary text into the
+    // operator email or the form_submissions JSON blob.
+    const CARE_SEEKER_ALLOWED = ['Myself', 'A loved one', 'I am a referring professional']
 
     if (!referrerName || !organization || !email || !notes) {
       return NextResponse.json(
         { error: 'Referrer name, organization, email, and notes are required' },
+        { status: 400 },
+      )
+    }
+    if (!CARE_SEEKER_ALLOWED.includes(careSeekerType)) {
+      return NextResponse.json(
+        { error: 'Please choose who the care is for' },
         { status: 400 },
       )
     }
@@ -40,7 +52,9 @@ export async function POST(request: NextRequest) {
 
     // Reuse existing form_submissions + leads tables (no new schema). The
     // source_page tag makes referrals findable in /admin/leads.
-    const dataJson = { referrerName, organization, role, email, phone, residentName, notes }
+    // careSeekerType rides along in the JSON blob so it's queryable later
+    // without a column migration.
+    const dataJson = { referrerName, organization, role, email, phone, residentName, careSeekerType, notes }
 
     const { data: submission } = await supabase
       .from('form_submissions')
@@ -72,6 +86,7 @@ export async function POST(request: NextRequest) {
           email,
           phone: phone || undefined,
           residentName: residentName || undefined,
+          careSeekerType,
           notes,
           business,
         })

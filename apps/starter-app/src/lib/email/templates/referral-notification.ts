@@ -15,6 +15,9 @@ export function referralNotificationEmail(params: {
   email: string
   phone?: string
   residentName?: string
+  // "Myself" | "A loved one" | "I am a referring professional" — validated
+  // by the API route before it gets here, so no additional guard needed.
+  careSeekerType: string
   notes: string
   // Tenant brand from runtime site_settings.business_name — caller resolves
   // it so the template never falls through to the build-time siteConfig
@@ -41,8 +44,9 @@ export function referralNotificationEmail(params: {
       value: `<a href="tel:${escapeHtml(params.phone)}" style="color:#1a1a1a">${escapeHtml(params.phone)}</a>`,
     })
   }
+  rows.push({ label: 'Care sought for', value: escapeHtml(params.careSeekerType) })
   if (params.residentName) {
-    rows.push({ label: 'Resident', value: escapeHtml(params.residentName) })
+    rows.push({ label: 'Individual seeking care', value: escapeHtml(params.residentName) })
   }
 
   const bodyHtml = `
@@ -57,9 +61,10 @@ ${paragraph(
 
   const text = `New referral on ${business}:
 
-Referrer:     ${params.referrerName}
-Organization: ${params.organization}${params.role ? `\nRole:         ${params.role}` : ''}
-Email:        ${params.email}${params.phone ? `\nPhone:        ${params.phone}` : ''}${params.residentName ? `\nResident:     ${params.residentName}` : ''}
+Referrer:              ${params.referrerName}
+Organization:          ${params.organization}${params.role ? `\nRole:                  ${params.role}` : ''}
+Email:                 ${params.email}${params.phone ? `\nPhone:                 ${params.phone}` : ''}
+Care sought for:       ${params.careSeekerType}${params.residentName ? `\nIndividual seeking care: ${params.residentName}` : ''}
 
 Situation / Notes:
 ${params.notes}${textFooter()}`
