@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { randomUUID } from 'node:crypto'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/sender'
-import { getNotificationRecipients } from '@/lib/email/recipients'
+import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recipients'
 import { getSiteSetting } from '@/lib/settings'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
@@ -212,7 +212,10 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const recipients = await getNotificationRecipients()
+      const [recipients, bcc] = await Promise.all([
+        getNotificationRecipients(),
+        getNotificationBcc(),
+      ])
       // Availability arrives as a ", "-joined string from the checkbox group;
       // split it back so each selected slot renders on its own line (the td's
       // white-space:pre-wrap turns \n into a visible line break).
@@ -259,6 +262,7 @@ export async function POST(request: NextRequest) {
 
       await sendEmail({
         to: recipients,
+        bcc,
         replyTo: email,
         subject: `New job application — ${position} — ${brand}`,
         html: `<p>A new job application was submitted to <strong>${escapeHtml(brand)}</strong>.</p><table style="border-collapse:collapse">${htmlRows}</table>${downloadHtml}`,

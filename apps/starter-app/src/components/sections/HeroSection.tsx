@@ -50,6 +50,16 @@ interface HeroSectionProps {
   // context they would from an alt attribute on an <img>. site_settings key:
   // hero_image_alt. Falls back to a neutral generic label.
   heroImageAlt?: string
+  // Optional override for the ImageOverlayHero eyebrow pill. site_settings
+  // key: hero_eyebrow_text.
+  //   undefined → caller did not read the key (or the row is missing) →
+  //               variant falls back to the derived label (Serving <city>,
+  //               <state> → tagline). Adama and every tenant without the row
+  //               keep existing behavior byte-identically.
+  //   ''        → the row IS present and explicitly empty → force-hide the
+  //               pill even when a derived value would otherwise render.
+  //   'text'    → use as the pill text as-is.
+  heroEyebrow?: string
 }
 
 type VariantProps = Omit<HeroSectionProps, 'variant'>
@@ -304,7 +314,17 @@ function ImageOverlayHero(props: VariantProps) {
     props.heroImageUrl || 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=1200&q=80'
 
   const locationLabel = getLocationLabel(props.city, props.state)
-  const pillLabel = locationLabel || resolveTagline(props.tagline) || null
+  // Eyebrow resolution order:
+  //   1. site_settings.hero_eyebrow_text (via props.heroEyebrow):
+  //      - undefined → key not set → fall through
+  //      - '' → explicit hide (final label is empty → pill not rendered)
+  //      - 'text' → use as-is
+  //   2. Derived: Serving <city>, <state>
+  //   3. Derived: tagline
+  //   4. Empty → pill hidden
+  const derivedEyebrow = locationLabel || resolveTagline(props.tagline) || ''
+  const rawEyebrow = props.heroEyebrow !== undefined ? props.heroEyebrow : derivedEyebrow
+  const pillLabel = rawEyebrow.trim()
   const imageAriaLabel = resolveHeroImageAlt(props.heroImageAlt, resolveBusinessName(props.businessName))
 
   // Surface the resolved hero image URL in Vercel logs so we can confirm
@@ -322,9 +342,17 @@ function ImageOverlayHero(props: VariantProps) {
         backgroundPosition: 'center',
       }}
     >
+      {/* Neutral black gradient — no blue channel — so the photo's real
+          colors show through while white text over the top stays legible.
+          The mid-photo dip (0.30 at 45%) keeps the middle of the image
+          visible behind the headline; the deeper stops top and bottom
+          protect the eyebrow pill and the CTA buttons. */}
       <div
         className="absolute inset-0"
-        style={{ backgroundColor: 'rgba(10, 31, 68, 0.55)' }}
+        style={{
+          backgroundImage:
+            'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.30) 45%, rgba(0,0,0,0.50) 100%)',
+        }}
         aria-hidden="true"
       />
 
@@ -1186,6 +1214,7 @@ export function HeroSection(props: HeroSectionProps) {
     heroVideoUrl: props.heroVideoUrl,
     heroPosterUrl: props.heroPosterUrl,
     heroImageAlt: props.heroImageAlt,
+    heroEyebrow: props.heroEyebrow,
   }
 
   switch (activeVariant) {

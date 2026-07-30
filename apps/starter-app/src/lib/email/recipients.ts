@@ -48,5 +48,26 @@ export async function getNotificationRecipients(): Promise<string[]> {
     if (isValidEmail(value)) return [value]
   } catch { /* fall through */ }
 
+  // Silent misconfiguration was routing tenants' leads to arsitechgroup@gmail.com
+  // without any signal in the logs. Emit a loud error including the resolved
+  // schema so a duplicate row, a missing row, or a wrong SUPABASE_SCHEMA env
+  // shows up in Vercel logs the first time a form is submitted.
+  console.error('[recipients] tenant lookup failed, using fallback', {
+    schema: process.env.SUPABASE_SCHEMA,
+  })
   return [DEFAULT_FALLBACK]
+}
+
+// Blind-copy list for form notifications. site_settings key: notification_bcc.
+// Same JSON-array-of-strings shape and validation as notification_emails.
+// Returns [] when the row is missing, empty, malformed, or contains no valid
+// emails. NEVER falls back to a hardcoded address — a missing BCC row must
+// mean "no BCC," not "silently CC arsitechgroup."
+export async function getNotificationBcc(): Promise<string[]> {
+  try {
+    const raw = await getSiteSetting('notification_bcc')
+    return parseEmails(raw)
+  } catch {
+    return []
+  }
 }

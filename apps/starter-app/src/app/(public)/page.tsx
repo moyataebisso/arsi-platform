@@ -200,6 +200,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // render so an empty hero is impossible when the video is blocked/slow.
   const heroVideo = await getSiteSetting('hero_video_url')
   const heroPoster = await getSiteSetting('hero_poster_url')
+  // ImageOverlayHero eyebrow override. Must distinguish "row missing"
+  // (undefined → use derived Serving <city>, <state> label — Adama and
+  // every tenant without the row keep existing behavior) from "row
+  // present, explicitly empty" (empty string → force-hide the pill even
+  // when a derived value would otherwise render). getSiteSetting collapses
+  // both cases to null, so we go through getSiteSettings which preserves
+  // the row's presence when value_json is an empty string.
+  const eyebrowSettings = await getSiteSettings(['hero_eyebrow_text'])
+  const heroEyebrow: string | undefined =
+    'hero_eyebrow_text' in eyebrowSettings ? eyebrowSettings.hero_eyebrow_text : undefined
   const business = await getBusinessProfile()
   // Conversational display name for hero + About headlines and body — strips
   // trailing " LLC" / " Inc.". Footer renders the raw business.name without
@@ -357,6 +367,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroVideoUrl={heroVideo || undefined}
         heroPosterUrl={heroPoster || undefined}
         heroImageAlt={heroImageAlt || undefined}
+        heroEyebrow={heroEyebrow}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}

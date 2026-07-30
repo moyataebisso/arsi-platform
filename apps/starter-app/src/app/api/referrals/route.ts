@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/sender'
 import { referralNotificationEmail } from '@/lib/email/templates/referral-notification'
-import { getNotificationRecipients } from '@/lib/email/recipients'
+import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recipients'
 import { getSiteSetting } from '@/lib/settings'
 import { siteConfig } from '@config'
 import { getEnabledModules } from '@/lib/enabled-modules'
@@ -74,7 +74,10 @@ export async function POST(request: NextRequest) {
 
     if (siteConfig.notifications.notifyOnNewLead) {
       try {
-        const recipients = await getNotificationRecipients()
+        const [recipients, bcc] = await Promise.all([
+          getNotificationRecipients(),
+          getNotificationBcc(),
+        ])
         // Prefer runtime site_settings.business_name over the build-time
         // siteConfig constant so tenant renames take effect immediately.
         const businessNameRaw = await getSiteSetting('business_name')
@@ -90,7 +93,7 @@ export async function POST(request: NextRequest) {
           notes,
           business,
         })
-        await sendEmail({ to: recipients, replyTo: email, ...template })
+        await sendEmail({ to: recipients, bcc, replyTo: email, ...template })
       } catch (emailError) {
         console.error('Failed to send referral notification email:', emailError)
       }

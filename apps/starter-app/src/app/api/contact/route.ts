@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/sender'
 import { leadNotificationEmail } from '@/lib/email/templates/lead-notification'
-import { getNotificationRecipients } from '@/lib/email/recipients'
+import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recipients'
 import { getSiteSetting } from '@/lib/settings'
 import { siteConfig } from '@config'
 
@@ -38,7 +38,10 @@ export async function POST(request: NextRequest) {
     // Send admin notification — don't fail the request if email fails
     if (siteConfig.notifications.notifyOnNewLead) {
       try {
-        const recipients = await getNotificationRecipients()
+        const [recipients, bcc] = await Promise.all([
+          getNotificationRecipients(),
+          getNotificationBcc(),
+        ])
         // Prefer runtime site_settings.business_name so a tenant rename
         // (e.g. "Entrusted Home Healthcare" → "Entrusted Care Residence")
         // takes effect without a rebuild. Only falls back to the build-time
@@ -54,7 +57,7 @@ export async function POST(request: NextRequest) {
           business,
         })
         // replyTo override: admin's reply goes straight to the lead.
-        await sendEmail({ to: recipients, replyTo: email, ...template })
+        await sendEmail({ to: recipients, bcc, replyTo: email, ...template })
       } catch (emailError) {
         console.error('Failed to send lead notification email:', emailError)
       }

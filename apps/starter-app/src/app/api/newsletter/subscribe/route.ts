@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/sender'
-import { getNotificationRecipients } from '@/lib/email/recipients'
+import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recipients'
 import { getSiteSetting } from '@/lib/settings'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
@@ -87,9 +87,13 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const recipients = await getNotificationRecipients()
+      const [recipients, bcc] = await Promise.all([
+        getNotificationRecipients(),
+        getNotificationBcc(),
+      ])
       await sendEmail({
         to: recipients,
+        bcc,
         replyTo: email,
         subject: `New newsletter subscriber — ${brand}`,
         html: `<p>Someone subscribed to updates from <strong>${brand}</strong>.</p><p>Email: <a href="mailto:${email}">${email}</a></p>`,
