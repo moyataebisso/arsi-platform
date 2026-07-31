@@ -335,7 +335,7 @@ function ImageOverlayHero(props: VariantProps) {
     <section
       role="img"
       aria-label={imageAriaLabel}
-      className="relative w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-28 min-h-[440px] sm:min-h-[480px] lg:min-h-[520px] overflow-hidden"
+      className="relative w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-28 min-h-[500px] sm:min-h-[560px] lg:min-h-[620px] overflow-hidden"
       style={{
         backgroundImage: cssUrl(imageUrl),
         backgroundSize: 'cover',
