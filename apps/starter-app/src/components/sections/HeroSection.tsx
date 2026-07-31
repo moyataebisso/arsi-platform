@@ -335,23 +335,23 @@ function ImageOverlayHero(props: VariantProps) {
     <section
       role="img"
       aria-label={imageAriaLabel}
-      className="relative w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-28 min-h-[500px] sm:min-h-[560px] lg:min-h-[620px] overflow-hidden"
+      className="relative w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-28 min-h-[540px] sm:min-h-[620px] lg:min-h-[720px] overflow-hidden"
       style={{
         backgroundImage: cssUrl(imageUrl),
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
     >
-      {/* Neutral black gradient — no blue channel — so the photo's real
-          colors show through while white text over the top stays legible.
-          The mid-photo dip (0.30 at 45%) keeps the middle of the image
-          visible behind the headline; the deeper stops top and bottom
-          protect the eyebrow pill and the CTA buttons. */}
+      {/* Very light neutral-black gradient. Kept subtle so the photo reads
+          bright and natural — legibility of white text over the brighter
+          exposed areas is picked back up via textShadow on the headline,
+          subheadline, and eyebrow pill below, not by a darker overlay. No
+          blue channel anywhere. */}
       <div
         className="absolute inset-0"
         style={{
           backgroundImage:
-            'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.30) 45%, rgba(0,0,0,0.50) 100%)',
+            'linear-gradient(180deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.10) 40%, rgba(0,0,0,0.28) 100%)',
         }}
         aria-hidden="true"
       />
@@ -367,6 +367,7 @@ function ImageOverlayHero(props: VariantProps) {
               fontWeight: 700,
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
+              textShadow: '0 2px 12px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.4)',
             }}
           >
             {pillLabel}
@@ -379,6 +380,7 @@ function ImageOverlayHero(props: VariantProps) {
             fontWeight: 800,
             lineHeight: 0.95,
             letterSpacing: '-0.025em',
+            textShadow: '0 2px 12px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.4)',
           }}
         >
           {line1}
@@ -393,7 +395,10 @@ function ImageOverlayHero(props: VariantProps) {
         <Subheadline
           text={display.subheadline}
           className="text-sm sm:text-base text-center mx-auto mb-8 max-w-[460px]"
-          style={{ color: 'rgba(255, 255, 255, 0.75)' }}
+          style={{
+            color: 'rgba(255, 255, 255, 0.75)',
+            textShadow: '0 2px 12px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.4)',
+          }}
         />
         <HeroBadge
           text={props.heroBadgeText}
@@ -424,12 +429,17 @@ function ImageOverlayHero(props: VariantProps) {
             style={{
               backgroundColor: 'transparent',
               color: '#ffffff',
-              border: '1px solid rgba(255, 255, 255, 0.50)',
+              // Raised from 0.50 → 0.75 so the outline reads against the
+              // brighter exposed parts of the photo now that the overlay is
+              // much lighter. Label picks up the same textShadow used on the
+              // headline/subhead so the button text also stays legible.
+              border: '1px solid rgba(255, 255, 255, 0.75)',
               padding: '12px 22px',
               fontSize: '12px',
               fontWeight: 700,
               letterSpacing: '0.04em',
               textTransform: 'uppercase',
+              textShadow: '0 2px 12px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.4)',
             }}
           >
             {display.ctaSecondary}
