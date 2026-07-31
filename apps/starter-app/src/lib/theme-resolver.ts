@@ -69,6 +69,16 @@ export interface ResolvedTheme {
   ctaBg: string
   sectionSurface: string
   headerBg: string
+  // Text colors scoped to the header bar. Derived from headerBg luma so
+  // adamaGold's near-black header does not render its own dark theme.text
+  // dark-on-dark. Only diverges from theme.text/textMuted when the header
+  // is dark AND the theme's text is also dark (i.e. the theme was designed
+  // for a light page body but ships with a dark header/footer). All other
+  // tenants — light-bg light-header (Entrusted, El Roi, most themes) and
+  // dark-bg light-text (classic dark themes like midnight/obsidian) —
+  // resolve to theme.text exactly as before.
+  headerText: string
+  headerMuted: string
 }
 
 const settingsKeys = [
@@ -117,6 +127,8 @@ export async function getActiveTheme(): Promise<ResolvedTheme> {
     // existing dark-footer / white-text behavior byte-for-byte.
     footerBg: '', // placeholder — assigned below so we can also derive footerText from it
     footerText: '', // placeholder — see below
+    headerText: '', // placeholder — assigned after headerBg is resolved
+    headerMuted: '', // placeholder — see below
     heroBg: settings.color_hero_bg || baseTheme.background,
     ctaBg: settings.color_cta_bg || baseTheme.primary,
     sectionSurface: settings.color_surface || baseTheme.surface,
@@ -138,6 +150,20 @@ export async function getActiveTheme(): Promise<ResolvedTheme> {
     (luma(baseTheme.background) < luma(baseTheme.text) ? baseTheme.background : baseTheme.text)
   // luma > ~190 ≈ near-white → use the theme's dark text. Otherwise white.
   resolved.footerText = luma(resolved.footerBg) > 190 ? baseTheme.text : '#ffffff'
+
+  // Header text tokens. Only override theme.text when a dark header would
+  // otherwise render dark theme.text on top of it (i.e. adamaGold's
+  // #0D0D0D header with the retuned light palette whose theme.text is
+  // #1A1A1A). For every other tenant — light header (Entrusted / El Roi
+  // etc.) or a dark header paired with an already-light theme.text
+  // (classic dark themes) — this resolves to baseTheme.text/textMuted and
+  // is byte-identical to prior behavior.
+  const headerIsDark = luma(resolved.headerBg) < 128
+  const textIsDark = luma(baseTheme.text) < 128
+  resolved.headerText = (headerIsDark && textIsDark) ? '#F4F1E8' : baseTheme.text
+  resolved.headerMuted = (headerIsDark && textIsDark)
+    ? mixHex('#F4F1E8', resolved.headerBg, 0.35)
+    : baseTheme.textMuted
 
   if (customPrimary) {
     resolved.primary = customPrimary
@@ -203,6 +229,8 @@ export function themeToCSS(t: ResolvedTheme): string {
       --color-button-text: #ffffff;
       --color-nav-bg: ${t.background};
       --color-header-bg: ${t.headerBg};
+      --color-header-text: ${t.headerText};
+      --color-header-text-muted: ${t.headerMuted};
     }
   `.trim()
 }

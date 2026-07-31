@@ -99,6 +99,14 @@ function buildPreviewThemeCSS(themeName: ThemeName): string {
     (base as { footerBackground?: string }).footerBackground ||
     (previewLuma(base.background) < previewLuma(base.text) ? base.background : base.text)
   const footerText = previewLuma(footerBg) > 190 ? base.text : '#ffffff'
+  const headerBg = (base as { headerBackground?: string }).headerBackground || base.background
+  // Same header-contrast rule as getActiveTheme (theme-resolver.ts). Only
+  // swaps in light text when a dark header would otherwise sit under dark
+  // theme.text — every other tenant resolves to base.text/textMuted.
+  const headerIsDark = previewLuma(headerBg) < 128
+  const textIsDark = previewLuma(base.text) < 128
+  const headerText = (headerIsDark && textIsDark) ? '#F4F1E8' : base.text
+  const headerMuted = (headerIsDark && textIsDark) ? '#B8B0A0' : base.textMuted
   const resolved: ResolvedTheme = {
     ...base,
     themeName,
@@ -110,7 +118,9 @@ function buildPreviewThemeCSS(themeName: ThemeName): string {
     heroBg: base.background,
     ctaBg: base.primary,
     sectionSurface: base.surface,
-    headerBg: (base as { headerBackground?: string }).headerBackground || base.background,
+    headerBg,
+    headerText,
+    headerMuted,
   }
   return themeToCSS(resolved)
 }

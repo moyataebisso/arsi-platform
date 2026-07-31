@@ -288,7 +288,7 @@ export function Header({
                     href={link.href}
                     className="text-[12px] lg:text-[13px] font-semibold uppercase tracking-[0.22em] transition-colors whitespace-nowrap"
                     style={{
-                      color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-text)',
+                      color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-header-text)',
                       fontFamily: 'var(--font-heading)',
                     }}
                     onMouseEnter={e =>
@@ -297,7 +297,7 @@ export function Header({
                     onMouseLeave={e =>
                       ((e.currentTarget as HTMLElement).style.color = isActive(link.href)
                         ? 'var(--color-primary)'
-                        : 'var(--color-text)')
+                        : 'var(--color-header-text)')
                     }
                   >
                     {link.label}
@@ -349,7 +349,7 @@ export function Header({
                     href={link.href}
                     className="text-[12px] lg:text-[13px] font-semibold uppercase tracking-[0.22em] transition-colors whitespace-nowrap"
                     style={{
-                      color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-text)',
+                      color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-header-text)',
                       fontFamily: 'var(--font-heading)',
                     }}
                     onMouseEnter={e =>
@@ -358,7 +358,7 @@ export function Header({
                     onMouseLeave={e =>
                       ((e.currentTarget as HTMLElement).style.color = isActive(link.href)
                         ? 'var(--color-primary)'
-                        : 'var(--color-text)')
+                        : 'var(--color-header-text)')
                     }
                   >
                     {link.label}
@@ -376,12 +376,12 @@ export function Header({
                           rel="noopener noreferrer"
                           aria-label={s.label}
                           className="transition-colors"
-                          style={{ color: 'var(--color-text)' }}
+                          style={{ color: 'var(--color-header-text)' }}
                           onMouseEnter={e =>
                             ((e.currentTarget as HTMLElement).style.color = 'var(--color-primary)')
                           }
                           onMouseLeave={e =>
-                            ((e.currentTarget as HTMLElement).style.color = 'var(--color-text)')
+                            ((e.currentTarget as HTMLElement).style.color = 'var(--color-header-text)')
                           }
                         >
                           <Icon size={16} strokeWidth={2} />
@@ -393,9 +393,17 @@ export function Header({
               </nav>
             </div>
 
-            {/* Mobile bar */}
-            <div className="md:hidden flex items-center justify-between h-16">
-              <Link href="/" aria-label={displayBusinessName}>
+            {/* Mobile bar — logo absolute-centered so it stays truly on the
+                page's midline regardless of what sits on either side (only
+                the hamburger sits at the right; nothing balances it, so a
+                flex justify-between layout centers the logo somewhere left
+                of true midpoint). Hamburger pins right via ml-auto. */}
+            <div className="md:hidden relative flex items-center h-16">
+              <Link
+                href="/"
+                aria-label={displayBusinessName}
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+              >
                 {logoUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={logoUrl} alt={resolvedLogoAlt} height={32} width={110} className="object-contain rounded-full" />
@@ -411,8 +419,8 @@ export function Header({
                 )}
               </Link>
               <button
-                className="p-2 rounded-xl"
-                style={{ color: 'var(--color-text)' }}
+                className="ml-auto p-2 rounded-xl"
+                style={{ color: 'var(--color-header-text)' }}
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label="Toggle menu"
               >
@@ -470,7 +478,7 @@ export function Header({
                   {displayTagline && (
                     <span
                       className="text-[10px] tracking-wide uppercase"
-                      style={{ color: 'var(--color-text-muted)' }}
+                      style={{ color: 'var(--color-header-text-muted)' }}
                     >
                       {displayTagline}
                     </span>
@@ -500,15 +508,15 @@ export function Header({
                     style={{
                       color: isActive(link.href)
                         ? 'var(--color-primary)'
-                        : 'var(--color-text-muted)',
+                        : 'var(--color-header-text-muted)',
                     }}
                     onMouseEnter={e => {
                       if (!isActive(link.href))
-                        (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'
+                        (e.currentTarget as HTMLElement).style.color = 'var(--color-header-text)'
                     }}
                     onMouseLeave={e => {
                       if (!isActive(link.href))
-                        (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)'
+                        (e.currentTarget as HTMLElement).style.color = 'var(--color-header-text-muted)'
                     }}
                   >
                     {link.label}
@@ -552,7 +560,7 @@ export function Header({
               <div className="ml-2 lg:ml-3 pl-2 lg:pl-3 flex items-center gap-1.5 lg:gap-2 whitespace-nowrap" style={{ borderLeft: '1px solid var(--color-border)' }}>
                 {user ? (
                   <>
-                    <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{truncatedName}</span>
+                    <span className="text-xs" style={{ color: 'var(--color-header-text-muted)' }}>{truncatedName}</span>
                     <Link
                       href={dashboardHref}
                       className="text-xs font-medium px-2 py-1 rounded-md transition-colors"
@@ -563,7 +571,7 @@ export function Header({
                     <button
                       onClick={handleSignOut}
                       className="text-xs px-2 py-1 rounded-md transition-colors cursor-pointer"
-                      style={{ color: 'var(--color-text-muted)' }}
+                      style={{ color: 'var(--color-header-text-muted)' }}
                     >
                       Sign Out
                     </button>
@@ -572,7 +580,7 @@ export function Header({
                   <Link
                     href="/login"
                     className="text-xs font-medium px-2 py-1 rounded-md transition-colors"
-                    style={{ color: 'var(--color-text-muted)' }}
+                    style={{ color: 'var(--color-header-text-muted)' }}
                   >
                     Sign In
                   </Link>
@@ -583,7 +591,7 @@ export function Header({
             {/* Mobile toggle */}
             <button
               className="md:hidden p-2 rounded-xl transition-colors"
-              style={{ color: 'var(--color-text)' }}
+              style={{ color: 'var(--color-header-text)' }}
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
             >
@@ -631,7 +639,7 @@ export function Header({
           <button
             onClick={() => setMobileOpen(false)}
             className="p-2 rounded-xl"
-            style={{ color: 'var(--color-text)' }}
+            style={{ color: 'var(--color-header-text)' }}
             aria-label="Close menu"
           >
             <X size={20} />
@@ -659,7 +667,7 @@ export function Header({
                 onClick={() => setMobileOpen(false)}
                 className="block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200"
                 style={{
-                  color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                  color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-header-text-muted)',
                   backgroundColor: isActive(link.href) ? 'var(--color-surface)' : 'transparent',
                 }}
               >
@@ -703,7 +711,7 @@ export function Header({
                     rel="noopener noreferrer"
                     aria-label={s.label}
                     className="p-2"
-                    style={{ color: 'var(--color-text)' }}
+                    style={{ color: 'var(--color-header-text)' }}
                   >
                     <Icon size={18} strokeWidth={2} />
                   </a>
@@ -715,7 +723,7 @@ export function Header({
           <div className="pt-3 mt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
             {user ? (
               <>
-                <span className="block px-4 py-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>{truncatedName}</span>
+                <span className="block px-4 py-1 text-xs" style={{ color: 'var(--color-header-text-muted)' }}>{truncatedName}</span>
                 <Link
                   href={dashboardHref}
                   onClick={() => setMobileOpen(false)}
@@ -727,7 +735,7 @@ export function Header({
                 <button
                   onClick={() => { setMobileOpen(false); handleSignOut() }}
                   className="block w-full text-left px-4 py-3 rounded-xl text-sm cursor-pointer"
-                  style={{ color: 'var(--color-text-muted)' }}
+                  style={{ color: 'var(--color-header-text-muted)' }}
                 >
                   Sign Out
                 </button>
@@ -737,7 +745,7 @@ export function Header({
                 href="/login"
                 onClick={() => setMobileOpen(false)}
                 className="block px-4 py-3 rounded-xl text-sm font-medium"
-                style={{ color: 'var(--color-text-muted)' }}
+                style={{ color: 'var(--color-header-text-muted)' }}
               >
                 Sign In
               </Link>
@@ -808,13 +816,13 @@ function NavDropdown({
           highlighted ? 'active' : ''
         }`}
         style={{
-          color: highlighted ? 'var(--color-primary)' : 'var(--color-text-muted)',
+          color: highlighted ? 'var(--color-primary)' : 'var(--color-header-text-muted)',
         }}
         onMouseEnter={e => {
-          if (!highlighted) (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'
+          if (!highlighted) (e.currentTarget as HTMLElement).style.color = 'var(--color-header-text)'
         }}
         onMouseLeave={e => {
-          if (!highlighted) (e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)'
+          if (!highlighted) (e.currentTarget as HTMLElement).style.color = 'var(--color-header-text-muted)'
         }}
       >
         {label}
@@ -839,7 +847,7 @@ function NavDropdown({
                 style={{
                   color: isActive(child.href)
                     ? 'var(--color-primary)'
-                    : 'var(--color-text)',
+                    : 'var(--color-header-text)',
                 }}
                 onMouseEnter={e =>
                   ((e.currentTarget as HTMLElement).style.color = 'var(--color-primary)')
@@ -847,7 +855,7 @@ function NavDropdown({
                 onMouseLeave={e =>
                   ((e.currentTarget as HTMLElement).style.color = isActive(child.href)
                     ? 'var(--color-primary)'
-                    : 'var(--color-text)')
+                    : 'var(--color-header-text)')
                 }
               >
                 {child.label}
@@ -890,7 +898,7 @@ function MobileAccordionItem({
           onClick={onNavigate}
           className="flex-1 block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200"
           style={{
-            color: highlighted ? 'var(--color-primary)' : 'var(--color-text-muted)',
+            color: highlighted ? 'var(--color-primary)' : 'var(--color-header-text-muted)',
             backgroundColor: highlighted ? 'var(--color-surface)' : 'transparent',
           }}
         >
@@ -903,7 +911,7 @@ function MobileAccordionItem({
           aria-label={expanded ? `Collapse ${label}` : `Expand ${label}`}
           className="p-3 rounded-xl transition-transform"
           style={{
-            color: 'var(--color-text-muted)',
+            color: 'var(--color-header-text-muted)',
             transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
           }}
         >
@@ -921,7 +929,7 @@ function MobileAccordionItem({
                 style={{
                   color: isActive(child.href)
                     ? 'var(--color-primary)'
-                    : 'var(--color-text-muted)',
+                    : 'var(--color-header-text-muted)',
                 }}
               >
                 {child.label}
