@@ -2314,13 +2314,17 @@ export const themeStyles: Partial<Record<ThemeName, ThemeStyle>> = {
   },
   adamaGold: {
     heroShape: 'none',
-    // Cards use the warm #1C1814 fill on the warm #12100D page with a
-    // #3A322A gold-leaning border for edge definition. Shadows dropped —
-    // invisible on dark; border does the elevation work.
-    cardStyle: 'rounded-xl bg-[#1C1814] border border-[#3A322A] p-6',
+    // Cards read directly from the color-entry tokens instead of hardcoding
+    // hex — eliminates the class of drift that produced the #1C1814 vs
+    // #211C16 mismatch in the prior commit. Any future palette change now
+    // flows to themeStyle.cardStyle automatically. Shadows dropped —
+    // invisible on dark; the border does the elevation work.
+    cardStyle: 'rounded-xl bg-[color:var(--color-card-bg)] border border-[color:var(--color-border)] p-6',
     // Gold on hover (not red). Red is reserved for CTAs and bands, so
     // hover accents pick up gold as the structural highlight color.
-    cardHover: 'hover:border-[#D4A24C] hover:bg-[#221D17] hover:-translate-y-0.5 transition-all duration-200',
+    // hover:bg pulls surfaceAlt (the lifted step above cardBg) so the card
+    // brightens by exactly one tonal step.
+    cardHover: 'hover:border-[color:var(--color-accent)] hover:bg-[color:var(--color-surface-alt)] hover:-translate-y-0.5 transition-all duration-200',
     buttonStyle: 'bg-[#C1272D] text-white rounded-none px-7 py-3 font-semibold tracking-[0.18em] uppercase border border-[#C1272D] hover:bg-[#9E1F24] hover:border-[#9E1F24]',
     // On-red variant for CTAs sitting inside a red band (About / Contact /
     // CTA sections). Red-on-red primary would disappear; this flips the
