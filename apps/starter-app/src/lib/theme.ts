@@ -199,33 +199,40 @@ export const themes = {
     headerBackground: '#FFFFFF',
     footerBackground: '#FFFFFF',
   },
-  // ── RESTAURANT — Adama (black page + red alternating bands, near-black
-  //    header/footer). Header/footer set to #000000 to match Adama's
-  //    site_settings.color_header_bg / color_footer_bg overrides so the
-  //    page has no seam. sectionAlt = primary so About / Contact / CTA
-  //    all render the same red (avoids a two-red mismatch on the page).
-  //    Border bumped to #383838 so form inputs sit visibly inside the
-  //    #141414 form card. ────────────────────────────────────────────────
+  // ── RESTAURANT — Adama (warm near-black page + red alternating bands,
+  //    darkest layer for header/footer). The whole palette carries a warm
+  //    gold undertone so the darks read as intentional rather than empty,
+  //    and so gold structural accents feel of a piece with the base rather
+  //    than pasted on. sectionAlt = primary so About / Contact / CTA all
+  //    render the same red band. header/footer sit at the darkest layer
+  //    (#0C0A08) to anchor the page top and bottom; the DB
+  //    color_header_bg / color_footer_bg overrides are being moved to the
+  //    same value by the tenant. accentLight = warm dark gold-tint (NOT
+  //    the old dark maroon) — it is the icon-circle fill for STEP 3.
+  //    border kept at #3A322A per user call (gold-leaning warm gray) —
+  //    contrast against the lifted #211C16 card measured at 1.33:1 WCAG,
+  //    marginal but accepted; the widened card-vs-page gap is what makes
+  //    inputs sit visibly, not the border. ─────────────────────────────
   adamaGold: {
     primary: '#C1272D',
     primaryHover: '#E03A40',
     secondary: '#8E1B20',
     accent: '#D4A24C',
-    accentLight: '#2A1012',
-    background: '#000000',
-    surface: '#0F0F0F',
-    surfaceAlt: '#161616',
+    accentLight: '#2A1F12',
+    background: '#100E0B',
+    surface: '#1A1713',
+    surfaceAlt: '#262019',
     sectionAlt: '#C1272D',
-    cardBg: '#141414',
+    cardBg: '#211C16',
     text: '#F5F1EA',
     textMuted: '#C9C2B8',
     textLight: '#9A948C',
-    border: '#383838',
-    borderLight: '#1E1E1E',
+    border: '#3A322A',
+    borderLight: '#2A241E',
     heading: 'font-serif font-bold tracking-tight',
     heroGradient: 'linear-gradient(135deg, #0D0D0D 0%, #2A0A0C 60%, #0D0D0D 100%)',
-    headerBackground: '#000000',
-    footerBackground: '#000000',
+    headerBackground: '#0C0A08',
+    footerBackground: '#0C0A08',
   },
   // ── HEALTHCARE — El Roi (deep navy + teal accent, NP-led clinical) ───
   elRoiNavy: {
@@ -1750,6 +1757,13 @@ export type ThemeName = keyof typeof themes
 export const themeNames = Object.keys(themes) as ThemeName[]
 
 // ── Structural style overrides ──────────────────────────────
+export interface LocationBarVariant {
+  bg: string
+  text: string
+  icon: string
+  border: string
+}
+
 export interface ThemeStyle {
   heroShape: string
   cardStyle: string
@@ -1764,6 +1778,22 @@ export interface ThemeStyle {
   sectionDivider: string
   badgeStyle: string
   accentShape: string
+  // Icon color inside on-card icon circles (ServicesSection). Any string
+  // usable as a CSS `color` value — theme entries typically pass a
+  // `var(...)` reference so overrides cascade through the CSS variable
+  // system. Optional: getThemeStyle() defaults it to var(--color-primary)
+  // so every existing theme renders exactly as before.
+  iconOnCard?: string
+  // box-shadow value applied to those same icon circles. Optional: default
+  // 'none' produces no ring, matching pre-token behavior for every theme.
+  // adamaGold uses an inset gold shadow to draw a 1px translucent ring.
+  iconRing?: string
+  // Bundled tokens for the homepage location strip (address bar). Optional
+  // group so a theme can style all four correlated properties in one place.
+  // When omitted, getThemeStyle() supplies the defaults that reproduce
+  // LocationStripSection's prior hardcoded token reads exactly — every
+  // other tenant renders the strip byte-identically.
+  locationBarVariant?: LocationBarVariant
 }
 
 export const defaultThemeStyle: ThemeStyle = {
@@ -2284,11 +2314,13 @@ export const themeStyles: Partial<Record<ThemeName, ThemeStyle>> = {
   },
   adamaGold: {
     heroShape: 'none',
-    // Cards on black page or on red band: same dark #141414 fill with a
-    // #2A2A2A border for edge definition. Shadows dropped — they are
-    // invisible on black. Border replaces the elevation cue.
-    cardStyle: 'rounded-xl bg-[#141414] border border-[#2A2A2A] p-6',
-    cardHover: 'hover:border-[#C1272D] hover:bg-[#1A1A1A] hover:-translate-y-0.5 transition-all duration-200',
+    // Cards use the warm #1C1814 fill on the warm #12100D page with a
+    // #3A322A gold-leaning border for edge definition. Shadows dropped —
+    // invisible on dark; border does the elevation work.
+    cardStyle: 'rounded-xl bg-[#1C1814] border border-[#3A322A] p-6',
+    // Gold on hover (not red). Red is reserved for CTAs and bands, so
+    // hover accents pick up gold as the structural highlight color.
+    cardHover: 'hover:border-[#D4A24C] hover:bg-[#221D17] hover:-translate-y-0.5 transition-all duration-200',
     buttonStyle: 'bg-[#C1272D] text-white rounded-none px-7 py-3 font-semibold tracking-[0.18em] uppercase border border-[#C1272D] hover:bg-[#9E1F24] hover:border-[#9E1F24]',
     // On-red variant for CTAs sitting inside a red band (About / Contact /
     // CTA sections). Red-on-red primary would disappear; this flips the
@@ -2296,11 +2328,32 @@ export const themeStyles: Partial<Record<ThemeName, ThemeStyle>> = {
     // hierarchically dominant against the saturated red band.
     buttonAltStyle: 'bg-[#F5F1EA] text-[#8E1B20] rounded-none px-7 py-3 font-semibold tracking-[0.18em] uppercase border border-[#F5F1EA] hover:bg-white',
     sectionDivider: 'none',
-    // Gold border on the badge — gold reads better than red on pure black
-    // and provides a subtle accent that ties back to the theme's original
-    // gold heritage without overwhelming the palette.
+    // Gold border on the badge — gold reads better than red on the warm
+    // dark base and reinforces the theme's gold structural language.
     badgeStyle: 'text-[#D4A24C] border border-[#D4A24C]/40 rounded-none px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em]',
-    accentShape: 'radial-gradient(ellipse at 50% 0%, rgba(193,39,45,0.18) 0%, transparent 65%)',
+    // Gold glow instead of red — warms the top of dark sections and ties
+    // back to the gold structural accents (card hover border, badge, icon
+    // ring). 10% opacity keeps it as a subtle wash rather than a stripe.
+    accentShape: 'radial-gradient(ellipse at 50% 0%, rgba(212,162,76,0.10) 0%, transparent 65%)',
+    // Icon inside on-card icon circles renders as gold, not red. Red on
+    // the warm gold-tint circle fill (#2A1F12) has almost no contrast; gold
+    // on that fill reads clearly and matches the rest of the theme's
+    // gold structural accents.
+    iconOnCard: 'var(--color-accent)',
+    // 1px inset gold ring at 30% opacity around the icon circle — makes
+    // the circle read as a deliberate element on the warm dark card
+    // rather than a smudge.
+    iconRing: 'inset 0 0 0 1px rgba(212, 162, 76, 0.30)',
+    // Homepage address bar becomes a gold accent band on adamaGold. Text
+    // + icon flip to near-black for AAA contrast (7.58:1 measured);
+    // border is transparent so the band has no visible hairline against
+    // the gold fill.
+    locationBarVariant: {
+      bg: 'var(--color-accent)',
+      text: '#1A1A1A',
+      icon: '#1A1A1A',
+      border: 'transparent',
+    },
   },
   elRoiNavy: {
     heroShape: 'none',
@@ -2313,14 +2366,31 @@ export const themeStyles: Partial<Record<ThemeName, ThemeStyle>> = {
   },
 }
 
+// Default LocationStripSection tokens — resolve to the CSS vars the
+// component read directly before the token was introduced, so any theme
+// that does not declare a locationBarVariant renders byte-identically.
+const DEFAULT_LOCATION_BAR: LocationBarVariant = {
+  bg: 'var(--color-surface)',
+  text: 'var(--color-text)',
+  icon: 'var(--color-primary)',
+  border: 'var(--color-border)',
+}
+
 export function getThemeStyle(name: ThemeName): ThemeStyle {
   const merged = { ...defaultThemeStyle, ...(themeStyles[name] || {}) }
-  // Fall buttonAltStyle back to buttonStyle so every theme that has not
-  // explicitly opted into an on-alt-band button variant keeps the same
-  // button styling across every band — byte-identical to prior behavior.
+  // Fall each optional structural token back to a byte-identical default:
+  //   buttonAltStyle → buttonStyle (no on-alt-band variant declared)
+  //   iconOnCard     → var(--color-primary) (matches the old hardcode)
+  //   iconRing       → 'none' (no ring rendered for any prior theme)
+  //   locationBarVariant → the four CSS vars LocationStripSection read
+  //                        directly before this token existed
+  // Every non-adamaGold theme therefore keeps its existing rendering.
   return {
     ...merged,
     buttonAltStyle: merged.buttonAltStyle || merged.buttonStyle,
+    iconOnCard: merged.iconOnCard || 'var(--color-primary)',
+    iconRing: merged.iconRing || 'none',
+    locationBarVariant: merged.locationBarVariant || DEFAULT_LOCATION_BAR,
   }
 }
 

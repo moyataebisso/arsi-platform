@@ -63,9 +63,14 @@ export function LocationStripSection({
 
   return (
     <section
+      // Address-strip tokens default to var(--color-surface) / --color-text /
+      // --color-primary / --color-border — the exact vars this component
+      // read before the tokens existed. Every theme that has not opted
+      // into a locationBarVariant renders byte-identically. adamaGold
+      // declares a gold band variant.
       style={{
-        backgroundColor: 'var(--color-surface)',
-        borderBottom: '1px solid var(--color-border)',
+        backgroundColor: 'var(--color-location-bar-bg)',
+        borderBottom: '1px solid var(--color-location-bar-border)',
       }}
     >
       <div className="max-w-6xl mx-auto px-4 py-4 md:py-5">
@@ -78,13 +83,13 @@ export function LocationStripSection({
               <MapPin
                 className="w-4 h-4 shrink-0"
                 strokeWidth={2.25}
-                style={{ color: 'var(--color-primary)' }}
+                style={{ color: 'var(--color-location-bar-icon)' }}
                 aria-hidden="true"
               />
               {line.label && (
                 <span
                   className="font-medium"
-                  style={{ color: 'var(--color-text)' }}
+                  style={{ color: 'var(--color-location-bar-text)' }}
                 >
                   {line.label}:
                 </span>
@@ -94,7 +99,7 @@ export function LocationStripSection({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-center hover:underline"
-                style={{ color: 'var(--color-text)' }}
+                style={{ color: 'var(--color-location-bar-text)' }}
               >
                 {line.address}
                 <span style={{ color: 'var(--color-text-muted)' }}>

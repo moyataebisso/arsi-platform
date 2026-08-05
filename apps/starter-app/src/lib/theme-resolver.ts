@@ -243,6 +243,12 @@ export function themeToCSS(t: ResolvedTheme): string {
       --color-header-text: ${t.headerText};
       --color-header-text-muted: ${t.headerMuted};
       --color-section-alt: ${t.sectionAlt};
+      --color-icon-on-card: ${t.themeStyle.iconOnCard};
+      --icon-ring-shadow: ${t.themeStyle.iconRing};
+      --color-location-bar-bg: ${t.themeStyle.locationBarVariant?.bg ?? 'var(--color-surface)'};
+      --color-location-bar-text: ${t.themeStyle.locationBarVariant?.text ?? 'var(--color-text)'};
+      --color-location-bar-icon: ${t.themeStyle.locationBarVariant?.icon ?? 'var(--color-primary)'};
+      --color-location-bar-border: ${t.themeStyle.locationBarVariant?.border ?? 'var(--color-border)'};
     }
   `.trim()
 }

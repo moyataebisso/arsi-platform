@@ -97,9 +97,24 @@ export function ServicesSection({
                 >
                   <div
                     className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
-                    style={{ backgroundColor: 'var(--color-accent-light)' }}
+                    style={{
+                      backgroundColor: 'var(--color-accent-light)',
+                      // Optional ring token — defaults to 'none' (byte-identical
+                      // for every theme that has not declared an iconRing).
+                      // adamaGold declares a translucent gold inset ring so the
+                      // circle reads as an intentional element on the dark card.
+                      boxShadow: 'var(--icon-ring-shadow)',
+                    }}
                   >
-                    <Icon size={26} style={{ color: 'var(--color-primary)' }} />
+                    <Icon
+                      size={26}
+                      // Icon color token — defaults to var(--color-primary)
+                      // for every theme (matches prior hardcoded behavior).
+                      // adamaGold overrides to var(--color-accent) — gold on
+                      // the warm gold-tint circle fill instead of red on
+                      // near-invisible dark red.
+                      style={{ color: 'var(--color-icon-on-card)' }}
+                    />
                   </div>
                   <h3
                     className="text-base font-semibold mb-2"
