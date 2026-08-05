@@ -1167,7 +1167,7 @@ function VideoHero(props: VariantProps) {
           ) : (
             <Link
               href={ctaHref}
-              className="inline-flex items-center justify-center transition-all hover:bg-[color:var(--color-primary)] hover:text-black"
+              className="inline-flex items-center justify-center transition-all hover:bg-[color:var(--color-primary)] hover:text-[color:var(--color-button-text)]"
               style={{
                 color: 'var(--color-primary)',
                 border: '1px solid var(--color-primary)',
