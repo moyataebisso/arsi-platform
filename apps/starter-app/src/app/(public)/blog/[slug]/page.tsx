@@ -20,7 +20,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
     <article className="max-w-3xl mx-auto px-4 py-16">
       <Link href="/blog" className="text-sm mb-6 inline-block" style={{ color: 'var(--color-primary)' }}>&larr; Back to Blog</Link>
       {post.cover_image && (
-        <div className="aspect-[2/1] rounded-xl overflow-hidden mb-8 bg-gray-100" style={{ backgroundImage: `url(${post.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+        <div className="aspect-[2/1] rounded-xl overflow-hidden mb-8 bg-[color:var(--color-surface-alt)]" style={{ backgroundImage: `url(${post.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
       )}
       <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-playfair)' }}>{post.title}</h1>
       <div className="flex items-center gap-3 mb-8 text-sm" style={{ color: 'var(--color-text-muted)' }}>

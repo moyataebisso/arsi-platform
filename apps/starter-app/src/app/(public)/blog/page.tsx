@@ -21,7 +21,7 @@ export default async function BlogPage() {
           <Link key={post.id} href={`/blog/${post.slug}`} className="block group">
             <article className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
               {post.cover_image && (
-                <div className="aspect-[3/1] bg-gray-100" style={{ backgroundImage: `url(${post.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                <div className="aspect-[3/1] bg-[color:var(--color-surface-alt)]" style={{ backgroundImage: `url(${post.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
               )}
               <div className="p-6">
                 {post.category && <span className="text-xs font-medium uppercase" style={{ color: 'var(--color-accent)' }}>{post.category}</span>}

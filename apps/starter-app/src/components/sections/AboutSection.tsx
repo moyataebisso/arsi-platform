@@ -98,7 +98,16 @@ export function AboutSection({
   const resolvedImage2Alt = (image2Alt || '').trim() || genericAlt
 
   return (
-    <section className="py-20 sm:py-28">
+    <section
+      className="py-20 sm:py-28"
+      // Alternating-band bg. --color-section-alt defaults to each theme's
+      // `background`, so tenants that never opted in (Entrusted, El Roi,
+      // every classic theme) render the section on the same color as the
+      // page and see zero visible change from prior "no bg" behavior.
+      // adamaGold declares sectionAlt = its red primary, producing the
+      // intended red About band on the Adama home page.
+      style={{ backgroundColor: 'var(--color-section-alt)' }}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16 items-center">
           {/* Left: Text (60%) */}

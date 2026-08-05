@@ -36,7 +36,7 @@ export default async function EventsPage() {
           >
             {event.image_url && (
               <div
-                className="aspect-[16/9] bg-gray-100"
+                className="aspect-[16/9] bg-[color:var(--color-surface-alt)]"
                 style={{
                   backgroundImage: `url(${event.image_url})`,
                   backgroundSize: 'cover',

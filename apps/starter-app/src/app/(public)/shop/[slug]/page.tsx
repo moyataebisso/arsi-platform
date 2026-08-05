@@ -35,7 +35,7 @@ export default function ProductPage() {
     <div className="max-w-4xl mx-auto px-4 py-16">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {product.image_url && (
-          <div className="aspect-square rounded-xl overflow-hidden bg-gray-100"
+          <div className="aspect-square rounded-xl overflow-hidden bg-[color:var(--color-surface-alt)]"
             style={{ backgroundImage: `url(${product.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
         )}
         <div>

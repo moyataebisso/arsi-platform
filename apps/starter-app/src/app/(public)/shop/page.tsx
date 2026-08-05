@@ -23,7 +23,7 @@ export default async function ShopPage() {
             style={{ backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}
           >
             {p.image_url && (
-              <div className="aspect-square bg-gray-100" style={{ backgroundImage: `url(${p.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+              <div className="aspect-square bg-[color:var(--color-surface-alt)]" style={{ backgroundImage: `url(${p.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
             )}
             <div className="p-4">
               <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>{p.name}</h2>

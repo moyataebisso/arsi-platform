@@ -47,7 +47,7 @@ export default function CartPage() {
           <div className="space-y-4 mb-6">
             {items.map((item, i) => (
               <div key={i} className="flex items-center gap-4 p-4 rounded-xl" style={{ backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
-                {item.image && <div className="w-16 h-16 rounded-lg bg-gray-100 shrink-0" style={{ backgroundImage: `url(${item.image})`, backgroundSize: 'cover' }} />}
+                {item.image && <div className="w-16 h-16 rounded-lg bg-[color:var(--color-surface-alt)] shrink-0" style={{ backgroundImage: `url(${item.image})`, backgroundSize: 'cover' }} />}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate" style={{ color: 'var(--color-text)' }}>{item.name}</p>
                   <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>${(item.price / 100).toFixed(2)} each</p>

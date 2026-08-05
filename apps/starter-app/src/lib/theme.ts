@@ -199,26 +199,33 @@ export const themes = {
     headerBackground: '#FFFFFF',
     footerBackground: '#FFFFFF',
   },
-  // ── RESTAURANT — Adama (red + white body, near-black header/footer) ──────
+  // ── RESTAURANT — Adama (black page + red alternating bands, near-black
+  //    header/footer). Header/footer set to #000000 to match Adama's
+  //    site_settings.color_header_bg / color_footer_bg overrides so the
+  //    page has no seam. sectionAlt = primary so About / Contact / CTA
+  //    all render the same red (avoids a two-red mismatch on the page).
+  //    Border bumped to #383838 so form inputs sit visibly inside the
+  //    #141414 form card. ────────────────────────────────────────────────
   adamaGold: {
     primary: '#C1272D',
-    primaryHover: '#9E1F24',
-    secondary: '#8C1A1F',
+    primaryHover: '#E03A40',
+    secondary: '#8E1B20',
     accent: '#D4A24C',
-    accentLight: '#FBF3F3',
-    background: '#FFFFFF',
-    surface: '#FAF6F1',
-    surfaceAlt: '#F3EDE5',
-    cardBg: '#FFFFFF',
-    text: '#1A1A1A',
-    textMuted: '#5A5A5A',
-    textLight: '#8A8A8A',
-    border: '#E6DFD6',
-    borderLight: '#F0EAE2',
+    accentLight: '#2A1012',
+    background: '#000000',
+    surface: '#0F0F0F',
+    surfaceAlt: '#161616',
+    sectionAlt: '#C1272D',
+    cardBg: '#141414',
+    text: '#F5F1EA',
+    textMuted: '#C9C2B8',
+    textLight: '#9A948C',
+    border: '#383838',
+    borderLight: '#1E1E1E',
     heading: 'font-serif font-bold tracking-tight',
     heroGradient: 'linear-gradient(135deg, #0D0D0D 0%, #2A0A0C 60%, #0D0D0D 100%)',
-    headerBackground: '#0D0D0D',
-    footerBackground: '#0D0D0D',
+    headerBackground: '#000000',
+    footerBackground: '#000000',
   },
   // ── HEALTHCARE — El Roi (deep navy + teal accent, NP-led clinical) ───
   elRoiNavy: {
@@ -1748,6 +1755,12 @@ export interface ThemeStyle {
   cardStyle: string
   cardHover: string
   buttonStyle: string
+  // Optional variant for buttons sitting inside a red / dark alternating
+  // band (adamaGold About / Contact / CTA), where the theme's normal
+  // primary-color button would disappear against the same-color band.
+  // When omitted, getThemeStyle() falls buttonAltStyle back to buttonStyle
+  // so every existing theme is byte-identical.
+  buttonAltStyle?: string
   sectionDivider: string
   badgeStyle: string
   accentShape: string
@@ -2271,12 +2284,23 @@ export const themeStyles: Partial<Record<ThemeName, ThemeStyle>> = {
   },
   adamaGold: {
     heroShape: 'none',
-    cardStyle: 'rounded-xl bg-white border border-[#E6DFD6] p-6 shadow-sm',
-    cardHover: 'hover:border-[#C1272D]/60 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200',
+    // Cards on black page or on red band: same dark #141414 fill with a
+    // #2A2A2A border for edge definition. Shadows dropped — they are
+    // invisible on black. Border replaces the elevation cue.
+    cardStyle: 'rounded-xl bg-[#141414] border border-[#2A2A2A] p-6',
+    cardHover: 'hover:border-[#C1272D] hover:bg-[#1A1A1A] hover:-translate-y-0.5 transition-all duration-200',
     buttonStyle: 'bg-[#C1272D] text-white rounded-none px-7 py-3 font-semibold tracking-[0.18em] uppercase border border-[#C1272D] hover:bg-[#9E1F24] hover:border-[#9E1F24]',
+    // On-red variant for CTAs sitting inside a red band (About / Contact /
+    // CTA sections). Red-on-red primary would disappear; this flips the
+    // button to cream fill with dark-red text so it stays readable and
+    // hierarchically dominant against the saturated red band.
+    buttonAltStyle: 'bg-[#F5F1EA] text-[#8E1B20] rounded-none px-7 py-3 font-semibold tracking-[0.18em] uppercase border border-[#F5F1EA] hover:bg-white',
     sectionDivider: 'none',
-    badgeStyle: 'text-[#C1272D] border border-[#C1272D]/40 rounded-none px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em]',
-    accentShape: 'radial-gradient(ellipse at 50% 0%, rgba(193,39,45,0.10) 0%, transparent 65%)',
+    // Gold border on the badge — gold reads better than red on pure black
+    // and provides a subtle accent that ties back to the theme's original
+    // gold heritage without overwhelming the palette.
+    badgeStyle: 'text-[#D4A24C] border border-[#D4A24C]/40 rounded-none px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em]',
+    accentShape: 'radial-gradient(ellipse at 50% 0%, rgba(193,39,45,0.18) 0%, transparent 65%)',
   },
   elRoiNavy: {
     heroShape: 'none',
@@ -2290,7 +2314,14 @@ export const themeStyles: Partial<Record<ThemeName, ThemeStyle>> = {
 }
 
 export function getThemeStyle(name: ThemeName): ThemeStyle {
-  return { ...defaultThemeStyle, ...(themeStyles[name] || {}) }
+  const merged = { ...defaultThemeStyle, ...(themeStyles[name] || {}) }
+  // Fall buttonAltStyle back to buttonStyle so every theme that has not
+  // explicitly opted into an on-alt-band button variant keeps the same
+  // button styling across every band — byte-identical to prior behavior.
+  return {
+    ...merged,
+    buttonAltStyle: merged.buttonAltStyle || merged.buttonStyle,
+  }
 }
 
 export const themeCategories = {

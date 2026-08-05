@@ -19,7 +19,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
     <div className="max-w-3xl mx-auto px-4 py-16">
       {event.image_url && (
         <div
-          className="aspect-[2/1] rounded-xl overflow-hidden mb-8 bg-gray-100"
+          className="aspect-[2/1] rounded-xl overflow-hidden mb-8 bg-[color:var(--color-surface-alt)]"
           style={{
             backgroundImage: `url(${event.image_url})`,
             backgroundSize: 'cover',

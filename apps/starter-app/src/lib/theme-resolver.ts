@@ -69,6 +69,15 @@ export interface ResolvedTheme {
   ctaBg: string
   sectionSurface: string
   headerBg: string
+  // Alternating-band background. Themes may declare an explicit sectionAlt
+  // (adamaGold does — its primary red so About / Contact / CTA all render
+  // the same band color). When a theme omits sectionAlt, this falls back
+  // to the theme's `background` (NOT `surface`) so untouched tenants have
+  // no visible band where none existed before — AboutSection currently
+  // renders with no bg and inherits the body's `background`, so aligning
+  // the fallback to `background` keeps every non-opted-in tenant
+  // byte-identical.
+  sectionAlt: string
   // Text colors scoped to the header bar. Derived from headerBg luma so
   // adamaGold's near-black header does not render its own dark theme.text
   // dark-on-dark. Only diverges from theme.text/textMuted when the header
@@ -132,6 +141,8 @@ export async function getActiveTheme(): Promise<ResolvedTheme> {
     heroBg: settings.color_hero_bg || baseTheme.background,
     ctaBg: settings.color_cta_bg || baseTheme.primary,
     sectionSurface: settings.color_surface || baseTheme.surface,
+    sectionAlt:
+      (baseTheme as { sectionAlt?: string }).sectionAlt || baseTheme.background,
     // Per-theme opt-in header background. Defaults to the theme background
     // (current behavior for every existing theme that does not declare one).
     // Override at site_settings.color_header_bg for tenant-level customization.
@@ -231,6 +242,7 @@ export function themeToCSS(t: ResolvedTheme): string {
       --color-header-bg: ${t.headerBg};
       --color-header-text: ${t.headerText};
       --color-header-text-muted: ${t.headerMuted};
+      --color-section-alt: ${t.sectionAlt};
     }
   `.trim()
 }

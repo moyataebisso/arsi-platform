@@ -107,6 +107,7 @@ function buildPreviewThemeCSS(themeName: ThemeName): string {
   const textIsDark = previewLuma(base.text) < 128
   const headerText = (headerIsDark && textIsDark) ? '#F4F1E8' : base.text
   const headerMuted = (headerIsDark && textIsDark) ? '#B8B0A0' : base.textMuted
+  const sectionAlt = (base as { sectionAlt?: string }).sectionAlt || base.background
   const resolved: ResolvedTheme = {
     ...base,
     themeName,
@@ -121,6 +122,7 @@ function buildPreviewThemeCSS(themeName: ThemeName): string {
     headerBg,
     headerText,
     headerMuted,
+    sectionAlt,
   }
   return themeToCSS(resolved)
 }
