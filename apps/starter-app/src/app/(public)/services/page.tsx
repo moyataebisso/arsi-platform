@@ -4,6 +4,7 @@ import {
   Briefcase, HeartHandshake, Lightbulb, Wrench, Heart, Star, Shield,
   Zap, Globe, Users, Coffee, Scissors, Truck, Home,
   Camera, Music, Book, Leaf, Award, Clock, Phone, Check,
+  ShoppingBag, CalendarCheck, Package,
   type LucideIcon,
 } from 'lucide-react'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
@@ -75,12 +76,15 @@ function parseServicesPageContent(raw: string | null): ServicesPageContent | nul
   }
 }
 
-// Same icon map used by the home ServicesSection so an `icon` key written in
-// site_settings.services resolves identically on both pages.
+// Keep in sync with the ICON_MAP in src/components/sections/ServicesSection.tsx.
+// Two hand-maintained lists — they must contain the same keys or an icon
+// name that resolves on one page will fall back to Lightbulb on the other.
+// Follow-up: extract to a shared module to eliminate the drift risk.
 const ICON_MAP: Record<string, LucideIcon> = {
   Lightbulb, Briefcase, Wrench, HeartHandshake, Heart, Star, Shield,
   Zap, Globe, Users, Coffee, Scissors, Truck, Home,
   Camera, Music, Book, Leaf, Award, Clock, Phone,
+  ShoppingBag, CalendarCheck, Package,
 }
 
 export default async function ServicesPage() {

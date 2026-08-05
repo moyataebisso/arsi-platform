@@ -103,11 +103,19 @@ export async function getServicesContent(): Promise<ServiceItem[]> {
 
   try {
     const supabase = getAdminClient()
+    // display_order + icon are nullable columns present on every tenant
+    // schema (client_%). Ordering: display_order ASC with NULLS LAST so
+    // tenants that haven't populated the column (Entrusted, El Roi) fall
+    // straight through to the alphabetical name tiebreaker they had before.
+    // icon: prefer the row's own value; when NULL / empty, fall back to the
+    // index-based DEFAULT_SERVICE_ICONS assignment used pre-column so
+    // untouched tenants render byte-identically.
     const { data, error } = await supabase
       .from('services')
-      .select('id, name, description, price, is_active')
+      .select('id, name, description, price, is_active, display_order, icon')
       .eq('is_active', true)
-      .order('name')
+      .order('display_order', { ascending: true, nullsFirst: false })
+      .order('name', { ascending: true })
       .limit(4)
     if (!error && data && data.length > 0) {
       return data.map((row, i) => ({
@@ -115,7 +123,7 @@ export async function getServicesContent(): Promise<ServiceItem[]> {
         name: row.name ?? 'Service',
         description: row.description ?? '',
         price: row.price != null ? String(row.price) : '',
-        icon: DEFAULT_SERVICE_ICONS[i % DEFAULT_SERVICE_ICONS.length],
+        icon: row.icon || DEFAULT_SERVICE_ICONS[i % DEFAULT_SERVICE_ICONS.length],
       }))
     }
   } catch { /* fall through to defaults */ }

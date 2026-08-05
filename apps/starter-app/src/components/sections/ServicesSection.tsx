@@ -4,15 +4,21 @@ import {
   Briefcase, HeartHandshake, Lightbulb, Wrench, Heart, Star, Shield,
   Zap, Globe, Users, Coffee, Scissors, Truck, Home,
   Camera, Music, Book, Leaf, Award, Clock, Phone,
+  ShoppingBag, CalendarCheck, Package,
   type LucideIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
 
+// Keep in sync with the ICON_MAP in src/app/(public)/services/page.tsx.
+// Two hand-maintained lists — they must contain the same keys or an icon
+// name that resolves on one page will fall back to Lightbulb on the other.
+// Follow-up: extract to a shared module to eliminate the drift risk.
 const ICON_MAP: Record<string, LucideIcon> = {
   Lightbulb, Briefcase, Wrench, HeartHandshake, Heart, Star, Shield,
   Zap, Globe, Users, Coffee, Scissors, Truck, Home,
   Camera, Music, Book, Leaf, Award, Clock, Phone,
+  ShoppingBag, CalendarCheck, Package,
 }
 
 interface ServiceItem {
