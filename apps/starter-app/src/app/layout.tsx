@@ -3,6 +3,7 @@ import './globals.css'
 import { siteConfig } from '@config'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { getSiteSettings } from '@/lib/settings'
+import { Analytics } from '@vercel/analytics/next'
 import { Playfair_Display, DM_Sans, Dancing_Script, Plus_Jakarta_Sans, Space_Grotesk, DM_Mono, JetBrains_Mono } from 'next/font/google'
 
 export const dynamic = 'force-dynamic'
@@ -195,6 +196,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`antialiased ${bodyFont}`}>
         <JsonLd />
         {children}
+        {/* Vercel Web Analytics beacon. Inert on non-Vercel deployments and
+            inert on Vercel deployments until Analytics is enabled per-project
+            in the Vercel dashboard — no env var, no config, no enabled_modules
+            flag needed. Shared multi-tenant code: every tenant that opts in
+            via their own Vercel project's dashboard starts collecting. */}
+        <Analytics />
       </body>
     </html>
   )
