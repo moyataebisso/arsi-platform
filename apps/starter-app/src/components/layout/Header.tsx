@@ -406,7 +406,7 @@ export function Header({
               >
                 {logoUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={logoUrl} alt={resolvedLogoAlt} height={32} width={110} className="object-contain rounded-full" />
+                  <img src={logoUrl} alt={resolvedLogoAlt} height={32} width={110} className="object-contain rounded-full h-10 w-auto max-w-[140px]" />
                 ) : showBrandLogo ? (
                   <BrandLogo businessName={displayBusinessName} height={40} />
                 ) : (
@@ -460,7 +460,7 @@ export function Header({
                   alt={resolvedLogoAlt}
                   height={32}
                   width={110}
-                  className="object-contain"
+                  className="object-contain h-10 sm:h-12 w-auto max-w-[140px] sm:max-w-[180px]"
                 />
               ) : showBrandLogo ? (
                 <BrandLogo businessName={displayBusinessName} height={44} />
@@ -624,7 +624,7 @@ export function Header({
               alt={resolvedLogoAlt}
               height={32}
               width={110}
-              className="object-contain"
+              className="object-contain h-10 w-auto max-w-[140px]"
             />
           ) : showBrandLogo ? (
             <BrandLogo businessName={displayBusinessName} height={40} />

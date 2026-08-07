@@ -29,7 +29,7 @@ export function RestaurantCtasSection({
   if (ctas.length === 0) return null
 
   return (
-    <section className="py-16 sm:py-20" style={{ backgroundColor: 'var(--color-background)' }}>
+    <section className="py-10 sm:py-20" style={{ backgroundColor: 'var(--color-background)' }}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
           className="grid gap-px"
@@ -43,31 +43,30 @@ export function RestaurantCtasSection({
             <Link
               key={cta.label}
               href={cta.href}
-              className="group flex flex-col items-center justify-center text-center transition-all py-16 px-6"
+              className="group flex flex-col items-center justify-center text-center transition-all py-8 px-2 sm:py-16 sm:px-6"
               style={{
                 backgroundColor: 'var(--color-background)',
                 color: 'var(--color-text)',
               }}
             >
               <span
-                className="block mb-3 transition-colors group-hover:underline"
+                className="block mb-1.5 sm:mb-3 transition-colors group-hover:underline break-words"
                 style={{
                   color: 'var(--color-primary)',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'clamp(1.5rem, 2.6vw, 2.25rem)',
+                  fontSize: 'clamp(1rem, 3vw, 2.25rem)',
                   fontWeight: 700,
                   letterSpacing: '0.04em',
                   textTransform: 'uppercase',
+                  lineHeight: 1.15,
                 }}
               >
                 {cta.label}
               </span>
               <span
-                className="text-xs"
+                className="text-[10px] sm:text-xs tracking-[0.12em] sm:tracking-[0.22em] uppercase"
                 style={{
                   color: 'var(--color-text-muted)',
-                  letterSpacing: '0.22em',
-                  textTransform: 'uppercase',
                 }}
               >
                 {cta.sub}

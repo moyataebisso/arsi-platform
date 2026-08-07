@@ -73,12 +73,12 @@ export function LocationStripSection({
         borderBottom: '1px solid var(--color-location-bar-border)',
       }}
     >
-      <div className="max-w-6xl mx-auto px-4 py-4 md:py-5">
+      <div className="max-w-6xl mx-auto px-4 py-2.5 md:py-4">
         <ul className="flex flex-col gap-y-2">
           {lines.map((line, i) => (
             <li
               key={i}
-              className="flex items-center justify-center gap-2 text-sm md:text-base flex-wrap"
+              className="flex items-center justify-center gap-2 text-[13px] md:text-base flex-wrap"
             >
               <MapPin
                 className="w-4 h-4 shrink-0"
@@ -101,11 +101,11 @@ export function LocationStripSection({
                 className="text-center hover:underline"
                 style={{ color: 'var(--color-location-bar-text)' }}
               >
-                {line.address}
+                <span className="whitespace-nowrap">{line.address}</span>
                 <span style={{ color: 'var(--color-text-muted)' }}>
                   {' · '}
                 </span>
-                {line.cityStateZip}
+                <span className="whitespace-nowrap">{line.cityStateZip}</span>
               </a>
             </li>
           ))}
