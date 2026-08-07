@@ -26,6 +26,26 @@ const nextConfig = {
       },
     ]
   },
+  async redirects() {
+    const HOSTS = [
+      'entrustedcareresidence.org',
+      'www.entrustedcareresidence.org',
+    ];
+
+    const legacy = [
+      ['/contact-us', '/contact'],
+      ['/our-homes',  '/assisted-living/homes'],
+    ];
+
+    return HOSTS.flatMap((host) =>
+      legacy.map(([source, destination]) => ({
+        source,
+        destination,
+        permanent: true,
+        has: [{ type: 'host', value: host }],
+      }))
+    );
+  },
 }
 
 module.exports = nextConfig
