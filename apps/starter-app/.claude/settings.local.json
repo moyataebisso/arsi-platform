@@ -20,7 +20,15 @@
       "Read(//c/Users/ebiss/AppData/Local/Temp/claude/C--Users-ebiss-Projects-arsi-platform-apps-starter-app/c8fbb050-0d5c-4488-a1e1-5872aeb7a3b1/tasks/**)",
       "Read(//c/Users/ebiss/Projects/arsi-platform/**)",
       "Read(//c/Users/ebiss/Projects/**)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "PowerShell(Get-ChildItem -Path src\\\\lib\\\\supabase -File | ForEach-Object { $_.Name })",
+      "PowerShell(Get-ChildItem -Path src\\\\components\\\\sections\\\\HeroSection.tsx | Select-String -Pattern \"ImageOverlayHero|rgba|linear-gradient|backdrop|mix-blend|bg-slate|bg-navy\" | ForEach-Object { \"{0}: {1}\" -f $_.LineNumber, $_.Line.Trim\\(\\) })",
+      "PowerShell(Get-ChildItem -Path src\\\\components\\\\sections\\\\HeroSection.tsx | Select-String -Pattern \"font-jakarta|function VideoHero|function BlockHero|function TerminalHero|// VIDEO_HERO|// BLOCK_HERO|// TERMINAL_HERO\" | ForEach-Object { \"{0}: {1}\" -f $_.LineNumber, $_.Line.Trim\\(\\) })",
+      "PowerShell(Get-ChildItem -Path src\\\\lib\\\\theme.ts | Select-String -Pattern \"headerBackground\" | ForEach-Object { \"{0}: {1}\" -f $_.LineNumber, $_.Line.Trim\\(\\) })",
+      "PowerShell(Get-ChildItem -Path src\\\\lib\\\\content\\\\resolver.ts | Select-String -Pattern \"getHomeServicesContent|from\\\\\\('services'\\\\\\)|\\\\.order\\\\\\(\" | ForEach-Object { \"{0}: {1}\" -f $_.LineNumber, $_.Line.Trim\\(\\) })",
+      "Bash(vercel --version)",
+      "Bash(curl -sI https://arsitechgroup.com)",
+      "Bash(curl -sI https://www.arsitechgroup.com)"
     ]
   }
 }
