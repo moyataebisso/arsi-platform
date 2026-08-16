@@ -7,10 +7,18 @@ import { getSiteSetting } from '@/lib/settings'
 // deployments read from different schemas, so routing is isolated):
 //   1. notification_emails (JSON array) — multi-recipient override
 //   2. contact_email (single string) — the tenant's primary inbox
-//   3. arsitechgroup@gmail.com — safe operator fallback if a tenant
-//      has neither key seeded. Never falls through to another tenant.
-const DEFAULT_FALLBACK = 'arsitechgroup@gmail.com'
-
+//
+// If neither key is set, this returns [] and the caller MUST skip the
+// send (see routes: they write the DB row first, then send email; a []
+// return from here just means no operator email goes out for this
+// submission — the lead itself is still persisted).
+//
+// The previous behavior was to fall back to arsitechgroup@gmail.com,
+// which silently routed real tenants' healthcare leads to a personal
+// inbox — a compliance-hostile default that hid misconfigured tenants
+// behind a working-looking email flow. Removing the fallback surfaces
+// the misconfiguration loudly in logs the first time a form is
+// submitted, without leaking PII to the wrong recipient.
 function isValidEmail(s: unknown): s is string {
   return typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
 }
@@ -48,14 +56,10 @@ export async function getNotificationRecipients(): Promise<string[]> {
     if (isValidEmail(value)) return [value]
   } catch { /* fall through */ }
 
-  // Silent misconfiguration was routing tenants' leads to arsitechgroup@gmail.com
-  // without any signal in the logs. Emit a loud error including the resolved
-  // schema so a duplicate row, a missing row, or a wrong SUPABASE_SCHEMA env
-  // shows up in Vercel logs the first time a form is submitted.
-  console.error('[recipients] tenant lookup failed, using fallback', {
+  console.error('[recipients] tenant has no notification_emails or contact_email — skipping operator email', {
     schema: process.env.SUPABASE_SCHEMA,
   })
-  return [DEFAULT_FALLBACK]
+  return []
 }
 
 // Blind-copy list for form notifications. site_settings key: notification_bcc.

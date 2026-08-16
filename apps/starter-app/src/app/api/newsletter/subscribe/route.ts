@@ -6,31 +6,31 @@ import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recip
 import { getSiteSetting } from '@/lib/settings'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
+import { guard, SILENT_SUCCESS_BODY, isValidEmail, stripHeaderValue, escapeHtml } from '@/lib/security/form-guard'
 
 const RATE_LIMIT_MAX = 3
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
 
 export async function POST(request: NextRequest) {
   try {
+    const body = await request.json()
+
+    // form-guard runs BEFORE the module gate so bots cannot use the 404
+    // response to fingerprint which tenants have the newsletter enabled.
+    const decision = guard({ body, emailField: 'email' })
+    if (decision.action === 'silent-drop') {
+      return NextResponse.json(SILENT_SUCCESS_BODY)
+    }
+    if (decision.action === 'reject') {
+      return NextResponse.json({ error: decision.error }, { status: decision.status })
+    }
+
     const enabled = await getEnabledModules()
     if (!enabled.community_subscribe) {
       return NextResponse.json({ error: 'Not enabled' }, { status: 404 })
     }
 
-    const body = await request.json()
-
-    const honeypot = typeof body.website === 'string' ? body.website.trim() : ''
-    if (honeypot) {
-      return NextResponse.json({ success: true })
-    }
-
     const rawEmail = String(body.email || '').trim()
-    if (!rawEmail) {
-      return NextResponse.json({ error: 'Email required' }, { status: 400 })
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
-      return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
-    }
     const email = rawEmail.toLowerCase()
 
     const ip = getClientIp(request)
@@ -73,12 +73,15 @@ export async function POST(request: NextRequest) {
     const businessNameRaw = await getSiteSetting('business_name')
     const brand = (businessNameRaw || '').trim() || 'our care community'
 
+    const safeBrand = escapeHtml(brand)
+    const safeEmail = escapeHtml(email)
+
     if (persisted) {
       try {
         await sendEmail({
           to: email,
           subject: `You are subscribed to updates from ${brand}`,
-          html: `<p>Thanks for subscribing to <strong>${brand}</strong>.</p><p>We will keep you in the loop with news and updates. If this was not you, please ignore this message.</p>`,
+          html: `<p>Thanks for subscribing to <strong>${safeBrand}</strong>.</p><p>We will keep you in the loop with news and updates. If this was not you, please ignore this message.</p>`,
           text: `Thanks for subscribing to ${brand}. We will keep you in the loop with news and updates. If this was not you, please ignore this message.`,
         })
       } catch (emailError) {
@@ -91,12 +94,14 @@ export async function POST(request: NextRequest) {
         getNotificationRecipients(),
         getNotificationBcc(),
       ])
+      const safeReplyTo = stripHeaderValue(email)
+      const replyToArg = isValidEmail(safeReplyTo) ? safeReplyTo : undefined
       await sendEmail({
         to: recipients,
         bcc,
-        replyTo: email,
+        replyTo: replyToArg,
         subject: `New newsletter subscriber — ${brand}`,
-        html: `<p>Someone subscribed to updates from <strong>${brand}</strong>.</p><p>Email: <a href="mailto:${email}">${email}</a></p>`,
+        html: `<p>Someone subscribed to updates from <strong>${safeBrand}</strong>.</p><p>Email: <a href="mailto:${safeEmail}">${safeEmail}</a></p>`,
         text: `Someone subscribed to updates from ${brand}. Email: ${email}`,
       })
     } catch (emailError) {

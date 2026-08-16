@@ -1,10 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { Honeypot, useMountTimestamp } from '@/components/security/Honeypot'
 
 export function EventRegistrationForm({ eventId }: { eventId: string }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [website, setWebsite] = useState('')
+  const mt = useMountTimestamp()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -17,7 +20,7 @@ export function EventRegistrationForm({ eventId }: { eventId: string }) {
       const res = await fetch('/api/events/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, name, email }),
+        body: JSON.stringify({ eventId, name, email, website, _mt: mt }),
       })
       const data = await res.json()
       if (data.success) {
@@ -61,6 +64,7 @@ export function EventRegistrationForm({ eventId }: { eventId: string }) {
           className="w-full border rounded-lg px-3 py-2 text-sm"
           style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-card-bg)', color: 'var(--color-text)' }}
         />
+        <Honeypot value={website} onChange={setWebsite} />
         {message && (
           <p className={`text-sm ${message.includes('registered') ? 'text-green-600' : 'text-red-600'}`}>
             {message}

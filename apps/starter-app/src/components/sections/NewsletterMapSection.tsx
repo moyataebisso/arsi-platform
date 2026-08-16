@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Honeypot, useMountTimestamp } from '@/components/security/Honeypot'
 
 interface NewsletterMapSectionProps {
   headline?: string
@@ -24,6 +25,8 @@ export function NewsletterMapSection({
   const addr = (address || '').trim()
 
   const [email, setEmail] = useState('')
+  const [website, setWebsite] = useState('')
+  const mt = useMountTimestamp()
   const [state, setState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [error, setError] = useState('')
 
@@ -36,7 +39,7 @@ export function NewsletterMapSection({
       const res = await fetch('/api/email/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), website, _mt: mt }),
       })
       if (!res.ok) throw new Error('Subscription failed')
       setState('success')
@@ -98,6 +101,7 @@ export function NewsletterMapSection({
               >
                 {state === 'success' ? 'Subscribed' : state === 'submitting' ? 'Sending…' : 'Submit'}
               </button>
+              <Honeypot value={website} onChange={setWebsite} />
             </form>
             {state === 'error' && (
               <p className="mt-3 text-sm" style={{ color: '#f87171' }}>

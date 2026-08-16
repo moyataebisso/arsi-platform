@@ -2,12 +2,15 @@
 
 import { useState } from 'react'
 import { Star } from 'lucide-react'
+import { Honeypot, useMountTimestamp } from '@/components/security/Honeypot'
 
 export function ReviewForm() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [rating, setRating] = useState(5)
   const [content, setContent] = useState('')
+  const [website, setWebsite] = useState('')
+  const mt = useMountTimestamp()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -20,7 +23,14 @@ export function ReviewForm() {
       const res = await fetch('/api/reviews/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authorName: name, authorEmail: email, rating, content }),
+        body: JSON.stringify({
+          authorName: name,
+          authorEmail: email,
+          rating,
+          content,
+          website,
+          _mt: mt,
+        }),
       })
       const data = await res.json()
       if (data.success) {
@@ -91,6 +101,7 @@ export function ReviewForm() {
           className="w-full border rounded-lg px-3 py-2 text-sm"
           style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-card-bg)', color: 'var(--color-text)' }}
         />
+        <Honeypot value={website} onChange={setWebsite} />
         {message && (
           <p className={`text-sm ${message.includes('Thank') ? 'text-green-600' : 'text-red-600'}`}>
             {message}

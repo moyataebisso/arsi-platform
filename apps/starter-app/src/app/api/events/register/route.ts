@@ -3,6 +3,7 @@ import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
 import { sendEventRegistration } from '@/lib/emails/triggers'
 import { siteConfig } from '@config'
 import { z } from 'zod'
+import { guard, SILENT_SUCCESS_BODY } from '@/lib/security/form-guard'
 
 const schema = z.object({
   eventId: z.string().uuid(),
@@ -11,6 +12,20 @@ const schema = z.object({
 })
 
 export async function POST(request: Request) {
+  const body = await request.json()
+
+  const decision = guard({
+    body,
+    nameFields: ['name'],
+    emailField: 'email',
+  })
+  if (decision.action === 'silent-drop') {
+    return Response.json(SILENT_SUCCESS_BODY)
+  }
+  if (decision.action === 'reject') {
+    return Response.json({ error: decision.error }, { status: decision.status })
+  }
+
   if (!siteConfig.modules.events) {
     return Response.json({ error: 'Not enabled' }, { status: 404 })
   }
@@ -19,7 +34,6 @@ export async function POST(request: Request) {
   const { success } = rateLimit(`event_reg_${ip}`, 5, 60_000)
   if (!success) return Response.json({ error: 'Too many requests' }, { status: 429 })
 
-  const body = await request.json()
   const parsed = schema.safeParse(body)
   if (!parsed.success) return Response.json({ error: parsed.error.flatten() }, { status: 400 })
 

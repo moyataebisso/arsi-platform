@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Honeypot, useMountTimestamp } from '@/components/security/Honeypot'
 
 // Fixed set of care-seeker options. Kept as a constant so the server-side
 // validator in /api/referrals can reuse the same list — any drift would let
@@ -35,6 +36,8 @@ const INITIAL: ReferralFormState = {
 
 export function ReferralForm() {
   const [data, setData] = useState<ReferralFormState>(INITIAL)
+  const [website, setWebsite] = useState('')
+  const mt = useMountTimestamp()
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   function set<K extends keyof ReferralFormState>(key: K, value: ReferralFormState[K]) {
@@ -48,7 +51,7 @@ export function ReferralForm() {
       const res = await fetch('/api/referrals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, website, _mt: mt }),
       })
       setStatus(res.ok ? 'success' : 'error')
     } catch {
@@ -235,6 +238,8 @@ export function ReferralForm() {
           style={inputStyle}
         />
       </div>
+
+      <Honeypot value={website} onChange={setWebsite} />
 
       {status === 'error' && (
         <p className="text-sm text-red-600">

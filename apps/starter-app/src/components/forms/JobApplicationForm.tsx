@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { Honeypot, useMountTimestamp } from '@/components/security/Honeypot'
 
 interface JobApplicationFormState {
   fullName: string
@@ -10,7 +11,6 @@ interface JobApplicationFormState {
   availability: string[]
   yearsExperience: string
   message: string
-  website: string
 }
 
 const INITIAL: JobApplicationFormState = {
@@ -21,7 +21,6 @@ const INITIAL: JobApplicationFormState = {
   availability: [],
   yearsExperience: '',
   message: '',
-  website: '',
 }
 
 const AVAILABILITY_OPTIONS = [
@@ -44,6 +43,8 @@ interface JobApplicationFormProps {
 
 export function JobApplicationForm({ roles }: JobApplicationFormProps) {
   const [data, setData] = useState<JobApplicationFormState>(INITIAL)
+  const [website, setWebsite] = useState('')
+  const mt = useMountTimestamp()
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [file, setFile] = useState<File | null>(null)
@@ -97,6 +98,8 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
       // string field the server already parses. Empty selection sends '' so the
       // server's `availability || null` insert branch still stores NULL.
       fd.append('availability', availability.join(', '))
+      fd.append('website', website)
+      fd.append('_mt', String(mt))
       if (file) fd.append('resume', file, file.name)
 
       const res = await fetch('/api/jobs/apply', {
@@ -354,18 +357,7 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
         )}
       </div>
 
-      <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, overflow: 'hidden' }}>
-        <label>
-          Website
-          <input
-            type="text"
-            tabIndex={-1}
-            autoComplete="off"
-            value={data.website}
-            onChange={(e) => set('website', e.target.value)}
-          />
-        </label>
-      </div>
+      <Honeypot value={website} onChange={setWebsite} />
 
       {status === 'error' && (
         <p className="text-sm text-red-600">{errorMessage}</p>

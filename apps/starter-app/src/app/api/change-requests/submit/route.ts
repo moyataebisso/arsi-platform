@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
+import { escapeHtml } from '@/lib/security/form-guard'
 import { Resend } from 'resend'
 
 export async function POST(request: Request) {
@@ -44,6 +45,14 @@ export async function POST(request: Request) {
     )
   }
 
+  // Every user-supplied value below flows through escapeHtml — the operator
+  // and client emails must not become an XSS vector when a request payload
+  // contains a raw <script> or an unclosed tag.
+  const safeBusiness = escapeHtml(businessName)
+  const safeClientEmail = escapeHtml(clientEmail)
+  const safeType = escapeHtml(requestType || 'General')
+  const safeDescription = escapeHtml(description)
+
   // Send email to Arsi Technology Group
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
@@ -57,15 +66,15 @@ export async function POST(request: Request) {
           <table style="width:100%;border-collapse:collapse">
             <tr>
               <td style="padding:8px;background:#f5f5f5;font-weight:bold;width:140px">Business</td>
-              <td style="padding:8px;border:1px solid #ddd">${businessName}</td>
+              <td style="padding:8px;border:1px solid #ddd">${safeBusiness}</td>
             </tr>
             <tr>
               <td style="padding:8px;background:#f5f5f5;font-weight:bold">Email</td>
-              <td style="padding:8px;border:1px solid #ddd">${clientEmail}</td>
+              <td style="padding:8px;border:1px solid #ddd">${safeClientEmail}</td>
             </tr>
             <tr>
               <td style="padding:8px;background:#f5f5f5;font-weight:bold">Type</td>
-              <td style="padding:8px;border:1px solid #ddd">${requestType || 'General'}</td>
+              <td style="padding:8px;border:1px solid #ddd">${safeType}</td>
             </tr>
             <tr>
               <td style="padding:8px;background:#f5f5f5;font-weight:bold">Priority</td>
@@ -75,7 +84,7 @@ export async function POST(request: Request) {
             </tr>
             <tr>
               <td style="padding:8px;background:#f5f5f5;font-weight:bold">Request</td>
-              <td style="padding:8px;border:1px solid #ddd">${description}</td>
+              <td style="padding:8px;border:1px solid #ddd">${safeDescription}</td>
             </tr>
           </table>
           <p style="margin-top:24px;color:#888;font-size:12px">
@@ -101,13 +110,13 @@ export async function POST(request: Request) {
           <h2 style="color:#1E3A5F">We got your request!</h2>
           <p>Hi there,</p>
           <p>We received your change request for
-             <strong>${businessName}</strong> and will
+             <strong>${safeBusiness}</strong> and will
              get back to you within 24 hours.</p>
           <div style="background:#f5f5f5;padding:16px;
                       border-radius:8px;margin:16px 0;
                       border-left:4px solid #2563EB">
             <strong>Your request:</strong><br>
-            <p style="margin:8px 0 0">${description}</p>
+            <p style="margin:8px 0 0">${safeDescription}</p>
           </div>
           ${priority === 'urgent' ? `
             <p style="color:#dc2626;font-weight:bold">

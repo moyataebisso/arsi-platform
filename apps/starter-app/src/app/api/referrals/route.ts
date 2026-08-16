@@ -7,15 +7,33 @@ import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recip
 import { getSiteSetting } from '@/lib/settings'
 import { siteConfig } from '@config'
 import { getEnabledModules } from '@/lib/enabled-modules'
+import { guard, SILENT_SUCCESS_BODY, isValidEmail, stripHeaderValue } from '@/lib/security/form-guard'
 
 export async function POST(request: NextRequest) {
   try {
+    const body = await request.json()
+
+    // Guard first so bots hitting a disabled tenant see the same success-
+    // shaped response as bots hitting an enabled one — module-enabled state
+    // must not leak. Name-field gibberish check covers referrerName only;
+    // organization can legitimately be a single-word acronym.
+    const decision = guard({
+      body,
+      nameFields: ['referrerName'],
+      emailField: 'email',
+    })
+    if (decision.action === 'silent-drop') {
+      return NextResponse.json(SILENT_SUCCESS_BODY)
+    }
+    if (decision.action === 'reject') {
+      return NextResponse.json({ error: decision.error }, { status: decision.status })
+    }
+
     const enabled = await getEnabledModules()
     if (!enabled.referrals) {
       return NextResponse.json({ error: 'Not enabled' }, { status: 404 })
     }
 
-    const body = await request.json()
     const referrerName = String(body.referrerName || '').trim()
     const organization = String(body.organization || '').trim()
     const role = body.role ? String(body.role).trim() : ''
@@ -93,7 +111,13 @@ export async function POST(request: NextRequest) {
           notes,
           business,
         })
-        await sendEmail({ to: recipients, bcc, replyTo: email, ...template })
+        // Second-line defense on replyTo: the submitter's address is user-
+        // controlled and flows into an SMTP header, so revalidate + strip
+        // CR/LF before Resend sees it, even though the guard already
+        // rejected malformed emails.
+        const safeReplyTo = stripHeaderValue(email)
+        const replyToArg = isValidEmail(safeReplyTo) ? safeReplyTo : undefined
+        await sendEmail({ to: recipients, bcc, replyTo: replyToArg, ...template })
       } catch (emailError) {
         console.error('Failed to send referral notification email:', emailError)
       }

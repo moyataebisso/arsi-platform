@@ -6,10 +6,24 @@ import { leadNotificationEmail } from '@/lib/email/templates/lead-notification'
 import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recipients'
 import { getSiteSetting } from '@/lib/settings'
 import { siteConfig } from '@config'
+import { guard, SILENT_SUCCESS_BODY, isValidEmail, stripHeaderValue } from '@/lib/security/form-guard'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+
+    const decision = guard({
+      body,
+      nameFields: ['name'],
+      emailField: 'email',
+    })
+    if (decision.action === 'silent-drop') {
+      return NextResponse.json(SILENT_SUCCESS_BODY)
+    }
+    if (decision.action === 'reject') {
+      return NextResponse.json({ error: decision.error }, { status: decision.status })
+    }
+
     const { name, email, phone, message, sourcePage } = body
 
     if (!name || !email || !message) {
@@ -56,8 +70,12 @@ export async function POST(request: NextRequest) {
           sourcePage: sourcePage || '/contact',
           business,
         })
-        // replyTo override: admin's reply goes straight to the lead.
-        await sendEmail({ to: recipients, bcc, replyTo: email, ...template })
+        // replyTo override: admin's reply goes straight to the lead. Second-
+        // line defense against header injection — revalidate + strip CR/LF
+        // even though the guard already rejected malformed emails.
+        const safeReplyTo = stripHeaderValue(email)
+        const replyToArg = isValidEmail(safeReplyTo) ? safeReplyTo : undefined
+        await sendEmail({ to: recipients, bcc, replyTo: replyToArg, ...template })
       } catch (emailError) {
         console.error('Failed to send lead notification email:', emailError)
       }

@@ -7,6 +7,7 @@ import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recip
 import { getSiteSetting } from '@/lib/settings'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
+import { guard, SILENT_SUCCESS_BODY, isValidEmail, stripHeaderValue } from '@/lib/security/form-guard'
 
 const RATE_LIMIT_MAX = 3
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
@@ -81,22 +82,12 @@ async function validateResume(file: File): Promise<ResumeValidation> {
 
 export async function POST(request: NextRequest) {
   try {
-    const enabled = await getEnabledModules()
-    if (!enabled.jobs_application_form) {
-      return NextResponse.json({ error: 'Not enabled' }, { status: 404 })
-    }
-
     let form: FormData
     try {
       form = await request.formData()
     } catch (parseError) {
       console.error('Failed to parse job application form data:', parseError)
       return NextResponse.json({ error: 'Invalid form submission' }, { status: 400 })
-    }
-
-    const honeypot = String(form.get('website') || '').trim()
-    if (honeypot) {
-      return NextResponse.json({ success: true })
     }
 
     const fullName = String(form.get('fullName') || '').trim()
@@ -107,14 +98,35 @@ export async function POST(request: NextRequest) {
     const yearsExperience = String(form.get('yearsExperience') || '').trim()
     const message = String(form.get('message') || '').trim()
 
+    // Adapt FormData → plain object for the guard. Keep this shape narrow so
+    // a bot cannot smuggle extra keys the guard would need to know about.
+    const decision = guard({
+      body: {
+        website: form.get('website'),
+        _mt: form.get('_mt'),
+        fullName,
+        email: rawEmail,
+      },
+      nameFields: ['fullName'],
+      emailField: 'email',
+    })
+    if (decision.action === 'silent-drop') {
+      return NextResponse.json(SILENT_SUCCESS_BODY)
+    }
+    if (decision.action === 'reject') {
+      return NextResponse.json({ error: decision.error }, { status: decision.status })
+    }
+
+    const enabled = await getEnabledModules()
+    if (!enabled.jobs_application_form) {
+      return NextResponse.json({ error: 'Not enabled' }, { status: 404 })
+    }
+
     if (!fullName || !rawEmail || !phone || !position) {
       return NextResponse.json(
         { error: 'Full name, email, phone, and position are required' },
         { status: 400 },
       )
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
-      return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
     }
     const email = rawEmail.toLowerCase()
 
@@ -260,10 +272,12 @@ export async function POST(request: NextRequest) {
         ? `\n\nDownload resume (expires in 7 days): ${signedResumeUrl}`
         : ''
 
+      const safeReplyTo = stripHeaderValue(email)
+      const replyToArg = isValidEmail(safeReplyTo) ? safeReplyTo : undefined
       await sendEmail({
         to: recipients,
         bcc,
-        replyTo: email,
+        replyTo: replyToArg,
         subject: `New job application — ${position} — ${brand}`,
         html: `<p>A new job application was submitted to <strong>${escapeHtml(brand)}</strong>.</p><table style="border-collapse:collapse">${htmlRows}</table>${downloadHtml}`,
         text: `A new job application was submitted to ${brand}.\n\n${textRows}${downloadText}`,

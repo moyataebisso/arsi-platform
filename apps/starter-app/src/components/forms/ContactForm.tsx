@@ -1,9 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { Honeypot, useMountTimestamp } from '@/components/security/Honeypot'
 
 export function ContactForm() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' })
+  const [website, setWebsite] = useState('')
+  const mt = useMountTimestamp()
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   async function handleSubmit(e: React.FormEvent) {
@@ -14,7 +17,12 @@ export function ContactForm() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, sourcePage: window.location.pathname }),
+        body: JSON.stringify({
+          ...formData,
+          sourcePage: window.location.pathname,
+          website,
+          _mt: mt,
+        }),
       })
       setStatus(res.ok ? 'success' : 'error')
     } catch {
@@ -168,6 +176,8 @@ export function ContactForm() {
           Message <span style={{ color: 'var(--color-primary)' }}>*</span>
         </label>
       </div>
+
+      <Honeypot value={website} onChange={setWebsite} />
 
       {status === 'error' && (
         <p className="text-sm text-red-600">

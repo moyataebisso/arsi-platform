@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Honeypot, useMountTimestamp } from '@/components/security/Honeypot'
 
 interface JoinCareCommunityProps {
   headline?: string
@@ -12,6 +13,8 @@ const DEFAULT_SUBHEAD = 'Get occasional updates on programs, events, and resourc
 
 export function JoinCareCommunity({ headline, subhead }: JoinCareCommunityProps) {
   const [email, setEmail] = useState('')
+  const [website, setWebsite] = useState('')
+  const mt = useMountTimestamp()
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   async function handleSubmit(e: React.FormEvent) {
@@ -22,7 +25,7 @@ export function JoinCareCommunity({ headline, subhead }: JoinCareCommunityProps)
       const res = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), website, _mt: mt }),
       })
       setStatus(res.ok ? 'success' : 'error')
     } catch {
@@ -92,6 +95,7 @@ export function JoinCareCommunity({ headline, subhead }: JoinCareCommunityProps)
               >
                 {status === 'loading' ? 'Joining…' : 'Join Now'}
               </button>
+              <Honeypot value={website} onChange={setWebsite} />
             </form>
           )}
         </div>
