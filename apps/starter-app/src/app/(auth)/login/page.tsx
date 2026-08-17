@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { siteConfig } from '@config'
 import Link from 'next/link'
 
 export default function LoginPage() {
@@ -56,9 +55,6 @@ export default function LoginPage() {
       </form>
       <div className="mt-4 text-center text-sm text-gray-600">
         <Link href="/forgot-password" className="text-indigo-600 hover:underline">Forgot password?</Link>
-        {siteConfig.auth.allowRegistration && (
-          <p className="mt-2">Don&apos;t have an account? <Link href="/register" className="text-indigo-600 hover:underline">Sign up</Link></p>
-        )}
       </div>
     </div>
   )

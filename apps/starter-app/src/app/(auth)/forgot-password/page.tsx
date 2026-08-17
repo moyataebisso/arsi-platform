@@ -1,21 +1,29 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { Honeypot, useMountTimestamp } from '@/components/security/Honeypot'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
+  const [website, setWebsite] = useState('')
+  const mt = useMountTimestamp()
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const supabase = createClient()
-    await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    })
+    try {
+      await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, website, _mt: mt }),
+      })
+    } catch {
+      // Swallow — success screen renders regardless so we never reveal
+      // whether the address exists or the request succeeded.
+    }
     setSent(true)
   }
 
@@ -36,6 +44,7 @@ export default function ForgotPasswordPage() {
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
           <input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2" />
         </div>
+        <Honeypot value={website} onChange={setWebsite} />
         <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white rounded-md py-2 hover:bg-indigo-700 disabled:opacity-50">
           {loading ? 'Sending...' : 'Send reset link'}
         </button>

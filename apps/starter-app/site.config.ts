@@ -91,7 +91,6 @@ export const siteConfig = {
   // -- 4. AUTHENTICATION --
   auth: {
     enabled: true,
-    allowRegistration: true,
     requireEmailVerification: true,
     providers: ["email"] as ("email" | "google" | "facebook")[],
   },
