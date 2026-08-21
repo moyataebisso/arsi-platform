@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getSiteSetting, getSiteSettings } from '@/lib/settings'
+import { getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { JobApplicationForm } from '@/components/forms/JobApplicationForm'
@@ -21,10 +21,17 @@ function parseRoles(raw: string | undefined): string[] {
 }
 
 export async function generateMetadata() {
-  const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
+  const enabled = await getEnabledModules()
+  if (!enabled.jobs) return {}
+  const settings = await getSiteSettings([
+    'meta_jobs_description',
+    'seo_description',
+  ])
+  const description =
+    settings.meta_jobs_description || settings.seo_description || ''
   return {
-    title: { absolute: `Careers | Join Our Team | ${brand}` },
-    description: `Join the ${brand} team. We are hiring RNs, LPNs, HHAs, DSPs, caregivers, and administrative staff in Minnesota.`,
+    title: 'Careers',
+    description,
   }
 }
 
