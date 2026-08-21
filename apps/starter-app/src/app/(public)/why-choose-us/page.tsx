@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Check, ArrowRight } from 'lucide-react'
 import { getEnabledModules } from '@/lib/enabled-modules'
-import { getSiteSetting } from '@/lib/settings'
+import { getSiteSetting, getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile, displayBusinessName } from '@/lib/business'
 
 export const dynamic = 'force-dynamic'
@@ -40,10 +40,15 @@ function parseItems(raw: string | null): string[] {
 export async function generateMetadata() {
   const enabled = await getEnabledModules()
   if (!enabled.why_choose_us) return {}
-  const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
+  const settings = await getSiteSettings([
+    'meta_why_choose_us_description',
+    'seo_description',
+  ])
+  const description =
+    settings.meta_why_choose_us_description || settings.seo_description || ''
   return {
-    title: { absolute: `Why Choose Us | ${brand}` },
-    description: `Discover why families and case managers choose ${brand} for home care and HCBS services in Minnesota.`,
+    title: 'Why Choose Us',
+    description,
   }
 }
 

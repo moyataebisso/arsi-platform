@@ -601,9 +601,11 @@ export default function AdminContentPage() {
               {field('meta_about_title', 'About Page Title')}
               {field('meta_about_description', 'About Page Description', { multiline: true, maxLen: 160 })}
               {field('meta_services_title', 'Services Page Title')}
+              {field('meta_services_description', 'Services Page Description', { multiline: true, maxLen: 160 })}
+              {field('meta_why_choose_us_description', 'Why Choose Us Page Description', { multiline: true, maxLen: 160 })}
               {field('meta_contact_title', 'Contact Page Title')}
             </div>
-            {renderSaveButton(['meta_home_title', 'meta_home_description', 'meta_about_title', 'meta_about_description', 'meta_services_title', 'meta_contact_title'])}
+            {renderSaveButton(['meta_home_title', 'meta_home_description', 'meta_about_title', 'meta_about_description', 'meta_services_title', 'meta_services_description', 'meta_why_choose_us_description', 'meta_contact_title'])}
           </div>
         )}
 

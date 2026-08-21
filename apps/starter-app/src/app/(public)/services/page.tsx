@@ -9,16 +9,20 @@ import {
 } from 'lucide-react'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
 import { getServicesContent } from '@/lib/content/resolver'
-import { getSiteSetting } from '@/lib/settings'
+import { getSiteSetting, getSiteSettings } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
-  const brand = ((await getSiteSetting('business_name')) || '').trim() || 'Our Business'
-  return {
-    title: { absolute: `Our Services | Skilled Nursing, HCBS & Home Care | ${brand}` },
-    description: `Explore skilled nursing, personal care, HCBS, homemaker, and respite services provided by ${brand} throughout Minnesota.`,
-  }
+  const settings = await getSiteSettings([
+    'meta_services_title',
+    'meta_services_description',
+    'seo_description',
+  ])
+  const title = (settings.meta_services_title || '').trim() || 'Our Services'
+  const description =
+    settings.meta_services_description || settings.seo_description || ''
+  return { title, description }
 }
 
 // Structured services-page content shape stored at site_settings.services_page_content.

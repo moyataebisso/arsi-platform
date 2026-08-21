@@ -128,16 +128,32 @@ function buildPreviewThemeCSS(themeName: ThemeName): string {
 }
 
 export async function generateMetadata() {
-  const [bn, content] = await Promise.all([
-    getSiteSetting('business_name'),
-    getContentMany(['meta_home_description']),
+  const settings = await getSiteSettings([
+    'meta_home_title',
+    'seo_title',
+    'meta_home_description',
+    'seo_description',
+    'business_description',
   ])
-  const brand = (bn || '').trim() || 'Our Business'
+  const metaHomeTitle = (settings.meta_home_title || '').trim()
+  const seoTitle = (settings.seo_title || '').trim()
+  // absolute only when an explicit meta/SEO title exists. When the chain
+  // falls through, omit `title` so the root layout's `default: seo_title ||
+  // business_name` fires without the `%s | ${business_name}` template
+  // duplicating the brand.
+  const title = metaHomeTitle
+    ? { absolute: metaHomeTitle }
+    : seoTitle
+      ? { absolute: seoTitle }
+      : undefined
+  const description =
+    settings.meta_home_description ||
+    settings.seo_description ||
+    settings.business_description ||
+    ''
   return {
-    // absolute prevents the root layout template (`%s | {business_name}`)
-    // from appending a second brand at the end.
-    title: { absolute: `${brand} | Home Care & HCBS Agency in Minnesota` },
-    description: content.meta_home_description,
+    ...(title ? { title } : {}),
+    description,
   }
 }
 

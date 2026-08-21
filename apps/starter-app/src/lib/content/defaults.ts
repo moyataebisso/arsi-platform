@@ -50,6 +50,8 @@ export const DEFAULTS: Record<string, string> = {
   meta_about_title: safeName ? `About | ${safeName}` : 'About',
   meta_about_description: safeName ? `Learn about ${safeName}` : 'Learn about us',
   meta_services_title: safeName ? `Services | ${safeName}` : 'Services',
+  meta_services_description: '',
+  meta_why_choose_us_description: '',
   meta_contact_title: safeName ? `Contact | ${safeName}` : 'Contact',
 
   // How It Works — neutral default. Layout-specific copy is provided by

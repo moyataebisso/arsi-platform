@@ -40,6 +40,8 @@ export const CONTENT_KEYS = {
   META_ABOUT_TITLE: 'meta_about_title',
   META_ABOUT_DESCRIPTION: 'meta_about_description',
   META_SERVICES_TITLE: 'meta_services_title',
+  META_SERVICES_DESCRIPTION: 'meta_services_description',
+  META_WHY_CHOOSE_US_DESCRIPTION: 'meta_why_choose_us_description',
   META_CONTACT_TITLE: 'meta_contact_title',
 
   // How It Works (fleet layout)
