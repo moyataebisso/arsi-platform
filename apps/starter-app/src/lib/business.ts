@@ -41,11 +41,19 @@ function strip(value: string | undefined | null): string {
   return PLACEHOLDERS.has(value) ? '' : value
 }
 
-function parseJsonArray<T>(value: string | undefined): T[] {
+function parseJsonArray<T>(key: string, value: string | undefined): T[] {
   if (!value) return []
   try {
     const parsed = JSON.parse(value)
-    return Array.isArray(parsed) ? (parsed as T[]) : []
+    if (Array.isArray(parsed)) return parsed as T[]
+    // Silent discard is how Entrusted's object-shaped `hours` went unnoticed
+    // for months — the JSON was valid but not an array, so the reader
+    // returned [] and the tenant silently fell to the siteConfig default.
+    // Return behaviour is unchanged; the warn just surfaces the mismatch.
+    console.warn(
+      `[business] site_settings.${key} is valid JSON but not an array (got ${typeof parsed}) — discarding`,
+    )
+    return []
   } catch {
     return []
   }
@@ -77,10 +85,10 @@ export async function getBusinessProfile(): Promise<BusinessProfile> {
   } catch { /* fall through to siteConfig defaults */ }
 
   const cfgHours = (siteConfig.location.hours as readonly HoursEntry[]) ?? []
-  const dbHours = parseJsonArray<HoursEntry>(s.hours)
+  const dbHours = parseJsonArray<HoursEntry>('hours', s.hours)
   const hours = dbHours.length > 0 ? dbHours : [...cfgHours]
 
-  const team = parseJsonArray<TeamMember>(s.team_members)
+  const team = parseJsonArray<TeamMember>('team_members', s.team_members)
 
   return {
     name: s.business_name || strip(siteConfig.business.name),

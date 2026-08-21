@@ -605,8 +605,11 @@ export default function AdminContentPage() {
               {field('meta_why_choose_us_description', 'Why Choose Us Page Description', { multiline: true, maxLen: 160 })}
               {field('meta_jobs_description', 'Careers Page Description', { multiline: true, maxLen: 160 })}
               {field('meta_contact_title', 'Contact Page Title')}
+              {field('serves_cuisine', 'Cuisine (Restaurant tenants only, e.g. "Ethiopian")', { placeholder: 'Ethiopian' })}
+              {field('accepts_reservations', 'Accepts Reservations (Restaurant tenants only — enter "true" or "false")', { placeholder: 'true' })}
+              {field('open_24_7', 'Open 24/7 for JSON-LD (enter "true" if the business operates continuously — displayed hours are unaffected)', { placeholder: 'false' })}
             </div>
-            {renderSaveButton(['meta_home_title', 'meta_home_description', 'meta_about_title', 'meta_about_description', 'meta_services_title', 'meta_services_description', 'meta_why_choose_us_description', 'meta_jobs_description', 'meta_contact_title'])}
+            {renderSaveButton(['meta_home_title', 'meta_home_description', 'meta_about_title', 'meta_about_description', 'meta_services_title', 'meta_services_description', 'meta_why_choose_us_description', 'meta_jobs_description', 'meta_contact_title', 'serves_cuisine', 'accepts_reservations', 'open_24_7'])}
           </div>
         )}
 

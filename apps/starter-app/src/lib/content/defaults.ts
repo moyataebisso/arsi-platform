@@ -55,6 +55,15 @@ export const DEFAULTS: Record<string, string> = {
   meta_jobs_description: '',
   meta_contact_title: safeName ? `Contact | ${safeName}` : 'Contact',
 
+  // JSON-LD enrichments — consumed by src/components/seo/JsonLd.tsx.
+  // serves_cuisine and accepts_reservations only emit when @type resolves
+  // to Restaurant; open_24_7 emits a Mon-Sun 00:00-23:59 spec for tenants
+  // whose displayed hours block is office hours only (e.g. 24-hour licensed
+  // assisted living). All three default empty / off.
+  serves_cuisine: '',
+  accepts_reservations: '',
+  open_24_7: '',
+
   // How It Works — neutral default. Layout-specific copy is provided by
   // getHowItWorksDefaultsForLayout() in resolver.ts and applied in (public)/page.tsx.
   how_it_works_headline: '',

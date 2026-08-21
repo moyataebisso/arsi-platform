@@ -45,6 +45,11 @@ export const CONTENT_KEYS = {
   META_JOBS_DESCRIPTION: 'meta_jobs_description',
   META_CONTACT_TITLE: 'meta_contact_title',
 
+  // JSON-LD enrichments (see defaults.ts)
+  SERVES_CUISINE: 'serves_cuisine',
+  ACCEPTS_RESERVATIONS: 'accepts_reservations',
+  OPEN_24_7: 'open_24_7',
+
   // How It Works (fleet layout)
   HOW_IT_WORKS_HEADLINE: 'how_it_works_headline',
   HOW_IT_WORKS_SUBTITLE: 'how_it_works_subtitle',

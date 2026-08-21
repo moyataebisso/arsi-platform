@@ -30,6 +30,7 @@ export interface EnabledModules {
   why_choose_us: boolean
   // Restaurant modules (Adama + future food tenants).
   // All default false so non-restaurant tenants are unaffected.
+  menu: boolean
   drinks: boolean
   order_online: boolean
   parties: boolean
@@ -66,6 +67,7 @@ function fromSiteConfig(): EnabledModules {
     founder_bio: m.founder_bio === true,
     payment_cta: m.payment_cta === true,
     why_choose_us: m.why_choose_us === true,
+    menu: m.menu === true,
     drinks: m.drinks === true,
     order_online: m.order_online === true,
     parties: m.parties === true,
