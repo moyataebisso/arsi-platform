@@ -1,5 +1,4 @@
 import { getAdminClient } from '@/lib/supabase/admin'
-import { getContentMany } from '@/lib/content/resolver'
 import { getBusinessProfile } from '@/lib/business'
 import { Star } from 'lucide-react'
 import { MenuItemImage } from '@/components/MenuItemImage'
@@ -7,10 +6,7 @@ import { MenuItemImage } from '@/components/MenuItemImage'
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
-  const { meta_home_title } = await getContentMany(['meta_home_title'])
-  const business = await getBusinessProfile()
-  const brand = business.name || meta_home_title || 'Menu'
-  return { title: `Menu | ${brand}` }
+  return { title: 'Menu' }
 }
 
 type Category = 'starter' | 'main' | 'dessert' | 'drink' | 'side'

@@ -3,15 +3,11 @@ import { notFound } from 'next/navigation'
 import { getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
-import { getContentMany } from '@/lib/content/resolver'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
-  const { meta_home_title } = await getContentMany(['meta_home_title'])
-  const business = await getBusinessProfile()
-  const brand = business.name || meta_home_title || 'Catering'
-  return { title: `Catering | ${brand}` }
+  return { title: 'Catering' }
 }
 
 export default async function CateringPage() {
