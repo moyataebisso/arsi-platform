@@ -5,6 +5,11 @@ import type { NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Expose the current pathname to server components via a request header
+  // so root generateMetadata can construct alternates.canonical. Next.js
+  // doesn't hand generateMetadata the pathname otherwise.
+  request.headers.set('x-pathname', pathname)
+
   // If Supabase env vars are missing, redirect to setup page
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -17,7 +22,7 @@ export async function middleware(request: NextRequest) {
       pathname === '/favicon.ico' ||
       pathname === '/setup'
     ) {
-      return NextResponse.next()
+      return NextResponse.next({ request })
     }
 
     // Redirect everything else to setup

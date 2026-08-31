@@ -25,6 +25,11 @@ export const DEFAULTS: Record<string, string> = {
   hero_subheadline: safeTagline,
   hero_cta_primary: 'Get In Touch',
   hero_cta_secondary: 'Our Services',
+  // Destination for the hero secondary CTA. Default matches the historical
+  // hardcoded `/services` link so tenants without a row in site_settings see
+  // no change. Adama seeds this to `/menu` to bypass the host-scoped 308
+  // redirect from /services → /menu.
+  hero_cta_secondary_href: '/services',
   services_title: 'What We Do Best',
   services_subtitle: 'From consultation to delivery, we provide comprehensive services',
   about_headline: safeName ? `About ${safeName}` : 'About us',
@@ -45,6 +50,9 @@ export const DEFAULTS: Record<string, string> = {
     ? `${safeTagline}.${safeFooterServingClause}`
     : `Dedicated to serving our community.${safeFooterServingClause}`,
   footer_about_text: safeName ? `${safeName} is dedicated to serving our community.` : 'Dedicated to serving our community.',
+  // Header rendered above the office-hours block in the footer. Restaurants
+  // override this to "Hours" or similar; default preserves prior wording.
+  footer_hours_heading: 'Office Hours',
   meta_home_title: safeDefaultTitle,
   meta_home_description: safeDefaultDescription,
   meta_about_title: safeName ? `About | ${safeName}` : 'About',

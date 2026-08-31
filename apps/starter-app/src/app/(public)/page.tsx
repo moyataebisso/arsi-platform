@@ -187,7 +187,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const content = await getContentMany([
     'hero_headline', 'hero_subheadline',
-    'hero_cta_primary', 'hero_cta_secondary',
+    'hero_cta_primary', 'hero_cta_secondary', 'hero_cta_secondary_href',
     'services_title', 'services_subtitle',
     'about_headline', 'about_body', 'about_text', 'about_quote', 'about_cta_text',
     'about_image', 'about_image_1', 'about_image_2',
@@ -389,6 +389,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         subheadline={content.hero_subheadline}
         ctaPrimary={content.hero_cta_primary}
         ctaSecondary={content.hero_cta_secondary}
+        ctaSecondaryHref={content.hero_cta_secondary_href}
         heroImageUrl={heroImage || undefined}
         heroBackgroundUrl={heroBackgroundUrl || undefined}
         heroBadgeText={heroBadgeText || undefined}
@@ -437,6 +438,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         hours={business.hours}
         hoursNote={hoursNote || undefined}
         googleMapsEmbed={business.googleMapsEmbed}
+        businessName={business.name}
       />
     ) : null,
     contact: siteConfig.modules.leads ? (

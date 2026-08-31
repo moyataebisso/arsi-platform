@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import './globals.css'
 import { siteConfig } from '@config'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { getSiteSettings } from '@/lib/settings'
+import { resolveBaseUrl } from '@/lib/site-url'
 import { Analytics } from '@vercel/analytics/next'
 import { Playfair_Display, DM_Sans, Dancing_Script, Plus_Jakarta_Sans, Space_Grotesk, DM_Mono, JetBrains_Mono } from 'next/font/google'
 
@@ -95,9 +97,32 @@ const themeFontMap: Record<string, string> = {
   crimson: dmSans.className,
 }
 
-const siteUrl = siteConfig.siteUrl
-
 export async function generateMetadata(): Promise<Metadata> {
+  // Read per-request. Was a module-level `const siteUrl = siteConfig.siteUrl`
+  // which baked the build-time env var into the bundle — when
+  // NEXT_PUBLIC_SITE_URL was unset for a tenant's Vercel project the
+  // literal 'https://example.com' shipped in every og:url / og:image /
+  // twitter:image / metadataBase. resolveBaseUrl() reads NEXT_PUBLIC_SITE_URL
+  // first, then falls back to VERCEL_PROJECT_PRODUCTION_URL, so both are
+  // reachable per request.
+  const siteUrl = resolveBaseUrl()
+  const hdrs = headers()
+  const host = (hdrs.get('host') || '').toLowerCase()
+  // x-pathname is set in middleware.ts. If it's missing (route somehow
+  // bypassed middleware, or the header was stripped upstream), OMIT the
+  // canonical tag entirely rather than defaulting to '/' — a wrong canonical
+  // pointing at the homepage would deindex every non-root page. No
+  // canonical is safe; a wrong one is not.
+  const rawPathname = hdrs.get('x-pathname')
+  const canonical =
+    rawPathname && rawPathname.startsWith('/')
+      ? `${siteUrl.replace(/\/$/, '')}${rawPathname}`
+      : null
+  // Preview deploys serve identical HTML on *.vercel.app alongside the
+  // custom domain(s). Flip robots to noindex/nofollow when we detect a
+  // preview host so search engines don't split-rank duplicates. Custom
+  // domains hit the else branch and keep index/follow.
+  const isPreviewHost = host.endsWith('.vercel.app')
   const settings = await getSiteSettings([
     'business_name',
     'tagline',
@@ -143,6 +168,7 @@ export async function generateMetadata(): Promise<Metadata> {
     authors: [{ name: businessName }],
     creator: businessName,
     metadataBase: new URL(siteUrl),
+    ...(canonical ? { alternates: { canonical } } : {}),
     // When a customer has favicon_url (or legacy logo_url) set, use it as the
     // favicon. Otherwise no icons key is emitted and the browser falls back
     // to its own default (globe / blank).
@@ -172,11 +198,11 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [siteConfig.seo.ogImage || '/og-image.jpg'],
     },
     robots: {
-      index: true,
-      follow: true,
+      index: !isPreviewHost,
+      follow: !isPreviewHost,
       googleBot: {
-        index: true,
-        follow: true,
+        index: !isPreviewHost,
+        follow: !isPreviewHost,
         'max-video-preview': -1,
         'max-image-preview': 'large',
         'max-snippet': -1,

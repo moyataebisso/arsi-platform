@@ -12,6 +12,10 @@ interface LocationSectionProps {
   hours?: { day: string; hours: string }[]
   hoursNote?: string
   googleMapsEmbed?: string
+  // DB-driven display name (site_settings.business_name). Fed into the map
+  // iframe title attribute so it reads "Map of <Tenant>" instead of the
+  // site.config.ts placeholder "Client Business Name".
+  businessName?: string
 }
 
 function isClosedDay(value: string): boolean {
@@ -26,6 +30,7 @@ export function LocationSection({
   hours,
   hoursNote,
   googleMapsEmbed,
+  businessName,
 }: LocationSectionProps = {}) {
   const cfg = siteConfig.location
   const resolvedAddress = address || cfg.address || ''
@@ -35,6 +40,10 @@ export function LocationSection({
   const resolvedHours: { day: string; hours: string }[] =
     hours && hours.length > 0 ? hours : cfg.hours.map(h => ({ day: h.day, hours: h.hours }))
   const resolvedEmbed = googleMapsEmbed || cfg.googleMapsEmbed || ''
+  // Never render the site.config.ts placeholder in the iframe title.
+  const rawName = (businessName || '').trim() || siteConfig.business.name
+  const mapTitleName =
+    rawName === 'Client Business Name' || !rawName ? 'our location' : rawName
   const fullAddress = `${resolvedAddress}, ${resolvedCity}, ${resolvedState} ${resolvedZip}`.trim()
   const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`
 
@@ -181,7 +190,7 @@ export function LocationSection({
                   style={{ border: 0, display: 'block' }}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title={`Map of ${siteConfig.business.name || 'our location'}`}
+                  title={`Map of ${mapTitleName}`}
                 />
               </div>
             </ScrollReveal>

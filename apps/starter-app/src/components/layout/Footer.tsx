@@ -59,7 +59,7 @@ export async function Footer({
 }: FooterProps = {}) {
   const { integrations, pages, modules } = siteConfig
   const profile = await getBusinessProfile()
-  const content = await getContentMany(['footer_tagline'])
+  const content = await getContentMany(['footer_tagline', 'footer_hours_heading'])
   const socialSettings = await getSiteSettings([
     'social_facebook',
     'social_linkedin',
@@ -68,6 +68,10 @@ export async function Footer({
     'hours_note',
   ])
   const hoursNote = (socialSettings.hours_note || '').trim()
+  // Heading rendered above the office-hours block. Default in defaults.ts
+  // matches the historical "Office Hours" string so tenants without a row
+  // in site_settings see zero change.
+  const hoursHeading = (content.footer_hours_heading || '').trim() || 'Office Hours'
 
   // DB-driven social icons. Built per-tenant so Adama (no keys set) renders
   // no icons row and the footer is byte-identical to before.
@@ -259,7 +263,7 @@ export async function Footer({
                   className="text-xs font-semibold uppercase tracking-wider mb-2"
                   style={{ color: 'var(--color-footer-heading)' }}
                 >
-                  Office Hours
+                  {hoursHeading}
                 </h5>
                 {hoursNote && (
                   <p

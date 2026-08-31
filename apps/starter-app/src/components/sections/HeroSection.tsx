@@ -17,6 +17,12 @@ interface HeroSectionProps {
   subheadline?: string
   ctaPrimary?: string
   ctaSecondary?: string
+  // Destination for the secondary CTA. site_settings key:
+  // hero_cta_secondary_href. Default '/services' when unset — keeps every
+  // tenant that hasn't seeded the row byte-identical. Adama seeds this to
+  // '/menu' so the button no longer clicks through the host-scoped 308
+  // /services → /menu redirect.
+  ctaSecondaryHref?: string
   heroImageUrl?: string
   // Optional full-bleed background image rendered on the SplitHero
   // wrapper. When set, the original animated gradient + accent shapes
@@ -178,6 +184,7 @@ function getDisplayValues(props: VariantProps) {
     ctaPrimary:
       props.ctaPrimary || (modules.booking ? 'Book Appointment' : modules.ecommerce ? 'Shop Now' : 'Get In Touch'),
     ctaSecondary: props.ctaSecondary || 'Our Services',
+    ctaSecondaryHref: (props.ctaSecondaryHref || '').trim() || '/services',
   }
 }
 
@@ -282,7 +289,7 @@ function SolidColorHero(props: VariantProps) {
             <ArrowRight size={16} strokeWidth={2.5} />
           </Link>
           <Link
-            href="/services"
+            href={display.ctaSecondaryHref}
             className="inline-flex items-center justify-center rounded-md transition-colors hover:bg-white/10"
             style={{
               backgroundColor: 'transparent',
@@ -424,7 +431,7 @@ function ImageOverlayHero(props: VariantProps) {
             <ArrowRight size={16} strokeWidth={2.5} />
           </Link>
           <Link
-            href="/services"
+            href={display.ctaSecondaryHref}
             className="inline-flex items-center justify-center rounded-md transition-colors hover:bg-white/10"
             style={{
               backgroundColor: 'transparent',
@@ -469,6 +476,7 @@ function SplitHero(props: VariantProps) {
   const displaySubheadline = subheadline || tagline || 'We provide exceptional services tailored to your needs. Let us help you achieve your goals with our dedicated team of professionals.'
   const displayCtaPrimary = ctaPrimary || (modules.booking ? 'Book Appointment' : modules.ecommerce ? 'Shop Now' : 'Get In Touch')
   const displayCtaSecondary = ctaSecondary || 'Our Services'
+  const displayCtaSecondaryHref = (props.ctaSecondaryHref || '').trim() || '/services'
 
   const imageUrl = heroImageUrl || 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=1200&q=80'
 
@@ -581,7 +589,7 @@ function SplitHero(props: VariantProps) {
                 </Link>
               )}
               <Link
-                href="/services"
+                href={displayCtaSecondaryHref}
                 className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl font-semibold text-base border-2 transition-all duration-200 hover:-translate-y-0.5"
                 style={{
                   color: 'var(--color-primary)',
@@ -882,7 +890,7 @@ function RoundedCardHero(props: VariantProps) {
                   {display.ctaPrimary}
                 </Link>
                 <Link
-                  href="/services"
+                  href={display.ctaSecondaryHref}
                   className="inline-flex items-center justify-center transition-colors"
                   style={{
                     backgroundColor: '#ecfdf5',
@@ -987,7 +995,7 @@ function TerminalHero(props: VariantProps) {
               <ArrowRight size={16} strokeWidth={2.5} />
             </Link>
             <Link
-              href="/services"
+              href={display.ctaSecondaryHref}
               className="inline-flex items-center justify-center rounded-md"
               style={{
                 backgroundColor: 'transparent',
@@ -1182,7 +1190,7 @@ function VideoHero(props: VariantProps) {
             </Link>
           )}
           <Link
-            href="/services"
+            href={display.ctaSecondaryHref}
             className="inline-flex items-center justify-center transition-all hover:text-[color:var(--color-primary)]"
             style={{
               color: '#F4F1E8',
@@ -1212,6 +1220,7 @@ export function HeroSection(props: HeroSectionProps) {
     subheadline: props.subheadline,
     ctaPrimary: props.ctaPrimary,
     ctaSecondary: props.ctaSecondary,
+    ctaSecondaryHref: props.ctaSecondaryHref,
     heroImageUrl: props.heroImageUrl,
     heroBackgroundUrl: props.heroBackgroundUrl,
     heroBadgeText: props.heroBadgeText,

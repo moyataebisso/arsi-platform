@@ -7,6 +7,7 @@ export const CONTENT_KEYS = {
   HERO_SUBHEADLINE: 'hero_subheadline',
   HERO_CTA_PRIMARY: 'hero_cta_primary',
   HERO_CTA_SECONDARY: 'hero_cta_secondary',
+  HERO_CTA_SECONDARY_HREF: 'hero_cta_secondary_href',
 
   // Services Section
   SERVICES_TITLE: 'services_title',
@@ -33,6 +34,7 @@ export const CONTENT_KEYS = {
   // Footer
   FOOTER_TAGLINE: 'footer_tagline',
   FOOTER_ABOUT_TEXT: 'footer_about_text',
+  FOOTER_HOURS_HEADING: 'footer_hours_heading',
 
   // SEO / Meta
   META_HOME_TITLE: 'meta_home_title',

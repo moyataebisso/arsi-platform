@@ -2,13 +2,13 @@ import { siteConfig } from '@config'
 import { getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile, type HoursEntry } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
+import { resolveBaseUrl } from '@/lib/site-url'
 
 // LocalBusiness structured data for Google rich results. All fields are
 // pulled from site_settings via getBusinessProfile / getSiteSettings so
-// each tenant emits its own address, phone, and description. NEXT_PUBLIC_SITE_URL
-// controls the canonical URL — different per Vercel project, so tenants never
-// leak each other's URLs.
-const DEFAULT_BASE_URL = 'https://example.com'
+// each tenant emits its own address, phone, and description. The URL is
+// resolved per request via resolveBaseUrl(): NEXT_PUBLIC_SITE_URL first
+// (build-time env var, per Vercel project), then VERCEL_PROJECT_PRODUCTION_URL.
 
 const DAY_ORDER = [
   'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
@@ -145,7 +145,7 @@ export async function JsonLd() {
     (siteConfig.seo.defaultDescription === 'Your business description here'
       ? ''
       : siteConfig.seo.defaultDescription)
-  const url = process.env.NEXT_PUBLIC_SITE_URL || siteConfig.siteUrl || DEFAULT_BASE_URL
+  const url = resolveBaseUrl()
   const areaServed = (settings.service_area || '').trim() || lb.areaServed || 'Minnesota'
 
   // Precedence for schema @type:

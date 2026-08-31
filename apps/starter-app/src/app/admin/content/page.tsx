@@ -447,9 +447,10 @@ export default function AdminContentPage() {
               {field('hero_subheadline', 'Subheadline')}
               {field('hero_cta_primary', 'Primary Button Text')}
               {field('hero_cta_secondary', 'Secondary Button Text')}
+              {field('hero_cta_secondary_href', 'Secondary Button Link (e.g. /services, /menu)', { placeholder: '/services' })}
               {imageField('hero_image', 'Hero Image', 'hero')}
             </div>
-            {renderSaveButton(['hero_headline', 'hero_subheadline', 'hero_cta_primary', 'hero_cta_secondary', 'hero_image'])}
+            {renderSaveButton(['hero_headline', 'hero_subheadline', 'hero_cta_primary', 'hero_cta_secondary', 'hero_cta_secondary_href', 'hero_image'])}
           </div>
         )}
 
@@ -587,8 +588,9 @@ export default function AdminContentPage() {
               <h2 className="font-semibold text-gray-900">Footer</h2>
               {field('footer_tagline', 'Tagline')}
               {field('footer_about_text', 'About Text', { multiline: true })}
+              {field('footer_hours_heading', 'Hours Heading (default: Office Hours)', { placeholder: 'Office Hours' })}
             </div>
-            {renderSaveButton(['footer_tagline', 'footer_about_text'])}
+            {renderSaveButton(['footer_tagline', 'footer_about_text', 'footer_hours_heading'])}
           </div>
         )}
 
