@@ -22,6 +22,7 @@ const ALLOWED = new Set([
 // but it does pick the sub-folder, so that has to be locked down.
 const ALLOWED_FOLDERS = new Set([
   'logo',
+  'favicon',
   'hero',
   'gallery',
   'team',

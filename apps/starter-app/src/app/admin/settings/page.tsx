@@ -69,6 +69,7 @@ export default function AdminSettingsPage() {
   )
   const [mapsEmbedUrl, setMapsEmbedUrl] = useState(siteConfig.location.googleMapsEmbed || '')
   const [logoUrl, setLogoUrl] = useState('')
+  const [faviconUrl, setFaviconUrl] = useState('')
   const [heroUrl, setHeroUrl] = useState('')
   const [galleryUrls, setGalleryUrls] = useState<string[]>([])
   const [ourHomesGalleryUrls, setOurHomesGalleryUrls] = useState<string[]>([])
@@ -104,6 +105,7 @@ export default function AdminSettingsPage() {
         if (data.color_cta_bg) setColorCtaBg(data.color_cta_bg)
         if (data.color_surface) setColorSurface(data.color_surface)
         if (data.logo_url) setLogoUrl(data.logo_url)
+        if (data.favicon_url) setFaviconUrl(data.favicon_url)
         if (data.hero_image_url) setHeroUrl(data.hero_image_url)
         if (data.gallery_images) {
           try {
@@ -534,6 +536,34 @@ export default function AdminSettingsPage() {
             }}
             maxSizeMB={2}
             label="Upload your business logo"
+          />
+        </div>
+
+        {/* Favicon Upload — optional. When unset the site falls back to
+            logo_url, then to /wajii-default-icon.svg. See app/layout.tsx. */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="font-semibold text-gray-900 mb-4">Favicon</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Optional. Small icon shown in browser tabs and bookmarks. If left blank,
+            your logo is used; if no logo is uploaded either, a neutral default is shown.
+            A 32×32 or 64×64 PNG works best.
+          </p>
+          <ImageUpload
+            folder="favicon"
+            aspectRatio="square"
+            currentUrl={faviconUrl || undefined}
+            onUpload={async url => {
+              setFaviconUrl(url)
+              await saveSetting('favicon_url', url)
+              showToast('Favicon saved!')
+            }}
+            onDelete={async () => {
+              setFaviconUrl('')
+              await saveSetting('favicon_url', '')
+              showToast('Favicon removed')
+            }}
+            maxSizeMB={1}
+            label="Upload a favicon"
           />
         </div>
 

@@ -151,12 +151,18 @@ export async function generateMetadata(): Promise<Metadata> {
   // Favicon precedence:
   //   1. site_settings.favicon_url  (tenant-specific favicon override)
   //   2. site_settings.logo_url     (existing behaviour — legacy fallback)
-  //   3. Neither set → no icons key emitted; browser uses its default.
+  //   3. /wajii-default-icon.svg    (neutral default so browsers never render
+  //                                  a blank tab). Resolved against metadataBase
+  //                                  above, so each tenant's Vercel project
+  //                                  serves it from its own /public folder.
   //
   // The old app/icon.svg file-convention icon was moved to
   // public/wajii-default-icon.svg so it no longer auto-injects and override
   // tenants that only have a logo_url uploaded.
-  const faviconUrl = (settings.favicon_url || '').trim() || settings.logo_url
+  const faviconUrl =
+    (settings.favicon_url || '').trim() ||
+    (settings.logo_url || '').trim() ||
+    '/wajii-default-icon.svg'
 
   return {
     title: {
@@ -169,12 +175,11 @@ export async function generateMetadata(): Promise<Metadata> {
     creator: businessName,
     metadataBase: new URL(siteUrl),
     ...(canonical ? { alternates: { canonical } } : {}),
-    // When a customer has favicon_url (or legacy logo_url) set, use it as the
-    // favicon. Otherwise no icons key is emitted and the browser falls back
-    // to its own default (globe / blank).
-    ...(faviconUrl
-      ? { icons: { icon: faviconUrl, apple: faviconUrl } }
-      : {}),
+    // Emitted unconditionally now that the fallback chain includes a repo
+    // asset (/wajii-default-icon.svg). Prior behavior omitted the key when
+    // favicon_url + logo_url were both absent, which left browsers rendering
+    // a blank tab for un-provisioned tenants.
+    icons: { icon: faviconUrl, apple: faviconUrl },
     openGraph: {
       type: 'website',
       locale: 'en_US',
