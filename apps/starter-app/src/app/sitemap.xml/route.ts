@@ -1,7 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache'
 import { resolveBaseUrl } from '@/lib/site-url'
 import { getEnabledModules, type EnabledModules } from '@/lib/enabled-modules'
-import { getSiteSetting } from '@/lib/settings'
+import { getSiteSettings } from '@/lib/settings'
 
 // Route handler variant of the previous `app/sitemap.ts` MetadataRoute
 // export. Two changes over the MetadataRoute form:
@@ -93,19 +93,23 @@ export async function GET() {
   const enabled = await getEnabledModules()
   const iso = new Date().toISOString()
 
-  // /gallery only appears when the tenant has actually seeded gallery_images.
-  // enabled_modules.gallery alone is not enough — Adama has it true while the
-  // list is empty during rollout, and we don't want crawlers indexing an
-  // empty "Gallery coming soon" page.
-  let hasGalleryImages = false
-  try {
-    const raw = await getSiteSetting('gallery_images')
-    if (raw) {
-      const parsed = JSON.parse(raw) as unknown
-      hasGalleryImages = Array.isArray(parsed) && parsed.length > 0
+  // /gallery has a tenant-scoped rule. When the tenant hasn't seeded a
+  // site_settings.gallery_images row at all, use the a02e21f rule verbatim
+  // (list /gallery whenever enabled_modules.gallery is true). When the row
+  // exists we require BOTH the flag and a non-empty array so tenants who
+  // opted in but seeded [] don't publish an empty gallery page to Google.
+  // getSiteSettings only returns keys whose value_json is non-null, so
+  // presence of the key here == "the tenant has actively chosen a list".
+  const gsettings = await getSiteSettings(['gallery_images'])
+  const gRowPresent = 'gallery_images' in gsettings
+  let gRowNonEmpty = false
+  if (gRowPresent) {
+    try {
+      const parsed = JSON.parse(gsettings.gallery_images) as unknown
+      gRowNonEmpty = Array.isArray(parsed) && parsed.length > 0
+    } catch {
+      gRowNonEmpty = false
     }
-  } catch {
-    hasGalleryImages = false
   }
 
   const entries: string[] = []
@@ -118,8 +122,9 @@ export async function GET() {
     // Suppress /our-homes when the tenant is on license-separated nav; its
     // license-scoped routes replace it.
     if (r.flag === 'our_homes' && enabled.license_separated_nav) continue
-    // /gallery needs both the module flag and a non-empty image list.
-    if (r.flag === 'gallery' && !hasGalleryImages) continue
+    // /gallery: row absent → a02e21f rule (flag alone). Row present →
+    // require the flag AND a non-empty list.
+    if (r.flag === 'gallery' && gRowPresent && !gRowNonEmpty) continue
     if (enabled[r.flag]) {
       entries.push(urlEntry(baseUrl, r.path, iso, r.changeFrequency, r.priority))
     }

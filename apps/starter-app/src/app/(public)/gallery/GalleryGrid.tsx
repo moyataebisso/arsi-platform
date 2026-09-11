@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { isAllowedImageHost } from '@/lib/image-hosts'
 
 export interface GalleryImage {
   url: string
@@ -86,6 +87,7 @@ export function GalleryGrid({ images }: { images: GalleryImage[] }) {
               fill
               loading="lazy"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              unoptimized={!isAllowedImageHost(img.url)}
               className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             />
           </button>
@@ -128,6 +130,7 @@ export function GalleryGrid({ images }: { images: GalleryImage[] }) {
               alt={images[openIndex].alt}
               fill
               sizes="90vw"
+              unoptimized={!isAllowedImageHost(images[openIndex].url)}
               className="object-contain"
               priority
             />

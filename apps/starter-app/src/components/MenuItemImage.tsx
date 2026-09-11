@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { UtensilsCrossed } from 'lucide-react'
+import { isAllowedImageHost } from '@/lib/image-hosts'
 
 interface Props {
   imageUrl: string | null
@@ -60,6 +61,7 @@ export function MenuItemImage({
           loading="lazy"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           onError={() => setErrored(true)}
+          unoptimized={!isAllowedImageHost(imageUrl)}
           className="object-cover"
         />
       </div>

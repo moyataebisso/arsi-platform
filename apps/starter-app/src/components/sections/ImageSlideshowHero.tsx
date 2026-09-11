@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { isAllowedImageHost } from '@/lib/image-hosts'
 
 // Slideshow behind the ImageOverlayHero-style overlay + copy. Renders the
 // first frame server-side with priority so it's the LCP; the rest are lazy
@@ -102,6 +103,7 @@ export function ImageSlideshowHero({
             fill
             priority={i === 0}
             sizes="100vw"
+            unoptimized={!isAllowedImageHost(src)}
             className="object-cover object-center"
           />
         </div>

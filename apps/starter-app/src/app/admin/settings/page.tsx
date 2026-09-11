@@ -72,6 +72,12 @@ export default function AdminSettingsPage() {
   const [faviconUrl, setFaviconUrl] = useState('')
   const [heroUrl, setHeroUrl] = useState('')
   const [galleryUrls, setGalleryUrls] = useState<string[]>([])
+  // Whether the DB row for gallery_images is the newer [{url, alt}] object
+  // shape (seeded via Phase 3 SQL). The admin URL-slot editor only knows
+  // how to persist a string array, so writing from it would clobber the
+  // alt text. When true, the whole editor is hidden with a note explaining
+  // that the row is managed via SQL for now.
+  const [galleryLockedObjects, setGalleryLockedObjects] = useState(false)
   const [ourHomesGalleryUrls, setOurHomesGalleryUrls] = useState<string[]>([])
   const [aboutImage1, setAboutImage1] = useState('')
   const [aboutImage2, setAboutImage2] = useState('')
@@ -111,7 +117,28 @@ export default function AdminSettingsPage() {
           try {
             const parsed = JSON.parse(data.gallery_images)
             if (Array.isArray(parsed)) {
-              setGalleryUrls(parsed.filter((u): u is string => typeof u === 'string'))
+              // Object-shaped rows come from the Phase 3 SQL seed and carry
+              // alt text this URL-slot editor cannot round-trip. Lock the
+              // editor rather than silently strip alts on the next save.
+              const hasObjects = parsed.some(
+                (u) => u && typeof u === 'object' && typeof (u as { url?: unknown }).url === 'string',
+              )
+              if (hasObjects) {
+                setGalleryLockedObjects(true)
+                setGalleryUrls(
+                  parsed
+                    .map((u) =>
+                      typeof u === 'string'
+                        ? u
+                        : u && typeof u === 'object' && typeof (u as { url?: unknown }).url === 'string'
+                          ? ((u as { url: string }).url)
+                          : '',
+                    )
+                    .filter(Boolean),
+                )
+              } else {
+                setGalleryUrls(parsed.filter((u): u is string => typeof u === 'string'))
+              }
             }
           } catch {}
         }
@@ -592,12 +619,28 @@ export default function AdminSettingsPage() {
           />
         </div>
 
-        {/* Gallery Images — only show when the tenant uses the gallery module.
-            site_settings.gallery_images is not currently read by any rendered
-            page; the /gallery page reads from the `gallery_images` TABLE
-            (separate surface). Gating by siteConfig.modules.gallery keeps
-            this card out of admins' way on tenants who don't use it. */}
-        {(siteConfig.modules as Record<string, boolean>).gallery && (
+        {/* Gallery Images — only show when the tenant uses the gallery module
+            AND the DB row is the historical string-array shape. Phase 3 seeds
+            an [{url, alt}] object array for tenants that opt into the new
+            /gallery renderer; this editor only knows how to write strings, so
+            it would strip alts on save. Locked tenants see a read-only note
+            instead of a broken editor. */}
+        {(siteConfig.modules as Record<string, boolean>).gallery && galleryLockedObjects && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="font-semibold text-gray-900 mb-2">Gallery Images</h2>
+          <p className="text-sm text-gray-600">
+            Managed via SQL for this tenant (alt text is stored alongside each URL). Edit
+            <code className="mx-1 px-1.5 py-0.5 bg-gray-100 rounded text-xs">site_settings.gallery_images</code>
+            directly to change the list.
+          </p>
+          {galleryUrls.length > 0 && (
+            <p className="mt-3 text-xs text-gray-500">
+              Currently seeded with {galleryUrls.length} image{galleryUrls.length === 1 ? '' : 's'}.
+            </p>
+          )}
+        </div>
+        )}
+        {(siteConfig.modules as Record<string, boolean>).gallery && !galleryLockedObjects && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-900">Gallery Images</h2>

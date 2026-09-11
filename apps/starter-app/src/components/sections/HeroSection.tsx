@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import type { HeroVariant } from '@/lib/layouts'
 import { displayBusinessName } from '@/lib/business'
 import { ImageSlideshowHero } from './ImageSlideshowHero'
+import { HeroBackgroundCrossfade } from './HeroBackgroundCrossfade'
 
 const PLACEHOLDER_NAME = 'Client Business Name'
 const PLACEHOLDER_TAGLINE = 'Your tagline here'
@@ -1094,6 +1095,13 @@ function VideoHero(props: VariantProps) {
 
   const videoUrl = props.heroVideoUrl || ''
 
+  // Optional crossfade slideshow behind the existing overlay. Only kicks in
+  // when the tenant seeds hero_images with 2+ URLs AND has no hero_video_url
+  // (video would sit on top of the slideshow anyway). 0-1 URLs -> keep the
+  // existing single CSS background-image render byte-for-byte.
+  const slideshowUrls = (props.heroImages || []).map(s => (s || '').trim()).filter(Boolean)
+  const useSlideshow = !videoUrl && slideshowUrls.length >= 2
+
   const subPrimary = display.ctaPrimary
   const subSecondary = display.ctaSecondary
 
@@ -1113,12 +1121,16 @@ function VideoHero(props: VariantProps) {
     <section
       className="relative w-full overflow-hidden min-h-[560px] sm:min-h-[640px] lg:min-h-[720px] flex items-center justify-center"
       style={{
-        backgroundImage: cssUrl(posterUrl),
+        // Suppress the single-image background whenever the crossfade is
+        // active — the slideshow layer paints its own frames from index 0
+        // with priority so the first image is still the LCP.
+        backgroundImage: useSlideshow ? undefined : cssUrl(posterUrl),
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundColor: '#000',
       }}
     >
+      {useSlideshow && <HeroBackgroundCrossfade images={slideshowUrls} />}
       {videoUrl && (
         // eslint-disable-next-line jsx-a11y/media-has-caption
         <video

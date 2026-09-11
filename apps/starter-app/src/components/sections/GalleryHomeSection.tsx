@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
+import { isAllowedImageHost } from '@/lib/image-hosts'
 
 export interface GalleryHomeImage {
   url: string
@@ -63,6 +64,7 @@ export function GalleryHomeSection({
                 fill
                 loading="lazy"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                unoptimized={!isAllowedImageHost(img.url)}
                 className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
               />
             </Link>
