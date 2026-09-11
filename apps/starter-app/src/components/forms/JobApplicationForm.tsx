@@ -52,9 +52,7 @@ const AVAILABILITY_DAY_OPTIONS_OPEN = [
   'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat',
 ] as const
 
-// 5 MB matches the /api/jobs/apply server cap. Bumped from 4 MB in
-// Phase 2 to fit modern PDFs with photos or formatting.
-const MAX_RESUME_BYTES = 5 * 1024 * 1024
+const MAX_RESUME_BYTES = 4 * 1024 * 1024
 const ACCEPTED_RESUME_EXTENSIONS = ['.pdf', '.doc', '.docx']
 
 // Form variant. 'shift_dropdown' preserves the historical single-select
@@ -94,7 +92,7 @@ export function JobApplicationForm({ roles, variant = 'shift_dropdown' }: JobApp
     if (f.size > MAX_RESUME_BYTES) {
       setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
-      setFileError('That file is too large (5 MB max). Please email your resume to us instead.')
+      setFileError('That file is too large (4 MB max). Please email your resume to us instead.')
       return
     }
     const lower = f.name.toLowerCase()
@@ -570,7 +568,7 @@ export function JobApplicationForm({ roles, variant = 'shift_dropdown' }: JobApp
           />
         )}
         <p className="mt-1.5 text-xs" style={{ color: 'var(--color-text-light)' }}>
-          PDF, DOC, or DOCX. Max 5 MB.
+          PDF, DOC, or DOCX. Max 4 MB.
         </p>
         {fileError && (
           <p className="mt-1.5 text-sm text-red-600">{fileError}</p>

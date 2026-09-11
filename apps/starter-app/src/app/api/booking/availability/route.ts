@@ -1,15 +1,9 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
-import { getEnabledModules } from '@/lib/enabled-modules'
-
-export const dynamic = 'force-dynamic'
+import { siteConfig } from '@config'
 
 export async function GET(request: Request) {
-  // Runtime enabled_modules gate — see /api/booking/create for the
-  // August-bug rationale. Static build-time gating hid this route from
-  // tenants that had booking enabled at runtime.
-  const enabled = await getEnabledModules()
-  if (!enabled.booking) {
+  if (!siteConfig.modules.booking) {
     return Response.json({ error: 'Not enabled' }, { status: 404 })
   }
 

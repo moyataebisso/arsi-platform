@@ -44,6 +44,13 @@ export async function POST(request: NextRequest) {
     if (!enabled.booking) {
       return NextResponse.json({ error: 'Not enabled' }, { status: 404 })
     }
+    // Only tenants running the request-mode form (Adama). Other tenants
+    // that enable booking use the services picker and never POST here;
+    // return 404 rather than accepting an unrelated submission.
+    const modeSetting = await getSiteSetting('booking_mode')
+    if ((modeSetting || '').trim().toLowerCase() !== 'request') {
+      return NextResponse.json({ error: 'Not enabled' }, { status: 404 })
+    }
 
     const ip = getClientIp(request)
     const rl = rateLimit(`private_room_${ip}`, 5, 60 * 60 * 1000)
