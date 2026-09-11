@@ -2,6 +2,10 @@ import { getAdminClient } from '@/lib/supabase/admin'
 import { bookingSchema } from '@/lib/security/validate'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
 import { sendBookingConfirmation } from '@/lib/emails/triggers'
+import { sendEmail } from '@/lib/email/sender'
+import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recipients'
+import { getSiteSetting } from '@/lib/settings'
+import { escapeHtml, isValidEmail, stripHeaderValue } from '@/lib/security/form-guard'
 import { siteConfig } from '@config'
 
 export async function POST(request: Request) {
@@ -51,5 +55,52 @@ export async function POST(request: Request) {
   }
 
   await sendBookingConfirmation(data)
+
+  // Operator notification. Fires ONLY when the tenant has seeded
+  // site_settings.notification_emails (JSON array) or contact_email;
+  // getNotificationRecipients returns [] otherwise, and we skip the send so
+  // pre-existing tenants without the row keep their exact current behavior
+  // (client confirmation only, no operator email). Every user-controlled
+  // value is escaped before HTML interpolation and the reply-to is
+  // header-stripped so the operator can reply straight to the guest.
+  try {
+    const recipients = await getNotificationRecipients()
+    if (recipients.length > 0) {
+      const bcc = await getNotificationBcc()
+      const businessNameRaw = await getSiteSetting('business_name')
+      const brand = (businessNameRaw || '').trim() || siteConfig.business.name
+      const safeBrand = escapeHtml(brand)
+      const safeName = escapeHtml(clientName)
+      const safeEmail = escapeHtml(clientEmail)
+      const safePhone = escapeHtml(clientPhone || '—')
+      const safeTime = escapeHtml(new Date(startTime).toLocaleString())
+      const safeReplyTo = stripHeaderValue(clientEmail)
+      const replyToArg = isValidEmail(safeReplyTo) ? safeReplyTo : undefined
+      const rows: [string, string][] = [
+        ['Name', safeName],
+        ['Email', safeEmail],
+        ['Phone', safePhone],
+        ['Start time', safeTime],
+      ]
+      const htmlRows = rows
+        .map(
+          ([label, value]) =>
+            `<tr><td style="padding:6px 12px;font-weight:600;vertical-align:top">${escapeHtml(label)}</td><td style="padding:6px 12px">${value}</td></tr>`,
+        )
+        .join('')
+      const textRows = rows.map(([label, value]) => `${label}: ${value}`).join('\n')
+      await sendEmail({
+        to: recipients,
+        bcc,
+        replyTo: replyToArg,
+        subject: `New booking — ${brand}`,
+        html: `<p>A new booking was submitted to <strong>${safeBrand}</strong>.</p><table style="border-collapse:collapse">${htmlRows}</table>`,
+        text: `A new booking was submitted to ${brand}.\n\n${textRows}`,
+      })
+    }
+  } catch (emailError) {
+    console.error('Failed to send booking operator notification:', emailError)
+  }
+
   return Response.json({ success: true, appointment: data })
 }

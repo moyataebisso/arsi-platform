@@ -3,6 +3,7 @@ import { getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile, type HoursEntry } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { resolveBaseUrl } from '@/lib/site-url'
+import { getActiveTheme } from '@/lib/theme-resolver'
 
 // LocalBusiness structured data for Google rich results. All fields are
 // pulled from site_settings via getBusinessProfile / getSiteSettings so
@@ -125,14 +126,16 @@ const ALWAYS_OPEN_SPEC: OpeningHoursSpec = {
 
 export async function JsonLd() {
   const lb = siteConfig.seo.localBusiness
-  const [profile, settings, enabled] = await Promise.all([
+  const [profile, settings, enabled, theme] = await Promise.all([
     getBusinessProfile(),
     getSiteSettings([
       'seo_description', 'meta_description', 'tagline', 'service_area', 'service_type',
       'serves_cuisine', 'accepts_reservations', 'open_24_7',
       'social_facebook', 'social_instagram',
+      'og_image_url',
     ]),
     getEnabledModules(),
+    getActiveTheme(),
   ])
 
   const fallbackName =
@@ -211,11 +214,22 @@ export async function JsonLd() {
       postalCode: profile.zip,
       addressCountry: 'US',
     },
-    image: siteConfig.seo.ogImage ? `${url}${siteConfig.seo.ogImage}` : undefined,
+    image: (() => {
+      // og_image_url takes precedence when set (per-tenant override). Falls
+      // back to the build-time siteConfig.seo.ogImage joined against the
+      // resolved base URL, preserving prior behavior for every tenant that
+      // has not seeded the row.
+      const ogOverride = (settings.og_image_url || '').trim()
+      if (ogOverride) return ogOverride
+      return siteConfig.seo.ogImage ? `${url}${siteConfig.seo.ogImage}` : undefined
+    })(),
     brand: {
       '@type': 'Brand',
       name: businessName,
-      color: siteConfig.branding.primaryColor,
+      // Theme primary (e.g. #C1272D for adamaGold) instead of the build-time
+      // siteConfig.branding.primaryColor default (#c2410c) so every tenant's
+      // structured brand color matches what actually paints on their site.
+      color: theme.primary,
     },
     ...(servesCuisine ? { servesCuisine } : {}),
     ...(menuUrl ? { menu: menuUrl } : {}),

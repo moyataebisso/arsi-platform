@@ -132,6 +132,7 @@ export async function generateMetadata(): Promise<Metadata> {
     'seo_title',
     'seo_description',
     'seo_keywords',
+    'og_image_url',
   ])
   const fallbackName =
     siteConfig.business.name === 'Client Business Name' ? 'Waji Site' : siteConfig.business.name
@@ -163,6 +164,14 @@ export async function generateMetadata(): Promise<Metadata> {
     (settings.favicon_url || '').trim() ||
     (settings.logo_url || '').trim() ||
     '/wajii-default-icon.svg'
+  // Per-tenant OG/Twitter image override. Falls back to the build-time
+  // siteConfig.seo.ogImage → /og-image.jpg default so tenants without the row
+  // (Entrusted, El Roi, every unprovisioned deploy) keep their existing
+  // sharing card behavior byte-identically.
+  const ogImageUrl =
+    (settings.og_image_url || '').trim() ||
+    siteConfig.seo.ogImage ||
+    '/og-image.jpg'
 
   return {
     title: {
@@ -189,7 +198,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       images: [
         {
-          url: siteConfig.seo.ogImage || '/og-image.jpg',
+          url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: businessName,
@@ -200,7 +209,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: 'summary_large_image',
       title: seoTitle,
       description,
-      images: [siteConfig.seo.ogImage || '/og-image.jpg'],
+      images: [ogImageUrl],
     },
     robots: {
       index: !isPreviewHost,

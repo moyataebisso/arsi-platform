@@ -63,6 +63,7 @@ import { CateringBandSection } from '@/components/sections/CateringBandSection'
 import { ReservationsBandSection } from '@/components/sections/ReservationsBandSection'
 import { GalleryStripSection } from '@/components/sections/GalleryStripSection'
 import { NewsletterMapSection } from '@/components/sections/NewsletterMapSection'
+import { BreakfastComingSoonSection } from '@/components/sections/BreakfastComingSoonSection'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
 import { themeToCSS, type ResolvedTheme } from '@/lib/theme-resolver'
@@ -224,6 +225,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // falls through to the existing about_text/about_body/about_quote keys and
   // their hardcoded fallbacks — Adama and Entrusted unaffected.
   const homeAboutBlurbRaw = await getSiteSetting('home_about_blurb')
+  // Optional per-tenant "Breakfast coming soon" block. Default false — every
+  // tenant that hasn't set the row keeps the existing layout byte-identical.
+  const showBreakfastRaw = await getSiteSetting('show_breakfast_coming_soon')
+  const showBreakfastComingSoon =
+    (showBreakfastRaw || '').trim().toLowerCase() === 'true'
   // video_hero only — both keys swappable per tenant. Poster MUST always
   // render so an empty hero is impossible when the video is blocked/slow.
   const heroVideo = await getSiteSetting('hero_video_url')
@@ -624,6 +630,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       />
     ) : null,
     gallery_strip: <GalleryStripSection images={galleryStripImages} />,
+    breakfast_coming_soon: (
+      <BreakfastComingSoonSection show={showBreakfastComingSoon} />
+    ),
     newsletter_map: (
       <NewsletterMapSection
         headline={restaurantCenteredSettings.newsletter_headline}
@@ -678,6 +687,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     const heroIdx = finalOrder.indexOf('hero')
     const insertAt = heroIdx >= 0 ? heroIdx + 1 : 0
     finalOrder.splice(insertAt, 0, 'restaurant_ctas')
+  }
+  // Inject "Breakfast coming soon" directly after the menu preview when the
+  // tenant has opted in. Default OFF — every tenant without the row is
+  // byte-identical to before.
+  if (showBreakfastComingSoon && !finalOrder.includes('breakfast_coming_soon')) {
+    const menuIdx = finalOrder.indexOf('menu_preview')
+    const insertAt = menuIdx >= 0 ? menuIdx + 1 : finalOrder.length
+    finalOrder.splice(insertAt, 0, 'breakfast_coming_soon')
   }
 
   return (

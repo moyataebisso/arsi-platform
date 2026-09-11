@@ -2,8 +2,11 @@ import { getAdminClient } from '@/lib/supabase/admin'
 import { subscriberSchema } from '@/lib/security/validate'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
 import { sendNewsletterWelcome } from '@/lib/emails/triggers'
+import { sendEmail } from '@/lib/email/sender'
+import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recipients'
+import { getSiteSetting } from '@/lib/settings'
 import { siteConfig } from '@config'
-import { guard, SILENT_SUCCESS_BODY } from '@/lib/security/form-guard'
+import { escapeHtml, guard, isValidEmail, SILENT_SUCCESS_BODY, stripHeaderValue } from '@/lib/security/form-guard'
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -38,5 +41,32 @@ export async function POST(request: Request) {
   )
 
   if (!error) await sendNewsletterWelcome(parsed.data)
+
+  // Operator notification. Fires ONLY when the tenant has seeded
+  // site_settings.notification_emails (JSON array) or contact_email;
+  // pre-existing tenants without the row keep the subscriber-only behavior.
+  try {
+    const recipients = await getNotificationRecipients()
+    if (recipients.length > 0) {
+      const bcc = await getNotificationBcc()
+      const businessNameRaw = await getSiteSetting('business_name')
+      const brand = (businessNameRaw || '').trim() || siteConfig.business.name
+      const safeBrand = escapeHtml(brand)
+      const safeEmail = escapeHtml(parsed.data.email)
+      const safeReplyTo = stripHeaderValue(parsed.data.email)
+      const replyToArg = isValidEmail(safeReplyTo) ? safeReplyTo : undefined
+      await sendEmail({
+        to: recipients,
+        bcc,
+        replyTo: replyToArg,
+        subject: `New newsletter subscriber — ${brand}`,
+        html: `<p>Someone subscribed to updates from <strong>${safeBrand}</strong>.</p><p>Email: <a href="mailto:${safeEmail}">${safeEmail}</a></p>`,
+        text: `Someone subscribed to updates from ${brand}. Email: ${parsed.data.email}`,
+      })
+    }
+  } catch (emailError) {
+    console.error('Failed to send newsletter subscribe operator notification:', emailError)
+  }
+
   return Response.json({ success: true })
 }

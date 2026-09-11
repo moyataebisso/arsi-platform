@@ -100,6 +100,7 @@ export default async function PublicLayout({ children }: { children: React.React
           showCatering={enabledModules.catering}
           showJobs={enabledModules.jobs}
           showLicenseSeparatedNav={enabledModules.license_separated_nav}
+          navVariant={navVariant}
         />
       </div>
     </>

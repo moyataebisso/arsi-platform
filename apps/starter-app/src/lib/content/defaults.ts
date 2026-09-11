@@ -79,7 +79,7 @@ export const DEFAULTS: Record<string, string> = {
 
   // Menu Preview (restaurant)
   menu_preview_headline: 'Tastes worth coming back for',
-  menu_preview_subtitle: 'A handful of guest favorites — the full menu changes with the season.',
+  menu_preview_subtitle: 'A few guest favorites. See the full menu for everything we make from scratch.',
 
   // Services Price List (salon)
   services_price_list_headline: 'Look your best',

@@ -1091,6 +1091,18 @@ function VideoHero(props: VariantProps) {
   const subPrimary = display.ctaPrimary
   const subSecondary = display.ctaSecondary
 
+  // Length-aware clamp so brand headlines like "Adama Restaurant and Awash
+  // Bakery" (34 chars) don't overflow at 375px viewports. Short (≤22 char)
+  // headlines keep the original clamp exactly, so every non-long-name
+  // tenant renders byte-identically to before.
+  const headlineLen = display.headline.length
+  const headlineClamp =
+    headlineLen > 30
+      ? 'clamp(1.75rem, 5.2vw, 4rem)'
+      : headlineLen > 22
+        ? 'clamp(2.25rem, 5.6vw, 4.5rem)'
+        : 'clamp(2.75rem, 6vw, 5.25rem)'
+
   return (
     <section
       className="relative w-full overflow-hidden min-h-[560px] sm:min-h-[640px] lg:min-h-[720px] flex items-center justify-center"
@@ -1132,7 +1144,7 @@ function VideoHero(props: VariantProps) {
           style={{
             color: 'var(--color-primary)',
             fontFamily: 'var(--font-heading)',
-            fontSize: 'clamp(2.75rem, 6vw, 5.25rem)',
+            fontSize: headlineClamp,
             fontWeight: 700,
             lineHeight: 1.05,
             letterSpacing: '0.01em',

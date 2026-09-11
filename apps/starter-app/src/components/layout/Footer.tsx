@@ -31,6 +31,11 @@ interface FooterProps {
   // added in the same order as the header dropdowns. Off by default so every
   // non-opted-in tenant renders the existing footer unchanged.
   showLicenseSeparatedNav?: boolean
+  // Mirrors the Header prop. center_logo tenants (Adama) drop /services from
+  // the header entirely — the flat "Services" link is meaningless when the
+  // tenant already 308-redirects /services → /menu. The footer must match
+  // that behavior. Other variants keep the existing footer nav byte-identical.
+  navVariant?: 'default' | 'center_logo'
 }
 
 function trimToTwoSentences(text: string): string {
@@ -56,7 +61,11 @@ export async function Footer({
   showCatering,
   showJobs,
   showLicenseSeparatedNav,
+  navVariant = 'default',
 }: FooterProps = {}) {
+  // center_logo variant drops the flat Services link (which would 308 to
+  // /menu anyway) so the footer's Quick Links stay coherent with the header.
+  const showServicesLink = navVariant !== 'center_logo'
   const { integrations, pages, modules } = siteConfig
   const profile = await getBusinessProfile()
   const content = await getContentMany(['footer_tagline', 'footer_hours_heading'])
@@ -111,7 +120,7 @@ export async function Footer({
         showDrinks && { href: '/drinks', label: 'Drinks' },
         showOrder && { href: '/order', label: 'Order' },
         showReserve && { href: '/book', label: 'Reserve' },
-        pages.services.enabled && { href: '/services', label: pages.services.title },
+        showServicesLink && pages.services.enabled && { href: '/services', label: pages.services.title },
         showWhyChooseUs && { href: '/why-choose-us', label: 'Why Choose Us' },
         showOurHomes && { href: '/our-homes', label: 'Our Homes' },
         showReferrals && { href: '/referrals', label: 'Referrals' },

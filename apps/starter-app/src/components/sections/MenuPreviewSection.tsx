@@ -57,7 +57,7 @@ function AccentedHeadline({ headline, accentTailWords = 1 }: { headline: string;
 export function MenuPreviewSection({ pill, headline, subtitle, dishes, viewFullMenuHref, cuisineType }: MenuPreviewSectionProps) {
   const displayPill = pill || 'On the menu'
   const displayHeadline = headline || 'Tastes worth coming back for'
-  const displaySubtitle = subtitle || 'A handful of guest favorites — the full menu changes with the season.'
+  const displaySubtitle = subtitle || 'A few guest favorites. See the full menu for everything we make from scratch.'
   const displayDishes = dishes && dishes.length > 0 ? dishes : DEFAULT_DISHES
   const href = viewFullMenuHref || '/menu'
 

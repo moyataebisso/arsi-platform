@@ -84,6 +84,9 @@ export type SectionId =
   | 'payment_cta'
   // restaurant add-ons (gated by enabled_modules)
   | 'restaurant_ctas'
+  // Optional per-tenant "Breakfast coming soon" block. Gated by
+  // site_settings.show_breakfast_coming_soon; defaults to hidden.
+  | 'breakfast_coming_soon'
   // restaurant_centered layout sections (all DB-driven)
   | 'about_split'
   | 'order_band'

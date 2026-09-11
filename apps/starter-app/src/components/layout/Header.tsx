@@ -330,10 +330,15 @@ export function Header({
                   <BrandLogo businessName={displayBusinessName} height={56} />
                 ) : (
                   <span
-                    className="text-2xl lg:text-3xl font-bold uppercase tracking-wider whitespace-nowrap"
+                    className={`font-bold uppercase tracking-wider ${
+                      displayBusinessName.length > 22
+                        ? 'text-base sm:text-lg lg:text-xl text-center leading-tight'
+                        : 'text-2xl lg:text-3xl whitespace-nowrap'
+                    }`}
                     style={{
                       color: 'var(--color-primary)',
                       fontFamily: 'var(--font-heading)',
+                      maxWidth: '260px',
                     }}
                   >
                     {displayBusinessName}
@@ -411,8 +416,16 @@ export function Header({
                   <BrandLogo businessName={displayBusinessName} height={40} />
                 ) : (
                   <span
-                    className="text-lg font-bold uppercase tracking-wider"
-                    style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}
+                    className={`font-bold uppercase tracking-wider ${
+                      displayBusinessName.length > 22
+                        ? 'text-[11px] text-center leading-tight'
+                        : 'text-lg'
+                    }`}
+                    style={{
+                      color: 'var(--color-primary)',
+                      fontFamily: 'var(--font-heading)',
+                      maxWidth: '220px',
+                    }}
                   >
                     {displayBusinessName}
                   </span>
