@@ -38,6 +38,15 @@ interface AboutSectionProps {
   // When set, individual fields override the legacy per-prop fallbacks;
   // missing fields fall through. Null/undefined leaves prior behavior intact.
   blurb?: HomeAboutBlurb | null
+  // Show the "Learn about our founder" link. Defaults to true so healthcare
+  // and other tenants that DO have a founder page keep the current render.
+  // Restaurant layouts pass false because Adama has no such page.
+  showFounderLink?: boolean
+  // Render the primary CTA link with a high-contrast style (white text +
+  // underline) instead of --color-primary. Used by tenants whose About band
+  // background matches --color-primary (adamaGold's red-on-red) so the link
+  // is readable. Defaults to the historical primary-colored style.
+  ctaHighContrast?: boolean
 }
 
 // Tenant-neutral healthcare fallbacks used when no DB about_image_1 /
@@ -60,6 +69,8 @@ export function AboutSection({
   image1Alt,
   image2Alt,
   blurb,
+  showFounderLink = true,
+  ctaHighContrast = false,
 }: AboutSectionProps) {
   const cfgName =
     siteConfig.business.name && siteConfig.business.name !== 'Client Business Name'
@@ -158,19 +169,34 @@ export function AboutSection({
                 <Link
                   href={displayCtaHref}
                   className="inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200 hover:gap-3"
-                  style={{ color: 'var(--color-primary)' }}
+                  style={
+                    ctaHighContrast
+                      ? {
+                          // Adama's About band paints --color-section-alt with
+                          // --color-primary (red). The default primary-on-red
+                          // link vanishes; swap to white with an underline so
+                          // the affordance stays readable without changing the
+                          // theme file (other tenants keep the primary link).
+                          color: '#ffffff',
+                          textDecoration: 'underline',
+                          textUnderlineOffset: '4px',
+                        }
+                      : { color: 'var(--color-primary)' }
+                  }
                 >
                   {displayCtaText}
                   <span aria-hidden="true">&rarr;</span>
                 </Link>
-                <Link
-                  href="/about"
-                  className="inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200 hover:gap-3"
-                  style={{ color: 'var(--color-accent)' }}
-                >
-                  Learn about our founder
-                  <span aria-hidden="true">&rarr;</span>
-                </Link>
+                {showFounderLink && (
+                  <Link
+                    href="/about"
+                    className="inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200 hover:gap-3"
+                    style={{ color: 'var(--color-accent)' }}
+                  >
+                    Learn about our founder
+                    <span aria-hidden="true">&rarr;</span>
+                  </Link>
+                )}
               </div>
             </ScrollReveal>
           </div>

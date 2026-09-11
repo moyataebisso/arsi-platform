@@ -44,6 +44,10 @@ export const DEFAULTS: Record<string, string> = {
   cta_button_text: 'Contact Us Today',
   contact_headline: "Let's Connect",
   contact_intro: 'We would love to hear from you. Fill out the form below or reach out directly — we respond within one business day.',
+  // Home LocationSection copy. Defaults match the pre-refactor hardcoded
+  // strings so every tenant without a DB row is byte-identical.
+  location_intro: 'Visit us or get in touch — we look forward to connecting with you',
+  location_hours_heading: 'Office Hours',
   contact_form_title: 'Send a Message',
   contact_success_message: 'Thank you! We will be in touch within one business day.',
   footer_tagline: safeTagline

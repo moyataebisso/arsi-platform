@@ -177,6 +177,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     layoutParam && (LAYOUT_IDS as readonly string[]).includes(layoutParam)
       ? (layoutParam as LayoutId)
       : active.layout
+  // Adama and any other restaurant-family tenant. Used to hide the healthcare
+  // "Learn about our founder" link and to swap the generic "View all services"
+  // CTA for "View full menu" (which also bypasses the /services -> /menu 308).
+  const isRestaurantLayout = layout === 'restaurant' || layout === 'restaurant_centered'
 
   // Theme: the (public) layout already reads `active_theme` via getActiveTheme and emits
   // the matching CSS, so we only need to emit a page-level override when the URL forces
@@ -196,6 +200,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     'about_headline', 'about_body', 'about_text', 'about_quote', 'about_cta_text',
     'about_image', 'about_image_1', 'about_image_2',
     'contact_headline', 'contact_intro',
+    'location_intro', 'location_hours_heading',
     'how_it_works_headline', 'how_it_works_subtitle',
     'menu_preview_headline', 'menu_preview_subtitle',
     'services_price_list_headline', 'services_price_list_subtitle',
@@ -474,6 +479,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         title={content.services_title}
         subtitle={content.services_subtitle}
         services={services}
+        ctaLabel={isRestaurantLayout ? 'View full menu' : undefined}
+        ctaHref={isRestaurantLayout ? '/menu' : undefined}
       />
     ),
     about: (
@@ -490,6 +497,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         image1Alt={aboutImage1Alt || undefined}
         image2Alt={aboutImage2Alt || undefined}
         blurb={homeAboutBlurb}
+        showFounderLink={!isRestaurantLayout}
+        ctaHighContrast={active.theme === 'adamaGold'}
       />
     ),
     location: siteConfig.location.showMapOnHome ? (
@@ -502,6 +511,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         hoursNote={hoursNote || undefined}
         googleMapsEmbed={business.googleMapsEmbed}
         businessName={business.name}
+        intro={content.location_intro}
+        hoursHeading={content.location_hours_heading}
       />
     ) : null,
     contact: siteConfig.modules.leads ? (

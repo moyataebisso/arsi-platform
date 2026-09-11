@@ -16,6 +16,11 @@ interface LocationSectionProps {
   // iframe title attribute so it reads "Map of <Tenant>" instead of the
   // site.config.ts placeholder "Client Business Name".
   businessName?: string
+  // Optional per-tenant copy overrides. Missing → the historical hardcoded
+  // strings render exactly as before, so tenants without the site_settings
+  // row are byte-identical.
+  intro?: string
+  hoursHeading?: string
 }
 
 function isClosedDay(value: string): boolean {
@@ -31,7 +36,12 @@ export function LocationSection({
   hoursNote,
   googleMapsEmbed,
   businessName,
+  intro,
+  hoursHeading,
 }: LocationSectionProps = {}) {
+  const resolvedIntro =
+    (intro || '').trim() || 'Visit us or get in touch — we look forward to connecting with you'
+  const resolvedHoursHeading = (hoursHeading || '').trim() || 'Office Hours'
   const cfg = siteConfig.location
   const resolvedAddress = address || cfg.address || ''
   const resolvedCity = city || cfg.city || ''
@@ -84,7 +94,7 @@ export function LocationSection({
               Our Location
             </h2>
             <p className="text-lg" style={{ color: 'var(--color-text-muted)' }}>
-              Visit us or get in touch — we look forward to connecting with you
+              {resolvedIntro}
             </p>
           </div>
         </ScrollReveal>
@@ -139,7 +149,7 @@ export function LocationSection({
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
-                    Office Hours
+                    {resolvedHoursHeading}
                   </h3>
                   {hoursNote && (
                     <p className="text-xs italic mb-2" style={{ color: 'var(--color-text-muted)' }}>

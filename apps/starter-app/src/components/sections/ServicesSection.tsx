@@ -34,6 +34,12 @@ interface ServicesSectionProps {
   title?: string
   subtitle?: string
   services?: ServiceItem[]
+  // Overrides for the tail-of-section link. Defaults match the pre-refactor
+  // hardcoded "View all services -> /services". Restaurant layouts pass
+  // "View full menu" + "/menu" so the link skips the /services -> /menu 308
+  // redirect and reads correctly for tenants that don't have a services page.
+  ctaLabel?: string
+  ctaHref?: string
 }
 
 const defaultServices: ServiceItem[] = [
@@ -47,7 +53,11 @@ export function ServicesSection({
   title = 'What We Do Best',
   subtitle = 'From consultation to delivery, we provide comprehensive services',
   services,
+  ctaLabel,
+  ctaHref,
 }: ServicesSectionProps) {
+  const resolvedCtaLabel = (ctaLabel || '').trim() || 'View all services'
+  const resolvedCtaHref = (ctaHref || '').trim() || '/services'
   const displayServices = (services || defaultServices).slice(0, 4)
   const count = displayServices.length
 
@@ -143,11 +153,11 @@ export function ServicesSection({
         <ScrollReveal delay={400}>
           <div className="text-center mt-12">
             <Link
-              href="/services"
+              href={resolvedCtaHref}
               className="inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200 hover:gap-3"
               style={{ color: 'var(--color-primary)' }}
             >
-              View all services
+              {resolvedCtaLabel}
               <span aria-hidden="true">&rarr;</span>
             </Link>
           </div>
