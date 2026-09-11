@@ -3,7 +3,7 @@ import { bookingSchema } from '@/lib/security/validate'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
 import { sendBookingConfirmation } from '@/lib/emails/triggers'
 import { sendEmail } from '@/lib/email/sender'
-import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recipients'
+import { getExplicitNotificationEmails, getNotificationBcc } from '@/lib/email/recipients'
 import { getSiteSetting } from '@/lib/settings'
 import { escapeHtml, isValidEmail, stripHeaderValue } from '@/lib/security/form-guard'
 import { siteConfig } from '@config'
@@ -56,15 +56,18 @@ export async function POST(request: Request) {
 
   await sendBookingConfirmation(data)
 
-  // Operator notification. Fires ONLY when the tenant has seeded
-  // site_settings.notification_emails (JSON array) or contact_email;
-  // getNotificationRecipients returns [] otherwise, and we skip the send so
-  // pre-existing tenants without the row keep their exact current behavior
-  // (client confirmation only, no operator email). Every user-controlled
-  // value is escaped before HTML interpolation and the reply-to is
-  // header-stripped so the operator can reply straight to the guest.
+  // Operator notification. Fires ONLY when the tenant has explicitly seeded
+  // site_settings.notification_emails (JSON array). Uses
+  // getExplicitNotificationEmails (no contact_email fallback) because this
+  // route historically sent NO operator email — falling back to contact_email
+  // would silently start emailing every tenant that has one on file
+  // (Entrusted, El Roi, ...) the moment this code shipped. Only tenants who
+  // affirmatively opt in via notification_emails get the dual-copy behavior.
+  // Every user-controlled value is escaped before HTML interpolation and the
+  // reply-to is header-stripped so the operator can reply straight to the
+  // guest.
   try {
-    const recipients = await getNotificationRecipients()
+    const recipients = await getExplicitNotificationEmails()
     if (recipients.length > 0) {
       const bcc = await getNotificationBcc()
       const businessNameRaw = await getSiteSetting('business_name')

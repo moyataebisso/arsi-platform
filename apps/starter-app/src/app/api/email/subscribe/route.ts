@@ -3,7 +3,7 @@ import { subscriberSchema } from '@/lib/security/validate'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
 import { sendNewsletterWelcome } from '@/lib/emails/triggers'
 import { sendEmail } from '@/lib/email/sender'
-import { getNotificationRecipients, getNotificationBcc } from '@/lib/email/recipients'
+import { getExplicitNotificationEmails, getNotificationBcc } from '@/lib/email/recipients'
 import { getSiteSetting } from '@/lib/settings'
 import { siteConfig } from '@config'
 import { escapeHtml, guard, isValidEmail, SILENT_SUCCESS_BODY, stripHeaderValue } from '@/lib/security/form-guard'
@@ -42,11 +42,14 @@ export async function POST(request: Request) {
 
   if (!error) await sendNewsletterWelcome(parsed.data)
 
-  // Operator notification. Fires ONLY when the tenant has seeded
-  // site_settings.notification_emails (JSON array) or contact_email;
-  // pre-existing tenants without the row keep the subscriber-only behavior.
+  // Operator notification. Fires ONLY when the tenant has explicitly seeded
+  // site_settings.notification_emails (JSON array). Uses
+  // getExplicitNotificationEmails (no contact_email fallback) because this
+  // route historically sent NO operator email — falling back to contact_email
+  // would quietly start emailing tenants that have one on file the moment
+  // this code shipped. Only tenants who opt in get the dual-copy behavior.
   try {
-    const recipients = await getNotificationRecipients()
+    const recipients = await getExplicitNotificationEmails()
     if (recipients.length > 0) {
       const bcc = await getNotificationBcc()
       const businessNameRaw = await getSiteSetting('business_name')

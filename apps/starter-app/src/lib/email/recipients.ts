@@ -62,6 +62,23 @@ export async function getNotificationRecipients(): Promise<string[]> {
   return []
 }
 
+// Strict variant of getNotificationRecipients that ONLY reads
+// site_settings.notification_emails — no contact_email fallback. Used by
+// routes that historically sent NO operator email (booking/create,
+// email/subscribe): they must stay silent for every tenant that has not
+// explicitly opted into dual-copy notifications, so contact_email cannot
+// be treated as consent. When notification_emails is unset, malformed, or
+// contains no valid addresses this returns [] and the caller MUST skip
+// the send.
+export async function getExplicitNotificationEmails(): Promise<string[]> {
+  try {
+    const raw = await getSiteSetting('notification_emails')
+    return parseEmails(raw)
+  } catch {
+    return []
+  }
+}
+
 // Blind-copy list for form notifications. site_settings key: notification_bcc.
 // Same JSON-array-of-strings shape and validation as notification_emails.
 // Returns [] when the row is missing, empty, malformed, or contains no valid
