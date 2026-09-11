@@ -74,6 +74,7 @@ export default async function PublicLayout({ children }: { children: React.React
           showParties={enabledModules.parties}
           showCatering={enabledModules.catering}
           showJobs={enabledModules.jobs}
+          showBakery={enabledModules.bakery}
           showLicenseSeparatedNav={enabledModules.license_separated_nav}
           promoBarText={settings.promo_bar_text}
           promoBarCtaUrl={settings.promo_bar_cta_url}
@@ -99,6 +100,7 @@ export default async function PublicLayout({ children }: { children: React.React
           showParties={enabledModules.parties}
           showCatering={enabledModules.catering}
           showJobs={enabledModules.jobs}
+          showBakery={enabledModules.bakery}
           showLicenseSeparatedNav={enabledModules.license_separated_nav}
           navVariant={navVariant}
         />

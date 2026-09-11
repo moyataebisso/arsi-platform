@@ -25,6 +25,7 @@ interface FooterProps {
   showParties?: boolean
   showCatering?: boolean
   showJobs?: boolean
+  showBakery?: boolean
   // Mirrors the Header prop. When true, /our-homes is dropped from Quick
   // Links and the license-scoped routes (/assisted-living, /assisted-living/
   // homes, /assisted-living/services, /hcbs, /hcbs/homes, /hcbs/services) are
@@ -60,6 +61,7 @@ export async function Footer({
   showParties,
   showCatering,
   showJobs,
+  showBakery,
   showLicenseSeparatedNav,
   navVariant = 'default',
 }: FooterProps = {}) {
@@ -126,6 +128,7 @@ export async function Footer({
         showReferrals && { href: '/referrals', label: 'Referrals' },
         showParties && { href: '/parties', label: 'Parties' },
         showCatering && { href: '/catering', label: 'Catering' },
+        showBakery && { href: '/bakery', label: 'Bakery' },
         showJobs && { href: '/jobs', label: 'Jobs' },
         (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
         !showReserve && (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },

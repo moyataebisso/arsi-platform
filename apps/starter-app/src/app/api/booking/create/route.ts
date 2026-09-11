@@ -5,11 +5,18 @@ import { sendBookingConfirmation } from '@/lib/emails/triggers'
 import { sendEmail } from '@/lib/email/sender'
 import { getExplicitNotificationEmails, getNotificationBcc } from '@/lib/email/recipients'
 import { getSiteSetting } from '@/lib/settings'
+import { getEnabledModules } from '@/lib/enabled-modules'
 import { escapeHtml, isValidEmail, stripHeaderValue } from '@/lib/security/form-guard'
 import { siteConfig } from '@config'
 
 export async function POST(request: Request) {
-  if (!siteConfig.modules.booking) {
+  // Runtime enabled_modules gate. The previous siteConfig.modules.booking
+  // check was a build-time constant (always false), which meant Adama's
+  // /book flow 404'd even after enabled_modules.booking flipped true in
+  // the DB — that's the August booking bug. Every other public API in
+  // this repo already reads getEnabledModules(); this now matches.
+  const enabled = await getEnabledModules()
+  if (!enabled.booking) {
     return Response.json({ error: 'Not enabled' }, { status: 404 })
   }
 

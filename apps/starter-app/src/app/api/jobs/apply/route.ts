@@ -12,7 +12,7 @@ import { guard, SILENT_SUCCESS_BODY, isValidEmail, stripHeaderValue } from '@/li
 const RATE_LIMIT_MAX = 3
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
 
-const MAX_RESUME_BYTES = 4 * 1024 * 1024
+const MAX_RESUME_BYTES = 5 * 1024 * 1024
 const RESUME_BUCKET = 'resumes'
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7
 

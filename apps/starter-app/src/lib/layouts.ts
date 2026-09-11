@@ -87,6 +87,9 @@ export type SectionId =
   // Optional per-tenant "Breakfast coming soon" block. Gated by
   // site_settings.show_breakfast_coming_soon; defaults to hidden.
   | 'breakfast_coming_soon'
+  // Adama-only "Awash Bakery" home block. Gated by
+  // enabled_modules.bakery; defaults to hidden for every other tenant.
+  | 'awash_bakery'
   // restaurant_centered layout sections (all DB-driven)
   | 'about_split'
   | 'order_band'

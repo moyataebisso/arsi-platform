@@ -37,6 +37,9 @@ export interface EnabledModules {
   catering: boolean
   jobs: boolean
   jobs_application_form: boolean
+  // Awash Bakery add-on for Adama (Phase 2). Adds a /bakery page + nav
+  // link + sitemap entry + home section. Off for every other tenant.
+  bakery: boolean
   // Splits the public nav into Assisted Living (144G) and HCBS / Waiver
   // Services (245D) sections with their own /homes and /services routes.
   // Off by default so El Roi, Adama, and every other tenant render byte-
@@ -74,6 +77,7 @@ function fromSiteConfig(): EnabledModules {
     catering: m.catering === true,
     jobs: m.jobs === true,
     jobs_application_form: m.jobs_application_form === true,
+    bakery: m.bakery === true,
     license_separated_nav: m.license_separated_nav === true,
   }
 }

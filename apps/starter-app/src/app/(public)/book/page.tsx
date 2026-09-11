@@ -1,10 +1,89 @@
-import { siteConfig } from '@config'
 import { notFound } from 'next/navigation'
-import { getAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
+import { getAdminClient } from '@/lib/supabase/admin'
+import { getEnabledModules } from '@/lib/enabled-modules'
+import { getSiteSettings } from '@/lib/settings'
+import { getBusinessProfile } from '@/lib/business'
+import { PrivateRoomRequestForm } from '@/components/forms/PrivateRoomRequestForm'
 
+export const dynamic = 'force-dynamic'
+
+export async function generateMetadata() {
+  return { title: 'Book' }
+}
+
+// August bug root cause: the previous version gated on
+// siteConfig.modules.booking, a build-time constant. That was false for
+// every tenant at build time, so /book 404'd even after
+// enabled_modules.booking flipped true in the DB (Adama). The rest of
+// the app (drinks, catering, jobs, parties) already reads the runtime
+// enabled_modules; this page now matches, per Phase 2 F2.
+//
+// booking_mode setting:
+//   'request' → render the private-room request form
+//              (Adama's use case; no serviceId flow, no deposit).
+//   'services' (default) → render the existing service picker so every
+//              tenant that WAS relying on the appointments flow stays
+//              byte-identical.
 export default async function BookPage() {
-  if (!siteConfig.modules.booking) return notFound()
+  const modules = await getEnabledModules()
+  if (!modules.booking) notFound()
+
+  const settings = await getSiteSettings([
+    'booking_mode',
+    'booking_headline',
+    'booking_body',
+  ])
+  const mode = (settings.booking_mode || '').trim().toLowerCase() === 'request' ? 'request' : 'services'
+  const business = await getBusinessProfile()
+  const phone = business.phone || ''
+
+  if (mode === 'request') {
+    const headline = settings.booking_headline || 'Private room reservations'
+    const bodyDefault =
+      'Our private room seats up to 16 — business meetings, birthdays, family gatherings. No deposit. This sends a request; we’ll call or email to confirm.'
+    const body = settings.booking_body || bodyDefault
+    const telHref = phone ? `tel:${phone.replace(/[^0-9+]/g, '')}` : ''
+
+    return (
+      <section className="py-14 sm:py-20" style={{ backgroundColor: 'var(--color-background)' }}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1
+            className="mb-6"
+            style={{
+              color: 'var(--color-primary)',
+              fontFamily: 'var(--font-heading)',
+              fontSize: 'clamp(2.25rem, 5vw, 4rem)',
+              fontWeight: 700,
+              lineHeight: 1.1,
+            }}
+          >
+            {headline}
+          </h1>
+          <p
+            className="text-lg leading-relaxed mb-8 whitespace-pre-line"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            {body}
+          </p>
+          {telHref && (
+            <p className="mb-10 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+              Prefer to talk?{' '}
+              <a
+                href={telHref}
+                className="font-semibold"
+                style={{ color: 'var(--color-primary)' }}
+                aria-label={`Call ${phone}`}
+              >
+                Call {phone}
+              </a>
+            </p>
+          )}
+          <PrivateRoomRequestForm />
+        </div>
+      </section>
+    )
+  }
 
   const supabase = getAdminClient()
   const { data: services } = await supabase
@@ -20,7 +99,7 @@ export default async function BookPage() {
       </h1>
       <p className="mb-8" style={{ color: 'var(--color-text-muted)' }}>Choose a service to get started.</p>
       <div className="grid gap-4">
-        {(services || []).map((s: any) => (
+        {(services || []).map((s: { id: string; name: string; description: string | null; duration_minutes: number; price: number }) => (
           <Link
             key={s.id}
             href={`/book/${s.id}`}

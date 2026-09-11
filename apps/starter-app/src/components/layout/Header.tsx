@@ -38,6 +38,7 @@ interface HeaderProps {
   showParties?: boolean
   showCatering?: boolean
   showJobs?: boolean
+  showBakery?: boolean
   // MN license separation. When true, the healthcare nav replaces its
   // /our-homes + /services links with two dropdown top-level items pointing
   // to /assisted-living and /hcbs. Kept off by default so El Roi and every
@@ -78,6 +79,7 @@ export function Header({
   showParties,
   showCatering,
   showJobs,
+  showBakery,
   showLicenseSeparatedNav,
   promoBarText,
   promoBarCtaUrl,
@@ -190,6 +192,7 @@ export function Header({
         showReferrals && { href: '/referrals', label: 'Referrals' },
         showParties && { href: '/parties', label: 'Parties' },
         showCatering && { href: '/catering', label: 'Catering' },
+        showBakery && { href: '/bakery', label: 'Bakery' },
         showJobs && { href: '/jobs', label: 'Jobs' },
         (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
         !showReserve && (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
@@ -217,6 +220,7 @@ export function Header({
   const centerRightLinks = [
     showParties && { href: '/parties', label: 'Parties' },
     showCatering && { href: '/catering', label: 'Catering' },
+    showBakery && { href: '/bakery', label: 'Bakery' },
     showJobs && { href: '/jobs', label: 'Jobs' },
   ].filter(Boolean) as { href: string; label: string }[]
 

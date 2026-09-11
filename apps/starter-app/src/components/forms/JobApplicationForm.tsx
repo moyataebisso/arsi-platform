@@ -8,7 +8,15 @@ interface JobApplicationFormState {
   email: string
   phone: string
   position: string
+  // Open-application variant uses this instead of the single `position`
+  // dropdown. Both fields exist on state so the same component can switch
+  // variants at runtime without shape drift.
+  positions: string[]
+  positionOther: string
   availability: string[]
+  // Open-application variant only.
+  availabilityDays: string[]
+  earliestStart: string
   yearsExperience: string
   message: string
 }
@@ -18,7 +26,11 @@ const INITIAL: JobApplicationFormState = {
   email: '',
   phone: '',
   position: '',
+  positions: [],
+  positionOther: '',
   availability: [],
+  availabilityDays: [],
+  earliestStart: '',
   yearsExperience: '',
   message: '',
 }
@@ -34,14 +46,31 @@ const AVAILABILITY_OPTIONS = [
 ] as const
 const YEARS_OPTIONS = ['None', 'Less than 1', '1-3', '3-5', '5+'] as const
 
-const MAX_RESUME_BYTES = 4 * 1024 * 1024
+// Adama-style open application variant options (parts-of-day + weekdays).
+const AVAILABILITY_TIME_OPTIONS_OPEN = ['Morning', 'Afternoon', 'Evening'] as const
+const AVAILABILITY_DAY_OPTIONS_OPEN = [
+  'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat',
+] as const
+
+// 5 MB matches the /api/jobs/apply server cap. Bumped from 4 MB in
+// Phase 2 to fit modern PDFs with photos or formatting.
+const MAX_RESUME_BYTES = 5 * 1024 * 1024
 const ACCEPTED_RESUME_EXTENSIONS = ['.pdf', '.doc', '.docx']
+
+// Form variant. 'shift_dropdown' preserves the historical single-select
+// + shift-time-of-day form Entrusted uses today; 'open_application' is
+// the Adama-style multi-position + weekday/parts-of-day layout added in
+// Phase 2. Defaults to shift_dropdown so any caller that omits the prop
+// is byte-identical to prior behavior.
+export type JobApplicationVariant = 'shift_dropdown' | 'open_application'
 
 interface JobApplicationFormProps {
   roles: string[]
+  variant?: JobApplicationVariant
 }
 
-export function JobApplicationForm({ roles }: JobApplicationFormProps) {
+export function JobApplicationForm({ roles, variant = 'shift_dropdown' }: JobApplicationFormProps) {
+  const isOpen = variant === 'open_application'
   const [data, setData] = useState<JobApplicationFormState>(INITIAL)
   const [website, setWebsite] = useState('')
   const mt = useMountTimestamp()
@@ -65,7 +94,7 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
     if (f.size > MAX_RESUME_BYTES) {
       setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
-      setFileError('That file is too large (4 MB max). Please email your resume to us instead.')
+      setFileError('That file is too large (5 MB max). Please email your resume to us instead.')
       return
     }
     const lower = f.name.toLowerCase()
@@ -90,14 +119,44 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
     setErrorMessage('')
     try {
       const fd = new FormData()
-      const { availability, ...rest } = data
-      for (const [k, v] of Object.entries(rest)) {
-        fd.append(k, v)
+
+      // Common single-value fields.
+      fd.append('fullName', data.fullName)
+      fd.append('email', data.email)
+      fd.append('phone', data.phone)
+      fd.append('yearsExperience', data.yearsExperience)
+      fd.append('message', data.message)
+
+      if (isOpen) {
+        // Multi-select positions with a free-text 'Other'. If Other is
+        // checked and text provided, use the text; otherwise strip Other
+        // from the list so the operator email is clean.
+        const chosen = data.positions.filter((p) => p !== 'Other')
+        if (data.positions.includes('Other') && data.positionOther.trim().length > 0) {
+          chosen.push(data.positionOther.trim())
+        }
+        // Server route currently persists `position` as a single string.
+        // Join the list so no data is dropped without needing a server
+        // migration; the operator email uses the same joined form.
+        fd.append('position', chosen.join(', '))
+        // Availability rows: "Mon, Tue, Wed" + "Morning, Evening" joined
+        // into the single string field the server already stores.
+        const days = data.availabilityDays.join(', ')
+        const times = data.availability.join(', ')
+        const availString = [days, times].filter(Boolean).join(' — ')
+        fd.append('availability', availString)
+        // Earliest start rides in the existing yearsExperience-adjacent
+        // `message` field prefix so it lands in the operator email
+        // without a server schema change. Explicit label so it's obvious.
+        if (data.earliestStart) {
+          const prefix = `Earliest start: ${data.earliestStart}\n\n`
+          fd.set('message', prefix + data.message)
+        }
+      } else {
+        fd.append('position', data.position)
+        fd.append('availability', data.availability.join(', '))
       }
-      // Multi-select checkbox group joined into the same single `availability`
-      // string field the server already parses. Empty selection sends '' so the
-      // server's `availability || null` insert branch still stores NULL.
-      fd.append('availability', availability.join(', '))
+
       fd.append('website', website)
       fd.append('_mt', String(mt))
       if (file) fd.append('resume', file, file.name)
@@ -220,28 +279,97 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
             style={inputStyle}
           />
         </div>
-        <div>
-          <label className={labelClass} style={labelStyle}>
-            Position {requiredMark}
-          </label>
-          <select
-            required
-            value={data.position}
-            onChange={(e) => set('position', e.target.value)}
-            className={inputClass}
-            style={inputStyle}
-          >
-            <option value="" disabled>
-              Select a position
-            </option>
-            {roles.map((role) => (
-              <option key={role} value={role}>
-                {role}
+        {!isOpen && (
+          <div>
+            <label className={labelClass} style={labelStyle}>
+              Position {requiredMark}
+            </label>
+            <select
+              required
+              value={data.position}
+              onChange={(e) => set('position', e.target.value)}
+              className={inputClass}
+              style={inputStyle}
+            >
+              <option value="" disabled>
+                Select a position
               </option>
-            ))}
-          </select>
-        </div>
+              {roles.map((role) => (
+                <option key={role} value={role}>
+                  {role}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
+
+      {isOpen && (
+        <fieldset>
+          <legend className={labelClass} style={labelStyle}>
+            Positions {requiredMark}
+          </legend>
+          <p className="text-xs mb-2" style={{ color: 'var(--color-text-light)' }}>
+            Check all that apply
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {roles.map((role) => {
+              const checked = data.positions.includes(role)
+              return (
+                <label
+                  key={role}
+                  className="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm cursor-pointer transition-colors"
+                  style={{
+                    borderColor: checked ? 'var(--color-primary)' : 'var(--color-border)',
+                    backgroundColor: 'var(--color-background)',
+                    color: 'var(--color-text)',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    value={role}
+                    checked={checked}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked
+                      setData((d) => ({
+                        ...d,
+                        positions: isChecked
+                          ? d.positions.includes(role) ? d.positions : [...d.positions, role]
+                          : d.positions.filter((v) => v !== role),
+                      }))
+                    }}
+                    className="h-4 w-4 cursor-pointer"
+                    style={{ accentColor: 'var(--color-primary)' }}
+                  />
+                  <span>{role}</span>
+                </label>
+              )
+            })}
+          </div>
+          {data.positions.includes('Other') && (
+            <input
+              type="text"
+              placeholder="Please specify"
+              value={data.positionOther}
+              onChange={(e) => set('positionOther', e.target.value)}
+              className={`${inputClass} mt-2`}
+              style={inputStyle}
+              maxLength={80}
+            />
+          )}
+          {data.positions.length === 0 && (
+            <input
+              type="hidden"
+              required
+              // Empty required hidden triggers the browser's required
+              // validation message and prevents submission. Visually the
+              // checkbox group is the affordance.
+              value=""
+              readOnly
+            />
+          )}
+        </fieldset>
+      )}
 
       <fieldset>
         <legend className={labelClass} style={labelStyle}>
@@ -250,47 +378,139 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
         <p className="text-xs mb-2" style={{ color: 'var(--color-text-light)' }}>
           Check all that apply
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-          {AVAILABILITY_OPTIONS.map((opt) => {
-            const checked = data.availability.includes(opt)
-            return (
-              <label
-                key={opt}
-                className="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-offset-1"
-                style={{
-                  borderColor: checked ? 'var(--color-primary)' : 'var(--color-border)',
-                  backgroundColor: 'var(--color-background)',
-                  color: 'var(--color-text)',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  value={opt}
-                  checked={checked}
-                  onChange={(e) => {
-                    const isChecked = e.target.checked
-                    setData((d) => ({
-                      ...d,
-                      availability: isChecked
-                        ? d.availability.includes(opt)
-                          ? d.availability
-                          : [...d.availability, opt]
-                        : d.availability.filter((v) => v !== opt),
-                    }))
+        {isOpen ? (
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs mb-1.5" style={{ color: 'var(--color-text-light)' }}>Days</p>
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                {AVAILABILITY_DAY_OPTIONS_OPEN.map((day) => {
+                  const checked = data.availabilityDays.includes(day)
+                  return (
+                    <label
+                      key={day}
+                      className="flex items-center justify-center gap-1 rounded-xl border px-2 py-2 text-sm cursor-pointer"
+                      style={{
+                        borderColor: checked ? 'var(--color-primary)' : 'var(--color-border)',
+                        backgroundColor: 'var(--color-background)',
+                        color: 'var(--color-text)',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        value={day}
+                        checked={checked}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked
+                          setData((d) => ({
+                            ...d,
+                            availabilityDays: isChecked
+                              ? d.availabilityDays.includes(day) ? d.availabilityDays : [...d.availabilityDays, day]
+                              : d.availabilityDays.filter((v) => v !== day),
+                          }))
+                        }}
+                        className="h-4 w-4 cursor-pointer"
+                        style={{ accentColor: 'var(--color-primary)' }}
+                      />
+                      <span>{day}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs mb-1.5" style={{ color: 'var(--color-text-light)' }}>Times of day</p>
+              <div className="grid grid-cols-3 gap-2">
+                {AVAILABILITY_TIME_OPTIONS_OPEN.map((opt) => {
+                  const checked = data.availability.includes(opt)
+                  return (
+                    <label
+                      key={opt}
+                      className="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm cursor-pointer"
+                      style={{
+                        borderColor: checked ? 'var(--color-primary)' : 'var(--color-border)',
+                        backgroundColor: 'var(--color-background)',
+                        color: 'var(--color-text)',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        value={opt}
+                        checked={checked}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked
+                          setData((d) => ({
+                            ...d,
+                            availability: isChecked
+                              ? d.availability.includes(opt) ? d.availability : [...d.availability, opt]
+                              : d.availability.filter((v) => v !== opt),
+                          }))
+                        }}
+                        className="h-4 w-4 cursor-pointer"
+                        style={{ accentColor: 'var(--color-primary)' }}
+                      />
+                      <span>{opt}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {AVAILABILITY_OPTIONS.map((opt) => {
+              const checked = data.availability.includes(opt)
+              return (
+                <label
+                  key={opt}
+                  className="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-offset-1"
+                  style={{
+                    borderColor: checked ? 'var(--color-primary)' : 'var(--color-border)',
+                    backgroundColor: 'var(--color-background)',
+                    color: 'var(--color-text)',
                   }}
-                  className="h-4 w-4 cursor-pointer"
-                  style={{ accentColor: 'var(--color-primary)' }}
-                />
-                <span>{opt}</span>
-              </label>
-            )
-          })}
-        </div>
+                >
+                  <input
+                    type="checkbox"
+                    value={opt}
+                    checked={checked}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked
+                      setData((d) => ({
+                        ...d,
+                        availability: isChecked
+                          ? d.availability.includes(opt) ? d.availability : [...d.availability, opt]
+                          : d.availability.filter((v) => v !== opt),
+                      }))
+                    }}
+                    className="h-4 w-4 cursor-pointer"
+                    style={{ accentColor: 'var(--color-primary)' }}
+                  />
+                  <span>{opt}</span>
+                </label>
+              )
+            })}
+          </div>
+        )}
       </fieldset>
+
+      {isOpen && (
+        <div>
+          <label className={labelClass} style={labelStyle}>
+            Earliest start date {optionalMark}
+          </label>
+          <input
+            type="date"
+            value={data.earliestStart}
+            onChange={(e) => set('earliestStart', e.target.value)}
+            className={inputClass}
+            style={inputStyle}
+          />
+        </div>
+      )}
 
       <div>
         <label className={labelClass} style={labelStyle}>
-          Years of experience {optionalMark}
+          {isOpen ? 'Work experience' : 'Years of experience'} {optionalMark}
         </label>
         <select
           value={data.yearsExperience}
@@ -350,7 +570,7 @@ export function JobApplicationForm({ roles }: JobApplicationFormProps) {
           />
         )}
         <p className="mt-1.5 text-xs" style={{ color: 'var(--color-text-light)' }}>
-          PDF, DOC, or DOCX. Max 4 MB.
+          PDF, DOC, or DOCX. Max 5 MB.
         </p>
         {fileError && (
           <p className="mt-1.5 text-sm text-red-600">{fileError}</p>

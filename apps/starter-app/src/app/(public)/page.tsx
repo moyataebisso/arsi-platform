@@ -64,6 +64,7 @@ import { ReservationsBandSection } from '@/components/sections/ReservationsBandS
 import { GalleryStripSection } from '@/components/sections/GalleryStripSection'
 import { NewsletterMapSection } from '@/components/sections/NewsletterMapSection'
 import { BreakfastComingSoonSection } from '@/components/sections/BreakfastComingSoonSection'
+import { AwashBakerySection } from '@/components/sections/AwashBakerySection'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
 import { themeToCSS, type ResolvedTheme } from '@/lib/theme-resolver'
@@ -230,6 +231,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const showBreakfastRaw = await getSiteSetting('show_breakfast_coming_soon')
   const showBreakfastComingSoon =
     (showBreakfastRaw || '').trim().toLowerCase() === 'true'
+  // Awash Bakery home block, gated on enabled_modules.bakery. Copy fields
+  // are all optional overrides; component ships sensible Adama defaults.
+  const bakerySectionSettings = await getSiteSettings([
+    'bakery_home_headline',
+    'bakery_home_body',
+    'bakery_home_image_url',
+    'bakery_home_cta_label',
+    'bakery_home_cta_href',
+  ])
   // video_hero only — both keys swappable per tenant. Poster MUST always
   // render so an empty hero is impossible when the video is blocked/slow.
   const heroVideo = await getSiteSetting('hero_video_url')
@@ -633,6 +643,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     breakfast_coming_soon: (
       <BreakfastComingSoonSection show={showBreakfastComingSoon} />
     ),
+    awash_bakery: (
+      <AwashBakerySection
+        show={enabledModules.bakery}
+        headline={bakerySectionSettings.bakery_home_headline}
+        body={bakerySectionSettings.bakery_home_body}
+        imageUrl={bakerySectionSettings.bakery_home_image_url}
+        ctaLabel={bakerySectionSettings.bakery_home_cta_label}
+        ctaHref={bakerySectionSettings.bakery_home_cta_href}
+      />
+    ),
     newsletter_map: (
       <NewsletterMapSection
         headline={restaurantCenteredSettings.newsletter_headline}
@@ -695,6 +715,18 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     const menuIdx = finalOrder.indexOf('menu_preview')
     const insertAt = menuIdx >= 0 ? menuIdx + 1 : finalOrder.length
     finalOrder.splice(insertAt, 0, 'breakfast_coming_soon')
+  }
+  // Inject Awash Bakery section directly after the breakfast block (or
+  // after menu_preview when no breakfast block). Gated on
+  // enabled_modules.bakery; tenants without the flag are unchanged.
+  if (enabledModules.bakery && !finalOrder.includes('awash_bakery')) {
+    const breakfastIdx = finalOrder.indexOf('breakfast_coming_soon')
+    const menuIdx = finalOrder.indexOf('menu_preview')
+    const insertAt =
+      breakfastIdx >= 0 ? breakfastIdx + 1 :
+      menuIdx >= 0 ? menuIdx + 1 :
+      finalOrder.length
+    finalOrder.splice(insertAt, 0, 'awash_bakery')
   }
 
   return (

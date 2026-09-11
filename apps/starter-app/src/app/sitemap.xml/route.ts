@@ -1,15 +1,38 @@
-import type { MetadataRoute } from 'next'
+import { unstable_noStore as noStore } from 'next/cache'
 import { resolveBaseUrl } from '@/lib/site-url'
 import { getEnabledModules, type EnabledModules } from '@/lib/enabled-modules'
 
-export const dynamic = 'force-dynamic'
+// Route handler variant of the previous `app/sitemap.ts` MetadataRoute
+// export. Two changes over the MetadataRoute form:
+//   1. `noStore()` guarantees the underlying Supabase reads (via
+//      getEnabledModules) never get memoized inside a single request.
+//   2. Explicit `Cache-Control: no-store` on the response defeats
+//      Vercel's edge cache — the previous file convention emitted no
+//      cache header, and Vercel was serving a stale sitemap for hours
+//      after `enabled_modules.parties` was flipped false in the DB.
+// Together they make /sitemap.xml reflect runtime enabled_modules
+// changes without a redeploy, per Phase 2 F0.
 
-type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]['changeFrequency']>
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+type ChangeFrequency =
+  | 'always'
+  | 'hourly'
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'yearly'
+  | 'never'
 
 interface RouteEntry {
   path: string
   priority: number
   changeFrequency: ChangeFrequency
+}
+
+interface FlagGatedRoute extends RouteEntry {
+  flag: keyof EnabledModules
 }
 
 const ALWAYS_PAGES: RouteEntry[] = [
@@ -18,10 +41,6 @@ const ALWAYS_PAGES: RouteEntry[] = [
   { path: '/services', priority: 0.9, changeFrequency: 'monthly' },
   { path: '/contact',  priority: 0.9, changeFrequency: 'monthly' },
 ]
-
-interface FlagGatedRoute extends RouteEntry {
-  flag: keyof EnabledModules
-}
 
 const FLAG_GATED_PAGES: FlagGatedRoute[] = [
   { flag: 'why_choose_us',  path: '/why-choose-us', priority: 0.7, changeFrequency: 'monthly' },
@@ -40,11 +59,9 @@ const FLAG_GATED_PAGES: FlagGatedRoute[] = [
   { flag: 'reviews',        path: '/reviews',       priority: 0.6, changeFrequency: 'weekly'  },
   { flag: 'gallery',        path: '/gallery',       priority: 0.6, changeFrequency: 'weekly'  },
   { flag: 'faq',            path: '/faq',           priority: 0.6, changeFrequency: 'weekly'  },
+  { flag: 'bakery',         path: '/bakery',        priority: 0.6, changeFrequency: 'weekly'  },
 ]
 
-// MN 144G / 245D routes. Only appear when the tenant flips
-// license_separated_nav on. When they do, /our-homes is removed below so the
-// sitemap does not point crawlers at the un-scoped homes page.
 const LICENSE_SEPARATED_PAGES: RouteEntry[] = [
   { path: '/assisted-living',          priority: 0.8, changeFrequency: 'monthly' },
   { path: '/assisted-living/homes',    priority: 0.7, changeFrequency: 'monthly' },
@@ -54,42 +71,58 @@ const LICENSE_SEPARATED_PAGES: RouteEntry[] = [
   { path: '/hcbs/services',            priority: 0.7, changeFrequency: 'monthly' },
 ]
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = resolveBaseUrl()
-  const enabled = await getEnabledModules()
-  const now = new Date()
+function xmlEscape(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
 
-  const routes: MetadataRoute.Sitemap = ALWAYS_PAGES.map((p) => ({
-    url: `${baseUrl}${p.path === '/' ? '' : p.path}`,
-    lastModified: now,
-    changeFrequency: p.changeFrequency,
-    priority: p.priority,
-  }))
+function urlEntry(base: string, path: string, iso: string, freq: ChangeFrequency, priority: number): string {
+  const loc = xmlEscape(`${base}${path === '/' ? '' : path}`)
+  return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${iso}</lastmod>\n    <changefreq>${freq}</changefreq>\n    <priority>${priority.toFixed(1)}</priority>\n  </url>`
+}
+
+export async function GET() {
+  noStore()
+
+  const baseUrl = resolveBaseUrl().replace(/\/$/, '')
+  const enabled = await getEnabledModules()
+  const iso = new Date().toISOString()
+
+  const entries: string[] = []
+
+  for (const p of ALWAYS_PAGES) {
+    entries.push(urlEntry(baseUrl, p.path, iso, p.changeFrequency, p.priority))
+  }
 
   for (const r of FLAG_GATED_PAGES) {
-    // Suppress /our-homes when the tenant has opted into license-separated nav;
-    // the license-scoped /assisted-living/homes and /hcbs/homes replace it.
+    // Suppress /our-homes when the tenant is on license-separated nav; its
+    // license-scoped routes replace it.
     if (r.flag === 'our_homes' && enabled.license_separated_nav) continue
     if (enabled[r.flag]) {
-      routes.push({
-        url: `${baseUrl}${r.path}`,
-        lastModified: now,
-        changeFrequency: r.changeFrequency,
-        priority: r.priority,
-      })
+      entries.push(urlEntry(baseUrl, r.path, iso, r.changeFrequency, r.priority))
     }
   }
 
   if (enabled.license_separated_nav) {
     for (const p of LICENSE_SEPARATED_PAGES) {
-      routes.push({
-        url: `${baseUrl}${p.path}`,
-        lastModified: now,
-        changeFrequency: p.changeFrequency,
-        priority: p.priority,
-      })
+      entries.push(urlEntry(baseUrl, p.path, iso, p.changeFrequency, p.priority))
     }
   }
 
-  return routes
+  const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap-0.9">\n${entries.join('\n')}\n</urlset>\n`
+
+  return new Response(body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      // Defeat Vercel edge cache — the previous MetadataRoute sitemap
+      // was being served stale for hours after a DB flag flip because
+      // no header pinned it to no-store.
+      'Cache-Control': 'no-store, max-age=0, must-revalidate',
+    },
+  })
 }

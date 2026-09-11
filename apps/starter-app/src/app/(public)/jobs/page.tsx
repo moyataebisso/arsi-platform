@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
-import { JobApplicationForm } from '@/components/forms/JobApplicationForm'
+import { JobApplicationForm, type JobApplicationVariant } from '@/components/forms/JobApplicationForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,7 +67,15 @@ export default async function JobsPage() {
     'jobs_apply_phone',
     'jobs_openings',
     'jobs_roles',
+    'jobs_form_variant',
   ])
+  // Form variant. 'open_application' (Adama-style) shows multi-position
+  // checkboxes + weekday/parts-of-day availability + earliest start; the
+  // default 'shift_dropdown' preserves Entrusted's existing form
+  // byte-identically (single-position dropdown + shift-time checkboxes).
+  const rawVariant = (settings.jobs_form_variant || '').trim().toLowerCase()
+  const jobsVariant: JobApplicationVariant =
+    rawVariant === 'open_application' ? 'open_application' : 'shift_dropdown'
   const business = await getBusinessProfile()
   const brand = business.name || ''
 
@@ -215,7 +223,7 @@ export default async function JobsPage() {
             >
               Apply now
             </h2>
-            <JobApplicationForm roles={applicationRoles} />
+            <JobApplicationForm roles={applicationRoles} variant={jobsVariant} />
           </div>
         )}
       </div>
