@@ -7,6 +7,7 @@ interface RestaurantCtasSectionProps {
   orderHref?: string
   cateringHref?: string
   reserveHref?: string
+  reserveSubtitle?: string
 }
 
 // Three gold-on-black CTA blocks for the restaurant home page. Only renders
@@ -19,11 +20,13 @@ export function RestaurantCtasSection({
   orderHref = '/order',
   cateringHref = '/catering',
   reserveHref = '/book',
+  reserveSubtitle,
 }: RestaurantCtasSectionProps) {
+  const reserveSub = (reserveSubtitle || '').trim() || 'Book your table'
   const ctas = [
     showOrder && { href: orderHref, label: 'Order Online', sub: 'Pickup & delivery' },
     showCatering && { href: cateringHref, label: 'Catering', sub: 'For events of any size' },
-    showReserve && { href: reserveHref, label: 'Reserve', sub: 'Book your table' },
+    showReserve && { href: reserveHref, label: 'Reserve', sub: reserveSub },
   ].filter(Boolean) as { href: string; label: string; sub: string }[]
 
   if (ctas.length === 0) return null

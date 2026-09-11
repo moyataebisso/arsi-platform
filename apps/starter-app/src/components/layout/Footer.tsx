@@ -37,6 +37,13 @@ interface FooterProps {
   // tenant already 308-redirects /services → /menu. The footer must match
   // that behavior. Other variants keep the existing footer nav byte-identical.
   navVariant?: 'default' | 'center_logo'
+  // Mirrors the Header prop. Only consulted for the center_logo variant —
+  // when present, footer Quick Links follow: Home, About, [left...],
+  // [right...], Contact. Disabled ids are skipped. Absent → current order.
+  navCenterSplit?: { left: string[]; right: string[] } | null
+  // Show gallery link in footer Quick Links (center_logo variant only).
+  // Driven by whether gallery_images has entries in the DB.
+  showGallery?: boolean
 }
 
 function trimToTwoSentences(text: string): string {
@@ -64,6 +71,8 @@ export async function Footer({
   showBakery,
   showLicenseSeparatedNav,
   navVariant = 'default',
+  navCenterSplit,
+  showGallery,
 }: FooterProps = {}) {
   // center_logo variant drops the flat Services link (which would 308 to
   // /menu anyway) so the footer's Quick Links stay coherent with the header.
@@ -100,6 +109,33 @@ export async function Footer({
     content.footer_tagline ||
     'Dedicated to serving our community.'
 
+  // center_logo variant with an explicit nav_center_split: mirror the header
+  // exactly — Home + About first, then [...left, ...right] from the setting
+  // in the tenant's declared order, then Contact last. Gallery slots in when
+  // the DB has gallery_images. Other variants keep the historical footer nav
+  // byte-identical.
+  const navSplitRegistry: Record<string, { href: string; label: string; enabled: boolean }> = {
+    menu:     { href: '/menu',     label: 'Menu',     enabled: Boolean(showMenuLink) },
+    drinks:   { href: '/drinks',   label: 'Drinks',   enabled: Boolean(showDrinks) },
+    order:    { href: '/order',    label: 'Order',    enabled: Boolean(showOrder) },
+    bakery:   { href: '/bakery',   label: 'Bakery',   enabled: Boolean(showBakery) },
+    reserve:  { href: '/book',     label: 'Reserve',  enabled: Boolean(showReserve) },
+    catering: { href: '/catering', label: 'Catering', enabled: Boolean(showCatering) },
+    jobs:     { href: '/jobs',     label: 'Jobs',     enabled: Boolean(showJobs) },
+    parties:  { href: '/parties',  label: 'Parties',  enabled: Boolean(showParties) },
+    gallery:  { href: '/gallery',  label: 'Gallery',  enabled: Boolean(showGallery) },
+    about:    { href: '/about',    label: pages.about.title, enabled: Boolean(pages.about.enabled) },
+    contact:  { href: '/contact',  label: pages.contact.title, enabled: Boolean(pages.contact.enabled) },
+  }
+  const isValidSplitId = (s: unknown): s is string =>
+    typeof s === 'string' && s in navSplitRegistry
+  const centerSplitOrder: string[] = navVariant === 'center_logo' && navCenterSplit
+    ? [
+        ...(Array.isArray(navCenterSplit.left)  ? navCenterSplit.left.filter(isValidSplitId)  : []),
+        ...(Array.isArray(navCenterSplit.right) ? navCenterSplit.right.filter(isValidSplitId) : []),
+      ]
+    : []
+
   const navLinks = showLicenseSeparatedNav
     ? ([
         pages.home.enabled && { href: '/', label: pages.home.title },
@@ -115,7 +151,27 @@ export async function Footer({
         showResources && { href: '/resources', label: 'Resources' },
         pages.contact.enabled && { href: '/contact', label: pages.contact.title },
       ].filter(Boolean) as { href: string; label: string }[])
-    : ([
+    : centerSplitOrder.length > 0
+      ? (() => {
+          const seen = new Set<string>()
+          const push = (href: string, label: string) => {
+            if (seen.has(href)) return null
+            seen.add(href)
+            return { href, label }
+          }
+          const items: Array<{ href: string; label: string } | null> = []
+          if (pages.home.enabled) items.push(push('/', pages.home.title))
+          if (pages.about.enabled) items.push(push('/about', pages.about.title))
+          for (const id of centerSplitOrder) {
+            if (id === 'about' || id === 'contact') continue
+            const entry = navSplitRegistry[id]
+            if (entry?.enabled) items.push(push(entry.href, entry.label))
+          }
+          if (showGallery && !seen.has('/gallery')) items.push(push('/gallery', 'Gallery'))
+          if (pages.contact.enabled) items.push(push('/contact', pages.contact.title))
+          return items.filter(Boolean) as { href: string; label: string }[]
+        })()
+      : ([
         pages.home.enabled && { href: '/', label: pages.home.title },
         pages.about.enabled && { href: '/about', label: pages.about.title },
         showMenuLink && { href: '/menu', label: 'Menu' },
@@ -133,6 +189,7 @@ export async function Footer({
         (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
         !showReserve && (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },
         (pages.blog.enabled || modules.blog) && { href: '/blog', label: pages.blog.title },
+        showGallery && { href: '/gallery', label: 'Gallery' },
         pages.contact.enabled && { href: '/contact', label: pages.contact.title },
         showResources && { href: '/resources', label: 'Resources' },
       ].filter(Boolean) as { href: string; label: string }[])

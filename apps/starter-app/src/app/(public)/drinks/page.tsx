@@ -1,7 +1,8 @@
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { getBusinessProfile } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
+import { getSiteSetting } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,7 +45,15 @@ async function loadDrinks(): Promise<DrinkItem[]> {
 
 export default async function DrinksPage() {
   const modules = await getEnabledModules()
-  if (!modules.drinks) notFound()
+  if (!modules.drinks) {
+    // If a tenant has explicitly seeded drinks_redirect_to (Adama points to
+    // /menu since drinks live on the menu page), 308 there rather than 404
+    // so any bookmarks or external links keep working. Any other tenant with
+    // drinks disabled keeps the historical 404 behavior byte-for-byte.
+    const redirectTarget = (await getSiteSetting('drinks_redirect_to') || '').trim()
+    if (redirectTarget) permanentRedirect(redirectTarget)
+    notFound()
+  }
 
   const items = await loadDrinks()
   const business = await getBusinessProfile()

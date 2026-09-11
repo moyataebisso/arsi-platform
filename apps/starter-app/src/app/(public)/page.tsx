@@ -231,6 +231,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const showBreakfastRaw = await getSiteSetting('show_breakfast_coming_soon')
   const showBreakfastComingSoon =
     (showBreakfastRaw || '').trim().toLowerCase() === 'true'
+  // Social URLs feed the Breakfast block's Facebook / Instagram links so we
+  // don't hardcode Adama's handles into the component.
+  const socialSettings = await getSiteSettings(['social_facebook', 'social_instagram'])
+  // Reserve CTA subtitle override (Adama swaps "Book your table" for a
+  // "Private room · up to 16" note so the CTA matches the /book request
+  // form). Absent → RestaurantCtasSection keeps the default copy.
+  const reserveCtaSubtitle = (await getSiteSetting('cta_reserve_subtitle') || '').trim()
   // Awash Bakery home block, gated on enabled_modules.bakery. Copy fields
   // are all optional overrides; component ships sensible Adama defaults.
   const bakerySectionSettings = await getSiteSettings([
@@ -600,6 +607,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           showOrder={enabledModules.order_online}
           showCatering={enabledModules.catering}
           showReserve={enabledModules.booking}
+          reserveSubtitle={reserveCtaSubtitle}
         />
       ) : null,
     // restaurant_centered layout bands. Each is data-driven; a section with
@@ -641,7 +649,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     ) : null,
     gallery_strip: <GalleryStripSection images={galleryStripImages} />,
     breakfast_coming_soon: (
-      <BreakfastComingSoonSection show={showBreakfastComingSoon} />
+      <BreakfastComingSoonSection
+        show={showBreakfastComingSoon}
+        facebookUrl={socialSettings.social_facebook}
+        instagramUrl={socialSettings.social_instagram}
+      />
     ),
     awash_bakery: (
       <AwashBakerySection

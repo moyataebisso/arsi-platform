@@ -61,6 +61,14 @@ interface HeaderProps {
   // Contact widgets, and shows social icons on the far right.
   navVariant?: NavVariant
   socialLinks?: NavSocialLink[]
+  // Optional per-tenant reordering of the center_logo nav. When set, the
+  // desktop bar splits items into `left` and `right` around the logo (in the
+  // exact order given), and the mobile drawer flattens them left→right. Items
+  // whose enabled_modules flag is off are silently skipped, so a tenant can
+  // leave stale ids in the array without breaking the render. Absent (or
+  // malformed) → the built-in defaults (menu/drinks/order/reserve on the
+  // left, parties/catering/bakery/jobs on the right) are used byte-for-byte.
+  navCenterSplit?: { left: string[]; right: string[] } | null
 }
 
 export function Header({
@@ -88,6 +96,7 @@ export function Header({
   phoneCtaHref,
   navVariant = 'default',
   socialLinks,
+  navCenterSplit,
 }: HeaderProps = {}) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -207,22 +216,42 @@ export function Header({
   }
 
   // Center-logo nav splits flag-gated items into two columns around the logo.
-  // Only items the tenant explicitly enabled (Menu, Drinks, Order, Reserve on
-  // the left; Parties, Catering, Jobs on the right) make it in — About,
-  // Services, Contact, Shop, Blog, Sign In, phone CTA are intentionally
-  // dropped because the centered layout doesn't have room.
-  const centerLeftLinks = [
-    showMenuLink && { href: '/menu', label: 'Menu' },
-    showDrinks && { href: '/drinks', label: 'Drinks' },
-    showOrder && { href: '/order', label: 'Order' },
-    showReserve && { href: '/book', label: 'Reserve' },
-  ].filter(Boolean) as { href: string; label: string }[]
-  const centerRightLinks = [
-    showParties && { href: '/parties', label: 'Parties' },
-    showCatering && { href: '/catering', label: 'Catering' },
-    showBakery && { href: '/bakery', label: 'Bakery' },
-    showJobs && { href: '/jobs', label: 'Jobs' },
-  ].filter(Boolean) as { href: string; label: string }[]
+  // Only items the tenant explicitly enabled make it in — About, Services,
+  // Contact, Shop, Blog, Sign In, phone CTA are intentionally dropped
+  // because the centered layout doesn't have room.
+  //
+  // Order comes from either the explicit nav_center_split site_setting
+  // (Adama-style Menu / Bakery / Order | Reserve / Catering / Jobs) or the
+  // historical defaults. Registry keyed by short ids so tenants can move
+  // items across the divider without knowing hrefs/labels.
+  type NavId =
+    | 'menu' | 'drinks' | 'order' | 'bakery' | 'reserve'
+    | 'catering' | 'jobs' | 'parties' | 'gallery' | 'about' | 'contact'
+  const centerNavRegistry: Record<NavId, { href: string; label: string; enabled: boolean }> = {
+    menu:     { href: '/menu',     label: 'Menu',     enabled: Boolean(showMenuLink) },
+    drinks:   { href: '/drinks',   label: 'Drinks',   enabled: Boolean(showDrinks) },
+    order:    { href: '/order',    label: 'Order',    enabled: Boolean(showOrder) },
+    bakery:   { href: '/bakery',   label: 'Bakery',   enabled: Boolean(showBakery) },
+    reserve:  { href: '/book',     label: 'Reserve',  enabled: Boolean(showReserve) },
+    catering: { href: '/catering', label: 'Catering', enabled: Boolean(showCatering) },
+    jobs:     { href: '/jobs',     label: 'Jobs',     enabled: Boolean(showJobs) },
+    parties:  { href: '/parties',  label: 'Parties',  enabled: Boolean(showParties) },
+    gallery:  { href: '/gallery',  label: 'Gallery',  enabled: false },
+    about:    { href: '/about',    label: pages.about.title, enabled: Boolean(pages.about.enabled) },
+    contact:  { href: '/contact',  label: pages.contact.title, enabled: Boolean(pages.contact.enabled) },
+  }
+  const DEFAULT_LEFT: NavId[]  = ['menu', 'drinks', 'order', 'reserve']
+  const DEFAULT_RIGHT: NavId[] = ['parties', 'catering', 'bakery', 'jobs']
+  const validId = (s: unknown): s is NavId =>
+    typeof s === 'string' && s in centerNavRegistry
+  const splitLeft: NavId[]  = Array.isArray(navCenterSplit?.left)  ? navCenterSplit!.left.filter(validId)  : DEFAULT_LEFT
+  const splitRight: NavId[] = Array.isArray(navCenterSplit?.right) ? navCenterSplit!.right.filter(validId) : DEFAULT_RIGHT
+  const centerLeftLinks = splitLeft
+    .filter(id => centerNavRegistry[id].enabled)
+    .map(id => ({ href: centerNavRegistry[id].href, label: centerNavRegistry[id].label }))
+  const centerRightLinks = splitRight
+    .filter(id => centerNavRegistry[id].enabled)
+    .map(id => ({ href: centerNavRegistry[id].href, label: centerNavRegistry[id].label }))
 
   const validSocials = (socialLinks || []).filter(s => s.url && s.url.trim().length > 0)
   function pickSocialIcon(label: string): LucideIcon {
