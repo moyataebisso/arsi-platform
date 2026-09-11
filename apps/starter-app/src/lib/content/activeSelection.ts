@@ -5,6 +5,7 @@ import { themeNames, type ThemeName } from '@/lib/theme'
 const HERO_VARIANTS: HeroVariant[] = [
   'solid_color',
   'image_overlay',
+  'image_slideshow',
   'split',
   'centered_minimal',
   'editorial_split',

@@ -57,6 +57,7 @@ import { MissionValuesPhilosophy } from '@/components/sections/MissionValuesPhil
 import { JoinCareCommunity } from '@/components/sections/JoinCareCommunity'
 import { PaymentAndCTA } from '@/components/sections/PaymentAndCTA'
 import { RestaurantCtasSection } from '@/components/sections/RestaurantCtasSection'
+import { GalleryHomeSection, type GalleryHomeImage } from '@/components/sections/GalleryHomeSection'
 import { AboutSplitSection } from '@/components/sections/AboutSplitSection'
 import { OrderBandSection } from '@/components/sections/OrderBandSection'
 import { CateringBandSection } from '@/components/sections/CateringBandSection'
@@ -75,6 +76,7 @@ export const dynamic = 'force-dynamic'
 const HERO_VARIANTS: HeroVariant[] = [
   'solid_color',
   'image_overlay',
+  'image_slideshow',
   'split',
   'centered_minimal',
   'editorial_split',
@@ -216,6 +218,22 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // animated gradient is suppressed and a 75% white overlay keeps text
   // readable. Absent / empty → existing gradient hero unchanged.
   const heroBackgroundUrl = await getSiteSetting('hero_background_url')
+  // image_slideshow variant reads hero_images (jsonb array of URLs). Parsed
+  // defensively — a malformed row falls through to a 0-length array, which
+  // the wrapper then treats as "no slideshow" and delegates to
+  // ImageOverlayHero with the single hero_image_url.
+  const heroImagesRaw = await getSiteSetting('hero_images')
+  let heroImages: string[] = []
+  if (heroImagesRaw) {
+    try {
+      const parsed = JSON.parse(heroImagesRaw) as unknown
+      if (Array.isArray(parsed)) {
+        heroImages = parsed.filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+      }
+    } catch {
+      heroImages = []
+    }
+  }
   // Optional one-line marketing strip under the hero subheadline. Empty/missing
   // → nothing renders. Used by El Roi for the service-list strip.
   const heroBadgeText = await getSiteSetting('hero_badge_text')
@@ -238,6 +256,27 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // "Private room · up to 16" note so the CTA matches the /book request
   // form). Absent → RestaurantCtasSection keeps the default copy.
   const reserveCtaSubtitle = (await getSiteSetting('cta_reserve_subtitle') || '').trim()
+  // "From our kitchen" home teaser reads the same gallery_images jsonb array
+  // as /gallery and the sitemap. Malformed / empty → gallery_home renders
+  // nothing so tenants without the row keep the existing home layout intact.
+  const galleryImagesRaw = await getSiteSetting('gallery_images')
+  let galleryHomeImages: GalleryHomeImage[] = []
+  if (galleryImagesRaw) {
+    try {
+      const parsed = JSON.parse(galleryImagesRaw) as unknown
+      if (Array.isArray(parsed)) {
+        for (const item of parsed) {
+          if (!item || typeof item !== 'object') continue
+          const rec = item as { url?: unknown; alt?: unknown }
+          const url = typeof rec.url === 'string' ? rec.url.trim() : ''
+          const alt = typeof rec.alt === 'string' ? rec.alt.trim() : ''
+          if (url) galleryHomeImages.push({ url, alt })
+        }
+      }
+    } catch {
+      galleryHomeImages = []
+    }
+  }
   // Awash Bakery home block, gated on enabled_modules.bakery. Copy fields
   // are all optional overrides; component ships sensible Adama defaults.
   const bakerySectionSettings = await getSiteSettings([
@@ -420,6 +459,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroPosterUrl={heroPoster || undefined}
         heroImageAlt={heroImageAlt || undefined}
         heroEyebrow={heroEyebrow}
+        heroImages={heroImages}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}
@@ -665,6 +705,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         ctaHref={bakerySectionSettings.bakery_home_cta_href}
       />
     ),
+    gallery_home: <GalleryHomeSection images={galleryHomeImages} />,
     newsletter_map: (
       <NewsletterMapSection
         headline={restaurantCenteredSettings.newsletter_headline}
@@ -739,6 +780,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       menuIdx >= 0 ? menuIdx + 1 :
       finalOrder.length
     finalOrder.splice(insertAt, 0, 'awash_bakery')
+  }
+  // Inject "From our kitchen" gallery teaser after the About section when
+  // gallery_images is populated. Empty list → gallery_home component
+  // noops, so tenants without the row keep the existing home order
+  // byte-identical.
+  if (galleryHomeImages.length > 0 && !finalOrder.includes('gallery_home')) {
+    const aboutIdx = finalOrder.indexOf('about')
+    const insertAt = aboutIdx >= 0 ? aboutIdx + 1 : finalOrder.length
+    finalOrder.splice(insertAt, 0, 'gallery_home')
   }
 
   return (

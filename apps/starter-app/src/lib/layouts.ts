@@ -27,6 +27,7 @@ export type LayoutId = (typeof LAYOUT_IDS)[number]
 export type HeroVariant =
   | 'solid_color'
   | 'image_overlay'
+  | 'image_slideshow'
   | 'split'
   | 'centered_minimal'
   | 'editorial_split'
@@ -90,6 +91,10 @@ export type SectionId =
   // Adama-only "Awash Bakery" home block. Gated by
   // enabled_modules.bakery; defaults to hidden for every other tenant.
   | 'awash_bakery'
+  // "From our kitchen" gallery teaser fed by site_settings.gallery_images.
+  // Renders nothing when the list is empty so tenants without the row keep
+  // the existing home layout byte-identical.
+  | 'gallery_home'
   // restaurant_centered layout sections (all DB-driven)
   | 'about_split'
   | 'order_band'

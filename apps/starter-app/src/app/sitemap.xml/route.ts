@@ -1,6 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache'
 import { resolveBaseUrl } from '@/lib/site-url'
 import { getEnabledModules, type EnabledModules } from '@/lib/enabled-modules'
+import { getSiteSetting } from '@/lib/settings'
 
 // Route handler variant of the previous `app/sitemap.ts` MetadataRoute
 // export. Two changes over the MetadataRoute form:
@@ -92,6 +93,21 @@ export async function GET() {
   const enabled = await getEnabledModules()
   const iso = new Date().toISOString()
 
+  // /gallery only appears when the tenant has actually seeded gallery_images.
+  // enabled_modules.gallery alone is not enough — Adama has it true while the
+  // list is empty during rollout, and we don't want crawlers indexing an
+  // empty "Gallery coming soon" page.
+  let hasGalleryImages = false
+  try {
+    const raw = await getSiteSetting('gallery_images')
+    if (raw) {
+      const parsed = JSON.parse(raw) as unknown
+      hasGalleryImages = Array.isArray(parsed) && parsed.length > 0
+    }
+  } catch {
+    hasGalleryImages = false
+  }
+
   const entries: string[] = []
 
   for (const p of ALWAYS_PAGES) {
@@ -102,6 +118,8 @@ export async function GET() {
     // Suppress /our-homes when the tenant is on license-separated nav; its
     // license-scoped routes replace it.
     if (r.flag === 'our_homes' && enabled.license_separated_nav) continue
+    // /gallery needs both the module flag and a non-empty image list.
+    if (r.flag === 'gallery' && !hasGalleryImages) continue
     if (enabled[r.flag]) {
       entries.push(urlEntry(baseUrl, r.path, iso, r.changeFrequency, r.priority))
     }

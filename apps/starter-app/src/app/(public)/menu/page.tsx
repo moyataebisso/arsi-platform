@@ -146,13 +146,16 @@ export default async function MenuPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {list.map(item => (
                     <div key={item.id} className="flex flex-col">
-                      <div className="mb-3">
-                        <MenuItemImage
-                          imageUrl={item.image_url}
-                          dishName={item.name}
-                          cuisineType={cuisineType}
-                        />
-                      </div>
+                      {item.image_url && (
+                        <div className="mb-3">
+                          <MenuItemImage
+                            imageUrl={item.image_url}
+                            dishName={item.name}
+                            cuisineType={cuisineType}
+                            missing="text_only"
+                          />
+                        </div>
+                      )}
                       <div className="flex items-start justify-between gap-3">
                         <h3
                           className="flex-1 inline-flex items-center gap-2"

@@ -16,6 +16,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      // Supabase Storage public bucket for tenant hero / gallery / menu photos.
+      // Constrained to /storage/v1/object/public/** so signed URLs and admin
+      // endpoints on the same host can never be pulled through next/image.
+      {
+        protocol: 'https',
+        hostname: 'abhpzepanwhuswhiuutu.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
   async headers() {

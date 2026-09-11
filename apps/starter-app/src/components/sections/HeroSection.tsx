@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import type { HeroVariant } from '@/lib/layouts'
 import { displayBusinessName } from '@/lib/business'
+import { ImageSlideshowHero } from './ImageSlideshowHero'
 
 const PLACEHOLDER_NAME = 'Client Business Name'
 const PLACEHOLDER_TAGLINE = 'Your tagline here'
@@ -56,6 +57,11 @@ interface HeroSectionProps {
   // context they would from an alt attribute on an <img>. site_settings key:
   // hero_image_alt. Falls back to a neutral generic label.
   heroImageAlt?: string
+  // image_slideshow only. site_settings key: hero_images. When 2+ entries,
+  // the hero variant crossfades across them; 0-1 entries fall through to the
+  // ImageOverlayHero rendering with the single image so no hero ever renders
+  // blank. Every other variant ignores this prop.
+  heroImages?: string[]
   // Optional override for the ImageOverlayHero eyebrow pill. site_settings
   // key: hero_eyebrow_text.
   //   undefined → caller did not read the key (or the row is missing) →
@@ -1223,6 +1229,42 @@ function VideoHero(props: VariantProps) {
 }
 
 // ============================================================
+// IMAGE_SLIDESHOW — server-side wrapper that resolves copy/CTA labels and
+// hands the render off to the client-side ImageSlideshowHero. When hero_images
+// has 0-1 entries the underlying ImageOverlayHero renders with the single
+// heroImageUrl instead so a mis-seeded row never blanks out the hero.
+// ============================================================
+function ImageSlideshowHeroWrapper(props: VariantProps) {
+  const images = (props.heroImages || []).map(s => (s || '').trim()).filter(Boolean)
+  if (images.length < 2) {
+    return <ImageOverlayHero {...props} heroImageUrl={images[0] || props.heroImageUrl} />
+  }
+  const display = getDisplayValues(props)
+  const { line1, line2 } = splitHeadline(display.headline)
+  const ctaHref = getCtaHref()
+  const locationLabel = getLocationLabel(props.city, props.state)
+  const derivedEyebrow = locationLabel || resolveTagline(props.tagline) || ''
+  const rawEyebrow = props.heroEyebrow !== undefined ? props.heroEyebrow : derivedEyebrow
+  const eyebrow = rawEyebrow.trim() || null
+  const imageAlt = resolveHeroImageAlt(props.heroImageAlt, resolveBusinessName(props.businessName))
+  return (
+    <ImageSlideshowHero
+      images={images}
+      imageAlt={imageAlt}
+      eyebrow={eyebrow}
+      line1={line1}
+      line2={line2}
+      subheadline={display.subheadline}
+      badgeText={props.heroBadgeText}
+      ctaPrimaryLabel={display.ctaPrimary}
+      ctaPrimaryHref={ctaHref}
+      ctaSecondaryLabel={display.ctaSecondary}
+      ctaSecondaryHref={display.ctaSecondaryHref}
+    />
+  )
+}
+
+// ============================================================
 // HeroSection — variant dispatcher
 // ============================================================
 export function HeroSection(props: HeroSectionProps) {
@@ -1246,6 +1288,7 @@ export function HeroSection(props: HeroSectionProps) {
     heroPosterUrl: props.heroPosterUrl,
     heroImageAlt: props.heroImageAlt,
     heroEyebrow: props.heroEyebrow,
+    heroImages: props.heroImages,
   }
 
   switch (activeVariant) {
@@ -1253,6 +1296,8 @@ export function HeroSection(props: HeroSectionProps) {
       return <SolidColorHero {...variantProps} />
     case 'image_overlay':
       return <ImageOverlayHero {...variantProps} />
+    case 'image_slideshow':
+      return <ImageSlideshowHeroWrapper {...variantProps} />
     case 'centered_minimal':
       return <CenteredMinimalHero {...variantProps} />
     case 'editorial_split':

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { UtensilsCrossed } from 'lucide-react'
 
 interface Props {
@@ -13,6 +14,13 @@ interface Props {
    * /menu and MenuPreview layouts. Override on home preview if needed.
    */
   aspect?: '4/3' | '1/1' | '16/9'
+  /**
+   * How to handle a missing image_url.
+   *   'placeholder' (default): render the cuisine-themed placeholder card.
+   *   'text_only': render nothing so the parent card is clean text only —
+   *     used by /menu, which prefers no broken/empty box over a placeholder.
+   */
+  missing?: 'placeholder' | 'text_only'
 }
 
 /**
@@ -32,6 +40,7 @@ export function MenuItemImage({
   cuisineType,
   className,
   aspect = '4/3',
+  missing = 'placeholder',
 }: Props) {
   const [errored, setErrored] = useState(false)
   const showImg = !!imageUrl && !errored
@@ -41,21 +50,25 @@ export function MenuItemImage({
   if (showImg) {
     return (
       <div
-        className={`${aspectClass} rounded-lg overflow-hidden ${className || ''}`}
+        className={`relative ${aspectClass} rounded-lg overflow-hidden ${className || ''}`}
         style={{ backgroundColor: 'var(--color-surface)' }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={imageUrl as string}
           alt={dishName}
+          fill
           loading="lazy"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           onError={() => setErrored(true)}
-          className="w-full h-full object-cover"
-          style={{ display: 'block' }}
+          className="object-cover"
         />
       </div>
     )
   }
+
+  // Text-only mode: render nothing so the parent card is clean text — used
+  // by /menu, where a placeholder card next to real photos looked broken.
+  if (missing === 'text_only') return null
 
   // Placeholder — theme-aware, dish-name overlaid on subtle pattern.
   return (

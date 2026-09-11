@@ -10,6 +10,7 @@ import { validateSelection, type ActiveSelection } from '@/lib/content/activeSel
 const HERO_VARIANTS: { id: HeroVariant; label: string }[] = [
   { id: 'solid_color', label: 'Solid color' },
   { id: 'image_overlay', label: 'Image overlay' },
+  { id: 'image_slideshow', label: 'Image slideshow' },
   { id: 'split', label: 'Split (2-col)' },
   { id: 'centered_minimal', label: 'Centered minimal' },
   { id: 'editorial_split', label: 'Editorial split' },
