@@ -46,12 +46,20 @@ export function GalleryHomeSection({
             </Link>
           )}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/*
+          Desktop keeps the 4-column grid inside max-w-6xl (~1152 / 4 = ~288
+          CSS px per tile) so the ~480px-wide source photos are always
+          downscaled, never upscaled. aspect-[4/3] + object-cover +
+          object-center gives a consistent landscape crop that reads as
+          intentional composition instead of "square photo shoved into a
+          square hole". Mobile keeps the 2-col square grid it had.
+        */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           {shown.map((img, i) => (
             <Link
               key={img.url + i}
               href={href}
-              className="relative block aspect-square overflow-hidden rounded-xl group focus:outline-none focus:ring-2 focus:ring-offset-2"
+              className="relative block aspect-square lg:aspect-[4/3] overflow-hidden rounded-xl group focus:outline-none focus:ring-2 focus:ring-offset-2"
               style={{
                 border: '1px solid var(--color-border)',
                 backgroundColor: 'var(--color-surface)',
@@ -63,9 +71,9 @@ export function GalleryHomeSection({
                 alt={img.alt}
                 fill
                 loading="lazy"
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                sizes="(min-width: 1024px) 300px, (min-width: 640px) 33vw, 50vw"
                 unoptimized={!isAllowedImageHost(img.url)}
-                className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                className="object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]"
               />
             </Link>
           ))}

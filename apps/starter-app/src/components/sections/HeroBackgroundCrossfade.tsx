@@ -66,15 +66,58 @@ export function HeroBackgroundCrossfade({ images }: { images: string[] }) {
           }}
           aria-hidden="true"
         >
+          {/*
+            Below lg: single object-cover frame (byte-identical to the
+            pre-fix render on phones and tablets where the source photo
+            covers cleanly).
+
+            lg and up: the source photos are ~480x480 near-square shots and
+            the desktop hero band is ~1920x720. Filling that in a single
+            layer either upscales ~4x and crops top+bottom (what shipped
+            and looked zoomed) or letterboxes with dead space. Split into
+            two layers instead:
+              (a) backdrop -- same image, object-cover, blurred + dimmed
+                  + scaled slightly to fill the band without visible
+                  cropping;
+              (b) foreground -- same image, object-contain, centered,
+                  natural aspect, no upscale beyond its own width.
+            The sizes attr caps the desktop request at ~1400px so we do
+            not pay for a 1920px optimized asset the foreground layer
+            cannot use anyway.
+          */}
           <Image
             src={src}
             alt=""
             fill
             priority={i === 0}
             loading={i === 0 ? undefined : 'lazy'}
-            sizes="100vw"
+            sizes="(min-width: 1024px) 1400px, 100vw"
             unoptimized={!isAllowedImageHost(src)}
-            className="object-cover object-center"
+            className="object-cover object-center lg:hidden"
+          />
+          <Image
+            src={src}
+            alt=""
+            fill
+            priority={i === 0}
+            loading={i === 0 ? undefined : 'lazy'}
+            sizes="(min-width: 1024px) 1400px, 100vw"
+            unoptimized={!isAllowedImageHost(src)}
+            className="hidden lg:block object-cover object-center"
+            style={{
+              filter: 'blur(24px) brightness(0.6)',
+              transform: 'scale(1.1)',
+            }}
+          />
+          <Image
+            src={src}
+            alt=""
+            fill
+            priority={i === 0}
+            loading={i === 0 ? undefined : 'lazy'}
+            sizes="(min-width: 1024px) 720px, 100vw"
+            unoptimized={!isAllowedImageHost(src)}
+            className="hidden lg:block object-contain object-center"
           />
         </div>
       ))}

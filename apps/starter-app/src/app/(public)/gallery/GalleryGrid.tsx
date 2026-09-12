@@ -65,7 +65,14 @@ export function GalleryGrid({ images }: { images: GalleryImage[] }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/*
+        Cap the grid at 4 columns inside max-w-6xl so each tile is at most
+        ~288 CSS px on desktop -- well below the ~480px natural width of the
+        seeded photos so next/image never has to upscale. aspect-[4/3] +
+        object-cover + object-center gives a uniform landscape crop across
+        the mixed-aspect source set. Mobile keeps the 1-col layout it had.
+      */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {images.map((img, i) => (
           <button
             key={img.url + i}
@@ -86,9 +93,9 @@ export function GalleryGrid({ images }: { images: GalleryImage[] }) {
               alt={img.alt}
               fill
               loading="lazy"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              sizes="(min-width: 1280px) 300px, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
               unoptimized={!isAllowedImageHost(img.url)}
-              className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              className="object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]"
             />
           </button>
         ))}
