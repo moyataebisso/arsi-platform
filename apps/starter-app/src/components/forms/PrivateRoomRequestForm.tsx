@@ -55,7 +55,11 @@ function todayISO(): string {
   return `${yyyy}-${mm}-${dd}`
 }
 
-export function PrivateRoomRequestForm() {
+// capacity is the private-room seating ceiling. Passed down from the server
+// page which resolves site_settings.private_room_capacity so this form stays
+// a pure client component. Defaulted here matching the page/API fallback so
+// unit-test callers that omit the prop still get a sane cap.
+export function PrivateRoomRequestForm({ capacity = 24 }: { capacity?: number }) {
   const [data, setData] = useState<FormState>(INITIAL)
   const [website, setWebsite] = useState('')
   const mt = useMountTimestamp()
@@ -161,8 +165,8 @@ export function PrivateRoomRequestForm() {
         </div>
         <div>
           <label htmlFor="pr-size" className={labelClass} style={labelStyle}>Party size {requiredMark}</label>
-          <input id="pr-size" type="number" required min={1} max={16} inputMode="numeric" value={data.partySize} onChange={(e) => set('partySize', e.target.value)} className={inputClass} style={inputStyle} />
-          <p className="mt-1 text-xs" style={{ color: 'var(--color-text-light)' }}>Room seats up to 16.</p>
+          <input id="pr-size" type="number" required min={1} max={capacity} inputMode="numeric" value={data.partySize} onChange={(e) => set('partySize', e.target.value)} className={inputClass} style={inputStyle} />
+          <p className="mt-1 text-xs" style={{ color: 'var(--color-text-light)' }}>{`Room seats up to ${capacity}.`}</p>
         </div>
       </div>
 

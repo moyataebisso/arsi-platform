@@ -9,14 +9,21 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata() {
   const enabled = await getEnabledModules()
   if (!enabled.bakery) return {}
-  const settings = await getSiteSettings(['bakery_meta_description'])
+  const settings = await getSiteSettings([
+    'bakery_meta_title',
+    'bakery_meta_description',
+    'business_name',
+  ])
+  const business = (settings.business_name || '').trim()
+  const explicit = (settings.bakery_meta_title || '').trim()
+  // Precedence: explicit meta title → "<business_name> Bakery" → 'Bakery'.
+  // Prior behavior hardcoded Adama's brand, which would have leaked to any
+  // future tenant that flipped enabled_modules.bakery on.
+  const title = explicit || (business ? `${business} Bakery` : 'Bakery')
   const description =
     settings.bakery_meta_description ||
-    'Fresh injera, homemade bread, and specialty bakes from Awash Bakery. Pre-orders welcome — call or send a request.'
-  return {
-    title: 'Awash Bakery | Injera & Homemade Bread in Columbia Heights',
-    description,
-  }
+    'Fresh injera, homemade bread, and specialty bakes. Pre-orders welcome — call or send a request.'
+  return { title, description }
 }
 
 export default async function BakeryPage() {
@@ -28,17 +35,45 @@ export default async function BakeryPage() {
     'bakery_body',
     'bakery_image_url',
     'bakery_pricing_note',
+    'bakery_pre_order_items',
   ])
   const business = await getBusinessProfile()
   const phone = business.phone || ''
   const telHref = phone ? `tel:${phone.replace(/[^0-9+]/g, '')}` : ''
+  const brand = (business.name || '').trim()
 
   const headline = settings.bakery_headline || 'Awash Bakery'
-  const bodyDefault =
-    'Fresh injera in several varieties and homemade bread, baked at Adama Restaurant. Open the same hours as the restaurant. Custom and pre-orders welcome by phone or the form below — we’ll follow up to confirm.'
+  // Default body interpolates the tenant's own business_name so an unseeded
+  // tenant enabling enabled_modules.bakery no longer inherits "Adama
+  // Restaurant". When business_name is unset, drop the "baked at" clause
+  // entirely rather than emit a dangling preposition.
+  const bodyDefault = brand
+    ? `Fresh injera in several varieties and homemade bread, baked at ${brand}. Open the same hours as the restaurant. Custom and pre-orders welcome by phone or the form below — we’ll follow up to confirm.`
+    : 'Fresh injera in several varieties and homemade bread. Open the same hours as the restaurant. Custom and pre-orders welcome by phone or the form below — we’ll follow up to confirm.'
   const body = settings.bakery_body || bodyDefault
   const pricingNote = settings.bakery_pricing_note || (phone ? `Call ${phone} for prices.` : 'Call for prices.')
   const heroImage = settings.bakery_image_url
+
+  // Parse site_settings.bakery_pre_order_items (jsonb array of strings).
+  // Malformed / missing → undefined, and the form falls through to its own
+  // DEFAULT_ITEM_OPTIONS. Filtering keeps only non-empty strings so a null
+  // slot in the array cannot render an empty checkbox.
+  let preOrderItems: string[] | undefined
+  const rawItems = settings.bakery_pre_order_items
+  if (rawItems) {
+    try {
+      const parsed = JSON.parse(rawItems) as unknown
+      if (Array.isArray(parsed)) {
+        const filtered = parsed
+          .filter((v): v is string => typeof v === 'string')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
+        if (filtered.length > 0) preOrderItems = filtered
+      }
+    } catch {
+      /* fall through to component default */
+    }
+  }
 
   return (
     <>
@@ -115,7 +150,7 @@ export default async function BakeryPage() {
           >
             Pre-order
           </h2>
-          <BakeryPreOrderForm />
+          <BakeryPreOrderForm items={preOrderItems} />
         </div>
       </section>
     </>

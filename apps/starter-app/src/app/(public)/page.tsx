@@ -714,6 +714,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         imageUrl={bakerySectionSettings.bakery_home_image_url}
         ctaLabel={bakerySectionSettings.bakery_home_cta_label}
         ctaHref={bakerySectionSettings.bakery_home_cta_href}
+        businessName={business.name}
       />
     ),
     gallery_home: <GalleryHomeSection images={galleryHomeImages} />,

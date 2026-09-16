@@ -3,7 +3,11 @@
 import { useState } from 'react'
 import { Honeypot, useMountTimestamp } from '@/components/security/Honeypot'
 
-const ITEM_OPTIONS = ['Injera', 'Homemade bread', 'Other'] as const
+// Neutral fallback used when the server page did not (or could not) pass an
+// item list. The server page reads site_settings.bakery_pre_order_items;
+// tenants override without touching this file. "Other" is the sentinel that
+// reveals the itemsOther free-text input.
+const DEFAULT_ITEM_OPTIONS: readonly string[] = ['Ambasha', 'Injera', 'Dabo bread', 'Other']
 
 interface FormState {
   name: string
@@ -35,7 +39,12 @@ function todayISO(): string {
   return `${yyyy}-${mm}-${dd}`
 }
 
-export function BakeryPreOrderForm() {
+// `items` is the DB-driven pre-order menu passed from the server /bakery
+// page. Falls back to DEFAULT_ITEM_OPTIONS when the caller omits the prop
+// (or the tenant hasn't seeded site_settings.bakery_pre_order_items).
+export function BakeryPreOrderForm({ items }: { items?: readonly string[] } = {}) {
+  const options: readonly string[] =
+    Array.isArray(items) && items.length > 0 ? items : DEFAULT_ITEM_OPTIONS
   const [data, setData] = useState<FormState>(INITIAL)
   const [website, setWebsite] = useState('')
   const mt = useMountTimestamp()
@@ -143,7 +152,7 @@ export function BakeryPreOrderForm() {
         <legend className={labelClass} style={labelStyle}>Items {requiredMark}</legend>
         <p className="text-xs mb-2" style={{ color: 'var(--color-text-light)' }}>Check all that apply</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          {ITEM_OPTIONS.map((opt) => {
+          {options.map((opt) => {
             const checked = data.items.includes(opt)
             return (
               <label

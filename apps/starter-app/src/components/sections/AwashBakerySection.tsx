@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
-// Adama-only home block, gated on enabled_modules.bakery. Points at
+// Bakery home block, gated on enabled_modules.bakery. Points at
 // /bakery for the pre-order form. Rendered directly after the
-// breakfast_coming_soon block per Phase 2 F4.
+// breakfast_coming_soon block per Phase 2 F4. The default body
+// interpolates businessName so a future tenant enabling the flag
+// no longer inherits Adama's brand.
 export function AwashBakerySection({
   show,
   headline,
@@ -11,6 +13,7 @@ export function AwashBakerySection({
   imageUrl,
   ctaLabel,
   ctaHref,
+  businessName,
 }: {
   show: boolean
   headline?: string
@@ -18,13 +21,17 @@ export function AwashBakerySection({
   imageUrl?: string
   ctaLabel?: string
   ctaHref?: string
+  businessName?: string
 }) {
   if (!show) return null
 
+  const brand = (businessName || '').trim()
   const resolvedHeadline = headline || 'Awash Bakery'
   const resolvedBody =
     body ||
-    'Fresh injera and homemade bread, baked at Adama Restaurant. Pre-orders welcome — pick up during regular hours.'
+    (brand
+      ? `Fresh injera and homemade bread, baked at ${brand}. Pre-orders welcome — pick up during regular hours.`
+      : 'Fresh injera and homemade bread. Pre-orders welcome — pick up during regular hours.')
   const resolvedCtaLabel = ctaLabel || 'Pre-order'
   const resolvedCtaHref = ctaHref || '/bakery'
 

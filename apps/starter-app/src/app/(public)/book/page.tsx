@@ -7,6 +7,16 @@ import { getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { PrivateRoomRequestForm } from '@/components/forms/PrivateRoomRequestForm'
 
+// Fallback matches the API route so form and server agree if the DB row is
+// absent or malformed. Historical value was 16; raised because the current
+// room seats more.
+const DEFAULT_PRIVATE_ROOM_CAPACITY = 24
+
+function resolveCapacity(raw: string | undefined): number {
+  const parsed = Number.parseInt((raw || '').trim(), 10)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_PRIVATE_ROOM_CAPACITY
+}
+
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
@@ -30,14 +40,16 @@ export default async function BookPage() {
       'booking_mode',
       'booking_headline',
       'booking_body',
+      'private_room_capacity',
     ])
     const mode = (settings.booking_mode || '').trim().toLowerCase() === 'request' ? 'request' : 'services'
     if (mode === 'request') {
       const business = await getBusinessProfile()
       const phone = business.phone || ''
+      const capacity = resolveCapacity(settings.private_room_capacity)
       const headline = settings.booking_headline || 'Private room reservations'
       const bodyDefault =
-        'Our private room seats up to 16 — business meetings, birthdays, family gatherings. No deposit. This sends a request; we’ll call or email to confirm.'
+        `Our private room seats up to ${capacity} — business meetings, birthdays, family gatherings. No deposit. This sends a request; we’ll call or email to confirm.`
       const body = settings.booking_body || bodyDefault
       const telHref = phone ? `tel:${phone.replace(/[^0-9+]/g, '')}` : ''
 
@@ -75,7 +87,7 @@ export default async function BookPage() {
                 </a>
               </p>
             )}
-            <PrivateRoomRequestForm />
+            <PrivateRoomRequestForm capacity={capacity} />
           </div>
         </section>
       )

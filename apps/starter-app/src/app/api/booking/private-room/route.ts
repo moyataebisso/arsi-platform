@@ -11,24 +11,37 @@ import { renderRows } from '@/lib/email/templates/form-rows'
 import { guard, SILENT_SUCCESS_BODY, escapeHtml, isValidEmail, stripHeaderValue } from '@/lib/security/form-guard'
 import { rateLimit, getClientIp } from '@/lib/security/ratelimit'
 
-const privateRoomSchema = z.object({
-  name: z.string().trim().min(1).max(120),
-  phone: z.string().trim().min(7).max(40),
-  email: z.string().trim().email().max(254),
-  date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).refine((d) => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return new Date(`${d}T00:00:00`) >= today
-  }, 'Date must be today or later'),
-  startTime: z.string().trim().regex(/^\d{2}:\d{2}$/),
-  endTime: z.string().trim().regex(/^$|^\d{2}:\d{2}$/).optional().default(''),
-  partySize: z.coerce.number().int().min(1).max(16),
-  occasion: z.string().trim().max(60).optional().default(''),
-  foodPlan: z.string().trim().max(60).optional().default(''),
-  coffeeCeremony: z.string().trim().max(20).optional().default(''),
-  accessibility: z.string().trim().max(300).optional().default(''),
-  notes: z.string().trim().max(2000).optional().default(''),
-})
+// Default private-room capacity when site_settings.private_room_capacity is
+// absent, malformed, or non-positive. Historical value was 16; raised to 24
+// because Adama's room reseats now support that many. Any tenant on a
+// smaller room seeds the key with their own integer.
+const DEFAULT_PRIVATE_ROOM_CAPACITY = 24
+
+function resolvePrivateRoomCapacity(raw: string | null): number {
+  const parsed = Number.parseInt((raw || '').trim(), 10)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_PRIVATE_ROOM_CAPACITY
+}
+
+function buildPrivateRoomSchema(capacity: number) {
+  return z.object({
+    name: z.string().trim().min(1).max(120),
+    phone: z.string().trim().min(7).max(40),
+    email: z.string().trim().email().max(254),
+    date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).refine((d) => {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      return new Date(`${d}T00:00:00`) >= today
+    }, 'Date must be today or later'),
+    startTime: z.string().trim().regex(/^\d{2}:\d{2}$/),
+    endTime: z.string().trim().regex(/^$|^\d{2}:\d{2}$/).optional().default(''),
+    partySize: z.coerce.number().int().min(1).max(capacity),
+    occasion: z.string().trim().max(60).optional().default(''),
+    foodPlan: z.string().trim().max(60).optional().default(''),
+    coffeeCeremony: z.string().trim().max(20).optional().default(''),
+    accessibility: z.string().trim().max(300).optional().default(''),
+    notes: z.string().trim().max(2000).optional().default(''),
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,6 +69,11 @@ export async function POST(request: NextRequest) {
     const rl = rateLimit(`private_room_${ip}`, 5, 60 * 60 * 1000)
     if (!rl.success) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
 
+    // Fetch the tenant's configured capacity BEFORE validating so the zod
+    // max reflects the current DB value. A missing / malformed row falls back
+    // to DEFAULT_PRIVATE_ROOM_CAPACITY.
+    const capacity = resolvePrivateRoomCapacity(await getSiteSetting('private_room_capacity'))
+    const privateRoomSchema = buildPrivateRoomSchema(capacity)
     const parsed = privateRoomSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })

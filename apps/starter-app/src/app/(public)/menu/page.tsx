@@ -1,5 +1,6 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { getBusinessProfile } from '@/lib/business'
+import { getSiteSetting } from '@/lib/settings'
 import { Star } from 'lucide-react'
 import { MenuItemImage } from '@/components/MenuItemImage'
 
@@ -74,6 +75,10 @@ export default async function MenuPage() {
   const business = await getBusinessProfile()
   const brand = business.name || ''
   const cuisineType = await loadCuisineType()
+  // Optional small muted note under the menu hero (e.g. "Prices subject to
+  // change" / "Dine-in only after 8pm"). Absent / empty → nothing renders,
+  // so tenants without the row keep the /menu layout byte-identical.
+  const menuNote = ((await getSiteSetting('menu_note')) || '').trim()
 
   // Group items by category, preserving the order in CATEGORY_ORDER.
   const grouped = new Map<string, MenuItem[]>()
@@ -113,6 +118,14 @@ export default async function MenuPage() {
                 ? `What's cooking at ${brand} — fresh, seasonal, and made with care.`
                 : "Fresh, seasonal, and made with care."}
             </p>
+            {menuNote && (
+              <p
+                className="mt-3 text-sm"
+                style={{ color: 'var(--color-text-light)' }}
+              >
+                {menuNote}
+              </p>
+            )}
           </div>
         </div>
       </section>
