@@ -239,6 +239,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       heroImages = []
     }
   }
+  // Hero image fit mode. 'contain' (default) preserves the current desktop
+  // render — blurred cover backdrop + sharp centered contain foreground.
+  // 'cover' skips the backdrop/contain split and renders a single object-cover
+  // frame edge-to-edge; used when the tenant has landscape source photos.
+  // Any other value (missing / malformed) falls through to 'contain' so
+  // every tenant without the row is byte-identical.
+  const heroFitRaw = (await getSiteSetting('hero_fit') || '').trim().toLowerCase()
+  const heroFit: 'contain' | 'cover' = heroFitRaw === 'cover' ? 'cover' : 'contain'
   // Optional one-line marketing strip under the hero subheadline. Empty/missing
   // → nothing renders. Used by El Roi for the service-list strip.
   const heroBadgeText = await getSiteSetting('hero_badge_text')
@@ -465,6 +473,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroImageAlt={heroImageAlt || undefined}
         heroEyebrow={heroEyebrow}
         heroImages={heroImages}
+        heroFit={heroFit}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}

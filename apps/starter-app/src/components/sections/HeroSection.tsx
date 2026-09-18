@@ -63,6 +63,15 @@ interface HeroSectionProps {
   // ImageOverlayHero rendering with the single image so no hero ever renders
   // blank. Every other variant ignores this prop.
   heroImages?: string[]
+  // How the crossfade layer fits the hero band. site_settings key: hero_fit.
+  //   'contain' (default / absent / malformed) — desktop renders a blurred
+  //                                             cover backdrop plus a sharp
+  //                                             centered contain foreground.
+  //                                             Byte-identical to prior
+  //                                             behavior.
+  //   'cover'   — a single object-cover frame per slide fills the band edge
+  //               to edge. Used by tenants with landscape source photos.
+  heroFit?: 'contain' | 'cover'
   // Optional override for the ImageOverlayHero eyebrow pill. site_settings
   // key: hero_eyebrow_text.
   //   undefined → caller did not read the key (or the row is missing) →
@@ -1130,7 +1139,7 @@ function VideoHero(props: VariantProps) {
         backgroundColor: '#000',
       }}
     >
-      {useSlideshow && <HeroBackgroundCrossfade images={slideshowUrls} />}
+      {useSlideshow && <HeroBackgroundCrossfade images={slideshowUrls} heroFit={props.heroFit} />}
       {videoUrl && (
         // eslint-disable-next-line jsx-a11y/media-has-caption
         <video
@@ -1301,6 +1310,7 @@ export function HeroSection(props: HeroSectionProps) {
     heroImageAlt: props.heroImageAlt,
     heroEyebrow: props.heroEyebrow,
     heroImages: props.heroImages,
+    heroFit: props.heroFit,
   }
 
   switch (activeVariant) {
