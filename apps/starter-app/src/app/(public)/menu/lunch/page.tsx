@@ -1,35 +1,36 @@
+import { notFound } from 'next/navigation'
 import { getBusinessProfile } from '@/lib/business'
-import { getSiteSetting } from '@/lib/settings'
 import {
   loadMenuItems,
   loadCuisineType,
   loadMenuSplitPagesFlag,
+  filterItemsByTab,
   MenuCategoriesList,
   MenuTabs,
-} from './_shared'
+} from '../_shared'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
-  return { title: 'Menu' }
+  const enabled = await loadMenuSplitPagesFlag()
+  if (!enabled) return {}
+  return { title: 'Lunch & Dinner Menu' }
 }
 
-export default async function MenuPage() {
-  const [items, cuisineType, splitEnabled] = await Promise.all([
+export default async function LunchMenuPage() {
+  const splitEnabled = await loadMenuSplitPagesFlag()
+  if (!splitEnabled) notFound()
+
+  const [allItems, cuisineType] = await Promise.all([
     loadMenuItems(),
     loadCuisineType(),
-    loadMenuSplitPagesFlag(),
   ])
+  const items = filterItemsByTab(allItems, 'lunch')
   const business = await getBusinessProfile()
   const brand = business.name || ''
-  // Optional small muted note under the menu hero (e.g. "Prices subject to
-  // change" / "Dine-in only after 8pm"). Absent / empty → nothing renders,
-  // so tenants without the row keep the /menu layout byte-identical.
-  const menuNote = ((await getSiteSetting('menu_note')) || '').trim()
 
   return (
     <>
-      {/* Hero */}
       <section
         className="py-16 sm:py-20"
         style={{
@@ -46,27 +47,23 @@ export default async function MenuPage() {
                 fontFamily: 'var(--font-playfair)',
               }}
             >
-              Menu
+              Lunch &amp; Dinner
             </h1>
             <p className="text-lg leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
               {brand
-                ? `What's cooking at ${brand} — fresh, seasonal, and made with care.`
-                : "Fresh, seasonal, and made with care."}
+                ? `The full menu at ${brand} — fresh, seasonal, and made with care.`
+                : 'Fresh, seasonal, and made with care.'}
             </p>
-            {menuNote && (
-              <p
-                className="mt-3 text-sm"
-                style={{ color: 'var(--color-text-light)' }}
-              >
-                {menuNote}
-              </p>
-            )}
-            {splitEnabled && <MenuTabs active="all" />}
+            <MenuTabs active="lunch" />
           </div>
         </div>
       </section>
 
-      <MenuCategoriesList items={items} cuisineType={cuisineType} />
+      <MenuCategoriesList
+        items={items}
+        cuisineType={cuisineType}
+        emptyMessage="Lunch & dinner menu coming soon. Check back shortly."
+      />
     </>
   )
 }

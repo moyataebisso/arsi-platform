@@ -65,6 +65,8 @@ import { ReservationsBandSection } from '@/components/sections/ReservationsBandS
 import { GalleryStripSection } from '@/components/sections/GalleryStripSection'
 import { NewsletterMapSection } from '@/components/sections/NewsletterMapSection'
 import { BreakfastComingSoonSection } from '@/components/sections/BreakfastComingSoonSection'
+import { BreakfastLiveSection } from '@/components/sections/BreakfastLiveSection'
+import { HomeRotatingGallery } from '@/components/sections/HomeRotatingGallery'
 import { AwashBakerySection } from '@/components/sections/AwashBakerySection'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
@@ -262,6 +264,61 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const showBreakfastRaw = await getSiteSetting('show_breakfast_coming_soon')
   const showBreakfastComingSoon =
     (showBreakfastRaw || '').trim().toLowerCase() === 'true'
+  // Live-mode breakfast block (Phase 5). site_settings.breakfast_status is
+  // "coming_soon" | "live". Absent / any other value → coming_soon path,
+  // which itself falls through to show_breakfast_coming_soon so pre-seed
+  // tenants keep the existing rendering.
+  const breakfastStatusRaw = ((await getSiteSetting('breakfast_status')) || '')
+    .trim()
+    .toLowerCase()
+  const breakfastStatus: 'live' | 'coming_soon' =
+    breakfastStatusRaw === 'live' ? 'live' : 'coming_soon'
+  // menu_split_pages controls whether /menu/breakfast + /menu/lunch are
+  // routable AND drives which CTA hrefs the home breakfast block + gallery
+  // bands point at. Missing / malformed → false so no other tenant gets
+  // dead links.
+  const menuSplitRaw = ((await getSiteSetting('menu_split_pages')) || '')
+    .trim()
+    .toLowerCase()
+  const menuSplitEnabled = menuSplitRaw === 'true'
+  // Live-mode content fields. Every one has a sensible default so a partial
+  // seed still renders. cta_href points at /menu/breakfast when the split
+  // pages are on, else at the /menu#breakfast anchor added by _shared.tsx.
+  const breakfastLiveSettings = await getSiteSettings([
+    'breakfast_heading',
+    'breakfast_body',
+    'breakfast_cta_href',
+    'breakfast_cta_label',
+    'breakfast_image_url',
+  ])
+  const defaultBreakfastHref = menuSplitEnabled ? '/menu/breakfast' : '/menu#breakfast'
+  // home_breakfast_gallery / home_lunch_gallery are jsonb arrays of image
+  // URLs. Parsed defensively — a malformed row leaves the list empty and
+  // both the standalone HomeRotatingGallery band and (for breakfast) the
+  // in-live-block gallery fall through cleanly.
+  function parseImageArray(raw: string | null): string[] {
+    if (!raw) return []
+    try {
+      const parsed = JSON.parse(raw) as unknown
+      if (!Array.isArray(parsed)) return []
+      return parsed.filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+    } catch {
+      return []
+    }
+  }
+  const homeBreakfastGalleryRaw = await getSiteSetting('home_breakfast_gallery')
+  const homeBreakfastGallery = parseImageArray(homeBreakfastGalleryRaw)
+  const homeLunchGalleryRaw = await getSiteSetting('home_lunch_gallery')
+  const homeLunchGallery = parseImageArray(homeLunchGalleryRaw)
+  const galleryHeadings = await getSiteSettings([
+    'home_breakfast_gallery_heading',
+    'home_lunch_gallery_heading',
+  ])
+  const breakfastGalleryHeading =
+    (galleryHeadings.home_breakfast_gallery_heading || '').trim() || 'Breakfast'
+  const lunchGalleryHeading =
+    (galleryHeadings.home_lunch_gallery_heading || '').trim() || 'Lunch & Dinner'
+  const lunchGalleryHref = menuSplitEnabled ? '/menu/lunch' : '/menu'
   // Social URLs feed the Breakfast block's Facebook / Instagram links so we
   // don't hardcode Adama's handles into the component.
   const socialSettings = await getSiteSettings(['social_facebook', 'social_instagram'])
@@ -708,11 +765,42 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       />
     ) : null,
     gallery_strip: <GalleryStripSection images={galleryStripImages} />,
-    breakfast_coming_soon: (
-      <BreakfastComingSoonSection
-        show={showBreakfastComingSoon}
-        facebookUrl={socialSettings.social_facebook}
-        instagramUrl={socialSettings.social_instagram}
+    breakfast_coming_soon:
+      breakfastStatus === 'live' ? (
+        <BreakfastLiveSection
+          heading={(breakfastLiveSettings.breakfast_heading || '').trim() || 'Breakfast is here'}
+          body={
+            (breakfastLiveSettings.breakfast_body || '').trim() ||
+            'Our breakfast menu is now serving. Stop in for fresh, made-from-scratch morning plates.'
+          }
+          ctaHref={
+            (breakfastLiveSettings.breakfast_cta_href || '').trim() || defaultBreakfastHref
+          }
+          ctaLabel={breakfastLiveSettings.breakfast_cta_label}
+          imageUrl={breakfastLiveSettings.breakfast_image_url}
+          galleryImages={homeBreakfastGallery}
+        />
+      ) : (
+        <BreakfastComingSoonSection
+          show={showBreakfastComingSoon}
+          facebookUrl={socialSettings.social_facebook}
+          instagramUrl={socialSettings.social_instagram}
+        />
+      ),
+    home_breakfast_gallery: (
+      <HomeRotatingGallery
+        images={homeBreakfastGallery}
+        heading={breakfastGalleryHeading}
+        ctaHref={defaultBreakfastHref}
+        ctaLabel="See the breakfast menu"
+      />
+    ),
+    home_lunch_gallery: (
+      <HomeRotatingGallery
+        images={homeLunchGallery}
+        heading={lunchGalleryHeading}
+        ctaHref={lunchGalleryHref}
+        ctaLabel="See the lunch menu"
       />
     ),
     awash_bakery: (
@@ -782,13 +870,44 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     const insertAt = heroIdx >= 0 ? heroIdx + 1 : 0
     finalOrder.splice(insertAt, 0, 'restaurant_ctas')
   }
-  // Inject "Breakfast coming soon" directly after the menu preview when the
-  // tenant has opted in. Default OFF — every tenant without the row is
-  // byte-identical to before.
-  if (showBreakfastComingSoon && !finalOrder.includes('breakfast_coming_soon')) {
+  // Inject the breakfast block directly after the menu preview when the
+  // tenant has opted in via either the historical show_breakfast_coming_soon
+  // flag OR the new breakfast_status='live' setting. The dispatch inside
+  // sectionMap.breakfast_coming_soon renders the correct variant. Default
+  // OFF — every tenant without either row is byte-identical to before.
+  const showBreakfastBlock = showBreakfastComingSoon || breakfastStatus === 'live'
+  if (showBreakfastBlock && !finalOrder.includes('breakfast_coming_soon')) {
     const menuIdx = finalOrder.indexOf('menu_preview')
     const insertAt = menuIdx >= 0 ? menuIdx + 1 : finalOrder.length
     finalOrder.splice(insertAt, 0, 'breakfast_coming_soon')
+  }
+  // Inject the rotating home breakfast gallery band directly after the
+  // breakfast block (or after menu_preview if the block isn't in the
+  // order). Gated on home_breakfast_gallery being non-empty so tenants
+  // without the row skip the injection entirely — HomeRotatingGallery
+  // additionally self-noops as a second line of defense.
+  if (homeBreakfastGallery.length > 0 && !finalOrder.includes('home_breakfast_gallery')) {
+    const breakfastIdx = finalOrder.indexOf('breakfast_coming_soon')
+    const menuIdx = finalOrder.indexOf('menu_preview')
+    const insertAt =
+      breakfastIdx >= 0 ? breakfastIdx + 1 :
+      menuIdx >= 0 ? menuIdx + 1 :
+      finalOrder.length
+    finalOrder.splice(insertAt, 0, 'home_breakfast_gallery')
+  }
+  // Inject the lunch gallery band directly after the breakfast gallery (or
+  // after the breakfast block, or after menu_preview) so the daypart order
+  // reads breakfast → lunch top to bottom.
+  if (homeLunchGallery.length > 0 && !finalOrder.includes('home_lunch_gallery')) {
+    const breakfastGalIdx = finalOrder.indexOf('home_breakfast_gallery')
+    const breakfastIdx = finalOrder.indexOf('breakfast_coming_soon')
+    const menuIdx = finalOrder.indexOf('menu_preview')
+    const insertAt =
+      breakfastGalIdx >= 0 ? breakfastGalIdx + 1 :
+      breakfastIdx >= 0 ? breakfastIdx + 1 :
+      menuIdx >= 0 ? menuIdx + 1 :
+      finalOrder.length
+    finalOrder.splice(insertAt, 0, 'home_lunch_gallery')
   }
   // Inject Awash Bakery section directly after the breakfast block (or
   // after menu_preview when no breakfast block). Gated on

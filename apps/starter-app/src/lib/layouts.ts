@@ -87,7 +87,15 @@ export type SectionId =
   | 'restaurant_ctas'
   // Optional per-tenant "Breakfast coming soon" block. Gated by
   // site_settings.show_breakfast_coming_soon; defaults to hidden.
+  // When site_settings.breakfast_status === 'live', this same slot renders
+  // the BreakfastLiveSection component instead — see (public)/page.tsx.
   | 'breakfast_coming_soon'
+  // Decorative rotating gallery bands on the home page. Reuse the hero
+  // crossfade component. Each is gated on its own site_settings jsonb array
+  // (home_breakfast_gallery / home_lunch_gallery); empty / missing → the
+  // section renders nothing.
+  | 'home_breakfast_gallery'
+  | 'home_lunch_gallery'
   // Adama-only "Awash Bakery" home block. Gated by
   // enabled_modules.bakery; defaults to hidden for every other tenant.
   | 'awash_bakery'
