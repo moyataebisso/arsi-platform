@@ -67,6 +67,7 @@ import { NewsletterMapSection } from '@/components/sections/NewsletterMapSection
 import { BreakfastComingSoonSection } from '@/components/sections/BreakfastComingSoonSection'
 import { BreakfastLiveSection } from '@/components/sections/BreakfastLiveSection'
 import { HomeRotatingGallery } from '@/components/sections/HomeRotatingGallery'
+import { parseGalleryList } from '@/lib/gallery'
 import { AwashBakerySection } from '@/components/sections/AwashBakerySection'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
@@ -292,24 +293,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     'breakfast_image_url',
   ])
   const defaultBreakfastHref = menuSplitEnabled ? '/menu/breakfast' : '/menu#breakfast'
-  // home_breakfast_gallery / home_lunch_gallery are jsonb arrays of image
-  // URLs. Parsed defensively — a malformed row leaves the list empty and
-  // both the standalone HomeRotatingGallery band and (for breakfast) the
-  // in-live-block gallery fall through cleanly.
-  function parseImageArray(raw: string | null): string[] {
-    if (!raw) return []
-    try {
-      const parsed = JSON.parse(raw) as unknown
-      if (!Array.isArray(parsed)) return []
-      return parsed.filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
-    } catch {
-      return []
-    }
-  }
+  // home_breakfast_gallery / home_lunch_gallery are jsonb arrays whose
+  // elements can each be a plain URL string OR a { url, label } object.
+  // parseGalleryList normalizes both shapes into GalleryImage[]; malformed
+  // rows / non-array roots / malformed elements yield an empty list or are
+  // skipped respectively. Downstream components render captions only for
+  // elements that carry a label.
   const homeBreakfastGalleryRaw = await getSiteSetting('home_breakfast_gallery')
-  const homeBreakfastGallery = parseImageArray(homeBreakfastGalleryRaw)
+  const homeBreakfastGallery = parseGalleryList(homeBreakfastGalleryRaw)
   const homeLunchGalleryRaw = await getSiteSetting('home_lunch_gallery')
-  const homeLunchGallery = parseImageArray(homeLunchGalleryRaw)
+  const homeLunchGallery = parseGalleryList(homeLunchGalleryRaw)
   const galleryHeadings = await getSiteSettings([
     'home_breakfast_gallery_heading',
     'home_lunch_gallery_heading',

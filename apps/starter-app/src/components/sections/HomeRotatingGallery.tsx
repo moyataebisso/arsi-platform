@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { HeroBackgroundCrossfade } from './HeroBackgroundCrossfade'
+import { toGalleryImages, type GalleryImage } from '@/lib/gallery'
 
 // Decorative homepage band that rotates through the tenant's
 // home_breakfast_gallery / home_lunch_gallery images. Reuses the hero
@@ -10,20 +11,20 @@ import { HeroBackgroundCrossfade } from './HeroBackgroundCrossfade'
 //
 // Returns null when the image list is empty so tenants without the row
 // keep the home layout byte-identical — no empty section, no layout shift.
+// Accepts either the legacy string[] or the new GalleryImage[] shape; a
+// mid-migration array with both types is fine.
 export function HomeRotatingGallery({
   images,
   heading,
   ctaHref,
   ctaLabel,
 }: {
-  images: string[]
+  images: ReadonlyArray<string | GalleryImage>
   heading: string
   ctaHref: string
   ctaLabel?: string
 }) {
-  const list = (images || []).filter(
-    (s): s is string => typeof s === 'string' && s.trim().length > 0,
-  )
+  const list = toGalleryImages(images)
   if (list.length === 0) return null
   const label = (ctaLabel || '').trim() || 'See the menu'
 

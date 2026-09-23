@@ -3,12 +3,15 @@ import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 import { HeroBackgroundCrossfade } from './HeroBackgroundCrossfade'
 import { isAllowedImageHost } from '@/lib/image-hosts'
+import { toGalleryImages, type GalleryImage } from '@/lib/gallery'
 
 // Home block that replaces BreakfastComingSoonSection when the tenant flips
 // site_settings.breakfast_status to "live". Copy is fully DB-driven; the
 // image slot renders (in preference order): the rotating gallery when
 // home_breakfast_gallery is non-empty, else the still image_url when set,
-// else nothing at all so a partial seed still degrades cleanly.
+// else nothing at all so a partial seed still degrades cleanly. Gallery
+// elements can be plain URL strings or { url, label } objects — the
+// crossfade paints per-slide captions for any element that carries a label.
 export function BreakfastLiveSection({
   heading,
   body,
@@ -22,11 +25,10 @@ export function BreakfastLiveSection({
   ctaHref: string
   ctaLabel?: string
   imageUrl?: string
-  galleryImages?: string[]
+  galleryImages?: ReadonlyArray<string | GalleryImage>
 }) {
   const label = (ctaLabel || '').trim() || 'See the breakfast menu'
-  const cleanGallery = (galleryImages || [])
-    .filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+  const cleanGallery = toGalleryImages(galleryImages)
   const hasGallery = cleanGallery.length > 0
   const staticImage = (imageUrl || '').trim()
   const hasImage = !hasGallery && staticImage.length > 0
