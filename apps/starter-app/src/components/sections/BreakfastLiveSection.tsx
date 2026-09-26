@@ -19,6 +19,7 @@ export function BreakfastLiveSection({
   ctaLabel,
   imageUrl,
   galleryImages,
+  eyebrow,
 }: {
   heading: string
   body: string
@@ -26,12 +27,17 @@ export function BreakfastLiveSection({
   ctaLabel?: string
   imageUrl?: string
   galleryImages?: ReadonlyArray<string | GalleryImage>
+  // Optional per-tenant override for the pill text. Absent / empty →
+  // falls through to the historical literal "Now serving" so tenants
+  // without site_settings.breakfast_eyebrow are unchanged.
+  eyebrow?: string
 }) {
   const label = (ctaLabel || '').trim() || 'See the breakfast menu'
   const cleanGallery = toGalleryImages(galleryImages)
   const hasGallery = cleanGallery.length > 0
   const staticImage = (imageUrl || '').trim()
   const hasImage = !hasGallery && staticImage.length > 0
+  const eyebrowText = (eyebrow || '').trim() || 'Now serving'
 
   return (
     <section
@@ -56,7 +62,7 @@ export function BreakfastLiveSection({
                 textTransform: 'uppercase',
               }}
             >
-              Now serving
+              {eyebrowText}
             </span>
             <h2
               className="text-3xl sm:text-4xl lg:text-5xl mb-4"

@@ -291,6 +291,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     'breakfast_cta_href',
     'breakfast_cta_label',
     'breakfast_image_url',
+    'breakfast_eyebrow',
   ])
   const defaultBreakfastHref = menuSplitEnabled ? '/menu/breakfast' : '/menu#breakfast'
   // home_breakfast_gallery / home_lunch_gallery are jsonb arrays whose
@@ -303,15 +304,31 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const homeBreakfastGallery = parseGalleryList(homeBreakfastGalleryRaw)
   const homeLunchGalleryRaw = await getSiteSetting('home_lunch_gallery')
   const homeLunchGallery = parseGalleryList(homeLunchGalleryRaw)
-  const galleryHeadings = await getSiteSettings([
-    'home_breakfast_gallery_heading',
-    'home_lunch_gallery_heading',
-  ])
-  const breakfastGalleryHeading =
-    (galleryHeadings.home_breakfast_gallery_heading || '').trim() || 'Breakfast'
+  // Only the lunch band remains as a standalone home section — the previous
+  // standalone breakfast band was removed in Phase 6C because it duplicated
+  // the rotating gallery already living inside BreakfastLiveSection. The
+  // home_breakfast_gallery array is still read above and still feeds that
+  // in-block gallery.
+  const galleryHeadings = await getSiteSettings(['home_lunch_gallery_heading'])
   const lunchGalleryHeading =
     (galleryHeadings.home_lunch_gallery_heading || '').trim() || 'Lunch & Dinner'
   const lunchGalleryHref = menuSplitEnabled ? '/menu/lunch' : '/menu'
+  // "From our kitchen" band opt-out. Defaults to visible (true) so every
+  // existing tenant that seeded gallery_images continues to render the
+  // band. Adama seeds this to false when they want the band suppressed
+  // without deleting the gallery_images row.
+  const fromKitchenRaw = ((await getSiteSetting('show_from_kitchen')) || '')
+    .trim()
+    .toLowerCase()
+  const showFromKitchen = fromKitchenRaw !== 'false'
+  // bakery_media_side: 'left' swaps the desktop column order via CSS
+  // `order` (source order preserved for screen readers and mobile).
+  // Absent / any other value → 'right', historical layout.
+  const bakeryMediaSideRaw = ((await getSiteSetting('bakery_media_side')) || '')
+    .trim()
+    .toLowerCase()
+  const bakeryMediaSide: 'left' | 'right' =
+    bakeryMediaSideRaw === 'left' ? 'left' : 'right'
   // Social URLs feed the Breakfast block's Facebook / Instagram links so we
   // don't hardcode Adama's handles into the component.
   const socialSettings = await getSiteSettings(['social_facebook', 'social_instagram'])
@@ -772,6 +789,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           ctaLabel={breakfastLiveSettings.breakfast_cta_label}
           imageUrl={breakfastLiveSettings.breakfast_image_url}
           galleryImages={homeBreakfastGallery}
+          eyebrow={breakfastLiveSettings.breakfast_eyebrow}
         />
       ) : (
         <BreakfastComingSoonSection
@@ -780,14 +798,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           instagramUrl={socialSettings.social_instagram}
         />
       ),
-    home_breakfast_gallery: (
-      <HomeRotatingGallery
-        images={homeBreakfastGallery}
-        heading={breakfastGalleryHeading}
-        ctaHref={defaultBreakfastHref}
-        ctaLabel="See the breakfast menu"
-      />
-    ),
     home_lunch_gallery: (
       <HomeRotatingGallery
         images={homeLunchGallery}
@@ -805,9 +815,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         ctaLabel={bakerySectionSettings.bakery_home_cta_label}
         ctaHref={bakerySectionSettings.bakery_home_cta_href}
         businessName={business.name}
+        mediaSide={bakeryMediaSide}
       />
     ),
-    gallery_home: <GalleryHomeSection images={galleryHomeImages} />,
+    // "From our kitchen" band. When the tenant has seeded gallery_images
+    // but has opted out via show_from_kitchen=false, we render nothing so
+    // /gallery keeps working without the home teaser also showing.
+    gallery_home: showFromKitchen ? (
+      <GalleryHomeSection images={galleryHomeImages} />
+    ) : null,
     newsletter_map: (
       <NewsletterMapSection
         headline={restaurantCenteredSettings.newsletter_headline}
@@ -874,29 +890,17 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     const insertAt = menuIdx >= 0 ? menuIdx + 1 : finalOrder.length
     finalOrder.splice(insertAt, 0, 'breakfast_coming_soon')
   }
-  // Inject the rotating home breakfast gallery band directly after the
-  // breakfast block (or after menu_preview if the block isn't in the
-  // order). Gated on home_breakfast_gallery being non-empty so tenants
-  // without the row skip the injection entirely — HomeRotatingGallery
-  // additionally self-noops as a second line of defense.
-  if (homeBreakfastGallery.length > 0 && !finalOrder.includes('home_breakfast_gallery')) {
-    const breakfastIdx = finalOrder.indexOf('breakfast_coming_soon')
-    const menuIdx = finalOrder.indexOf('menu_preview')
-    const insertAt =
-      breakfastIdx >= 0 ? breakfastIdx + 1 :
-      menuIdx >= 0 ? menuIdx + 1 :
-      finalOrder.length
-    finalOrder.splice(insertAt, 0, 'home_breakfast_gallery')
-  }
-  // Inject the lunch gallery band directly after the breakfast gallery (or
-  // after the breakfast block, or after menu_preview) so the daypart order
-  // reads breakfast → lunch top to bottom.
+  // Phase 6C removed the standalone home_breakfast_gallery band injection;
+  // the same array now feeds only the rotating image inside
+  // BreakfastLiveSection. The home_lunch_gallery band stays untouched.
+  //
+  // Inject the lunch gallery band directly after the breakfast block (or
+  // after menu_preview when the block isn't in the order) so the daypart
+  // sequence reads breakfast → lunch top to bottom.
   if (homeLunchGallery.length > 0 && !finalOrder.includes('home_lunch_gallery')) {
-    const breakfastGalIdx = finalOrder.indexOf('home_breakfast_gallery')
     const breakfastIdx = finalOrder.indexOf('breakfast_coming_soon')
     const menuIdx = finalOrder.indexOf('menu_preview')
     const insertAt =
-      breakfastGalIdx >= 0 ? breakfastGalIdx + 1 :
       breakfastIdx >= 0 ? breakfastIdx + 1 :
       menuIdx >= 0 ? menuIdx + 1 :
       finalOrder.length

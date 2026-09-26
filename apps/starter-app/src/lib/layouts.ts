@@ -90,11 +90,12 @@ export type SectionId =
   // When site_settings.breakfast_status === 'live', this same slot renders
   // the BreakfastLiveSection component instead — see (public)/page.tsx.
   | 'breakfast_coming_soon'
-  // Decorative rotating gallery bands on the home page. Reuse the hero
-  // crossfade component. Each is gated on its own site_settings jsonb array
-  // (home_breakfast_gallery / home_lunch_gallery); empty / missing → the
-  // section renders nothing.
-  | 'home_breakfast_gallery'
+  // Decorative rotating gallery band on the home page. Reuses the hero
+  // crossfade component and is gated on site_settings.home_lunch_gallery
+  // being a non-empty array; empty / missing → the section renders
+  // nothing. (The previous standalone home_breakfast_gallery slot was
+  // removed in Phase 6C — that array now feeds only the rotating image
+  // inside BreakfastLiveSection.)
   | 'home_lunch_gallery'
   // Adama-only "Awash Bakery" home block. Gated by
   // enabled_modules.bakery; defaults to hidden for every other tenant.

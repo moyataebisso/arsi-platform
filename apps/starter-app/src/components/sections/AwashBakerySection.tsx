@@ -6,6 +6,12 @@ import { ArrowRight } from 'lucide-react'
 // breakfast_coming_soon block per Phase 2 F4. The default body
 // interpolates businessName so a future tenant enabling the flag
 // no longer inherits Adama's brand.
+//
+// mediaSide (default 'right') controls which column the image column takes
+// on the md+ grid. 'left' swaps the visual order via CSS `order` only, so
+// the DOM source order (text first, image second) is preserved for screen
+// readers and mobile stacking. Absent / any other value → 'right', which
+// leaves both columns in their historical position.
 export function AwashBakerySection({
   show,
   headline,
@@ -14,6 +20,7 @@ export function AwashBakerySection({
   ctaLabel,
   ctaHref,
   businessName,
+  mediaSide = 'right',
 }: {
   show: boolean
   headline?: string
@@ -22,6 +29,7 @@ export function AwashBakerySection({
   ctaLabel?: string
   ctaHref?: string
   businessName?: string
+  mediaSide?: 'left' | 'right'
 }) {
   if (!show) return null
 
@@ -34,6 +42,13 @@ export function AwashBakerySection({
       : 'Fresh injera and homemade bread. Pre-orders welcome — pick up during regular hours.')
   const resolvedCtaLabel = ctaLabel || 'Pre-order'
   const resolvedCtaHref = ctaHref || '/bakery'
+  // Only rewrite the desktop column order when the caller explicitly asks
+  // for 'left'. All other inputs (undefined / 'right' / anything else) leave
+  // the tenant on the historical text-then-image layout at md+ and every
+  // breakpoint below md.
+  const mediaLeft = mediaSide === 'left'
+  const textOrderClass = mediaLeft ? 'md:order-2' : ''
+  const mediaOrderClass = mediaLeft ? 'md:order-1' : ''
 
   return (
     <section
@@ -42,7 +57,7 @@ export function AwashBakerySection({
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-          <div>
+          <div className={textOrderClass}>
             <span
               className="inline-block rounded-full mb-4 px-3 py-1.5"
               style={{
@@ -93,7 +108,7 @@ export function AwashBakerySection({
           <div
             role="img"
             aria-label="Awash Bakery"
-            className="aspect-[4/3] rounded-2xl overflow-hidden"
+            className={`aspect-[4/3] rounded-2xl overflow-hidden ${mediaOrderClass}`.trim()}
             style={{
               backgroundImage: imageUrl
                 ? `url('${imageUrl.replace(/'/g, "\\'")}')`
