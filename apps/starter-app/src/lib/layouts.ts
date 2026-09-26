@@ -97,6 +97,11 @@ export type SectionId =
   // removed in Phase 6C — that array now feeds only the rotating image
   // inside BreakfastLiveSection.)
   | 'home_lunch_gallery'
+  // Static DB-driven reviews grid. Gated on site_settings.reviews being a
+  // non-empty array of valid Review objects. Absent / empty → the section
+  // renders nothing. Default position is after home_lunch_gallery and
+  // before location so social proof lands before the address/hours block.
+  | 'reviews'
   // Adama-only "Awash Bakery" home block. Gated by
   // enabled_modules.bakery; defaults to hidden for every other tenant.
   | 'awash_bakery'

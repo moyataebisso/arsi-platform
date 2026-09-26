@@ -12,18 +12,25 @@ export interface GalleryHomeImage {
 // site_settings.gallery_images, plus a "View all" link into /gallery when
 // there are more. Rendered directly after the About section for tenants
 // that seed the row; noops silently when the list is empty.
+//
+// linkToGalleryPage (default true) drives whether the "View all" CTA and
+// the per-tile <Link> render at all. Tenants that seeded
+// gallery_page_enabled='false' pass false here so the band doesn't emit
+// any anchors pointing at a route that 308s to /menu.
 export function GalleryHomeSection({
   images,
   headline = 'From our kitchen',
   href = '/gallery',
+  linkToGalleryPage = true,
 }: {
   images: GalleryHomeImage[]
   headline?: string
   href?: string
+  linkToGalleryPage?: boolean
 }) {
   if (!images || images.length === 0) return null
   const shown = images.slice(0, 8)
-  const hasMore = images.length > shown.length
+  const hasMore = images.length > shown.length && linkToGalleryPage
 
   return (
     <section className="py-16 sm:py-20" style={{ backgroundColor: 'var(--color-background)' }}>
@@ -55,17 +62,14 @@ export function GalleryHomeSection({
           square hole". Mobile keeps the 2-col square grid it had.
         */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-          {shown.map((img, i) => (
-            <Link
-              key={img.url + i}
-              href={href}
-              className="relative block aspect-square lg:aspect-[4/3] overflow-hidden rounded-xl group focus:outline-none focus:ring-2 focus:ring-offset-2"
-              style={{
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-surface)',
-              }}
-              aria-label={`View gallery: ${img.alt}`}
-            >
+          {shown.map((img, i) => {
+            const tileClass =
+              'relative block aspect-square lg:aspect-[4/3] overflow-hidden rounded-xl group focus:outline-none focus:ring-2 focus:ring-offset-2'
+            const tileStyle: React.CSSProperties = {
+              border: '1px solid var(--color-border)',
+              backgroundColor: 'var(--color-surface)',
+            }
+            const tileImage = (
               <Image
                 src={img.url}
                 alt={img.alt}
@@ -75,8 +79,30 @@ export function GalleryHomeSection({
                 unoptimized={!isAllowedImageHost(img.url)}
                 className="object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]"
               />
-            </Link>
-          ))}
+            )
+            // linkToGalleryPage=false: emit a non-interactive <div> tile so
+            // no anchor points at a route that 308s to /menu. Alt text on
+            // the <Image> keeps the accessible name intact.
+            return linkToGalleryPage ? (
+              <Link
+                key={img.url + i}
+                href={href}
+                className={tileClass}
+                style={tileStyle}
+                aria-label={`View gallery: ${img.alt}`}
+              >
+                {tileImage}
+              </Link>
+            ) : (
+              <div
+                key={img.url + i}
+                className={tileClass}
+                style={tileStyle}
+              >
+                {tileImage}
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>

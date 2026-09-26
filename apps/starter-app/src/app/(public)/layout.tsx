@@ -26,6 +26,7 @@ export default async function PublicLayout({ children }: { children: React.React
       'nav_variant',
       'nav_center_split',
       'gallery_images',
+      'gallery_page_enabled',
       'social_facebook',
       'social_instagram',
       'social_twitter',
@@ -81,6 +82,14 @@ export default async function PublicLayout({ children }: { children: React.React
       hasGallery = false
     }
   }
+  // Per-tenant opt-out for the /gallery route. When the tenant has seeded
+  // gallery_page_enabled='false' the route 308s to /menu at request time,
+  // so the footer's Gallery link would 308 as well — suppress it entirely.
+  // Absent / any other value → treated as enabled so every existing tenant
+  // stays byte-identical.
+  const galleryPageEnabled =
+    (settings.gallery_page_enabled || '').trim().toLowerCase() !== 'false'
+  const showGallery = hasGallery && galleryPageEnabled
 
   return (
     <>
@@ -140,7 +149,7 @@ export default async function PublicLayout({ children }: { children: React.React
           showLicenseSeparatedNav={enabledModules.license_separated_nav}
           navVariant={navVariant}
           navCenterSplit={navCenterSplit}
-          showGallery={hasGallery}
+          showGallery={showGallery}
         />
       </div>
     </>

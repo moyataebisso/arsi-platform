@@ -1,9 +1,10 @@
 import { siteConfig } from '@config'
-import { getSiteSettings } from '@/lib/settings'
+import { getSiteSettings, getSiteSetting } from '@/lib/settings'
 import { getBusinessProfile, type HoursEntry } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { resolveBaseUrl } from '@/lib/site-url'
 import { getActiveTheme } from '@/lib/theme-resolver'
+import { parseReviews, aggregateRating } from '@/lib/reviews'
 
 // LocalBusiness structured data for Google rich results. All fields are
 // pulled from site_settings via getBusinessProfile / getSiteSettings so
@@ -126,7 +127,7 @@ const ALWAYS_OPEN_SPEC: OpeningHoursSpec = {
 
 export async function JsonLd() {
   const lb = siteConfig.seo.localBusiness
-  const [profile, settings, enabled, theme] = await Promise.all([
+  const [profile, settings, enabled, theme, reviewsRaw] = await Promise.all([
     getBusinessProfile(),
     getSiteSettings([
       'seo_description', 'meta_description', 'tagline', 'service_area', 'service_type',
@@ -136,6 +137,7 @@ export async function JsonLd() {
     ]),
     getEnabledModules(),
     getActiveTheme(),
+    getSiteSetting('reviews'),
   ])
 
   const fallbackName =
@@ -196,6 +198,37 @@ export async function JsonLd() {
     : ''
   const menuUrl = isRestaurant && enabled.menu ? `${url}/menu` : ''
 
+  // DB-driven reviews. When the array is empty we omit both `review` and
+  // `aggregateRating` entirely — schema.org validators reject either type
+  // when the corresponding data is missing. aggregateRating is only
+  // emitted when at least one review carries a numeric rating.
+  const reviews = parseReviews(reviewsRaw)
+  const reviewMarkup =
+    reviews.length > 0
+      ? reviews.map((r) => {
+          const node: Record<string, unknown> = {
+            '@type': 'Review',
+            reviewBody: r.quote,
+          }
+          if (r.author) {
+            node.author = { '@type': 'Person', name: r.author }
+          }
+          if (typeof r.rating === 'number') {
+            node.reviewRating = {
+              '@type': 'Rating',
+              ratingValue: r.rating,
+              bestRating: 5,
+              worstRating: 1,
+            }
+          }
+          if (r.source) {
+            node.publisher = { '@type': 'Organization', name: r.source }
+          }
+          return node
+        })
+      : null
+  const agg = reviews.length > 0 ? aggregateRating(reviews) : null
+
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': schemaType,
@@ -237,6 +270,18 @@ export async function JsonLd() {
       ? { acceptsReservations: acceptsRaw === 'true' }
       : {}),
     ...(socials.length > 0 ? { sameAs: socials } : {}),
+    ...(reviewMarkup ? { review: reviewMarkup } : {}),
+    ...(agg
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: agg.ratingValue,
+            reviewCount: agg.reviewCount,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
   }
 
   return (

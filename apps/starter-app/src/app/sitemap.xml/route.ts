@@ -100,7 +100,10 @@ export async function GET() {
   // opted in but seeded [] don't publish an empty gallery page to Google.
   // getSiteSettings only returns keys whose value_json is non-null, so
   // presence of the key here == "the tenant has actively chosen a list".
-  const gsettings = await getSiteSettings(['gallery_images'])
+  const gsettings = await getSiteSettings([
+    'gallery_images',
+    'gallery_page_enabled',
+  ])
   const gRowPresent = 'gallery_images' in gsettings
   let gRowNonEmpty = false
   if (gRowPresent) {
@@ -111,6 +114,10 @@ export async function GET() {
       gRowNonEmpty = false
     }
   }
+  // Per-tenant opt-out. Absent → true (historical behavior preserved).
+  // Only the literal "false" suppresses /gallery from the sitemap.
+  const gPageEnabled =
+    (gsettings.gallery_page_enabled || '').trim().toLowerCase() !== 'false'
 
   const entries: string[] = []
 
@@ -123,8 +130,11 @@ export async function GET() {
     // license-scoped routes replace it.
     if (r.flag === 'our_homes' && enabled.license_separated_nav) continue
     // /gallery: row absent → a02e21f rule (flag alone). Row present →
-    // require the flag AND a non-empty list.
+    // require the flag AND a non-empty list. Also skip entirely when the
+    // tenant has seeded gallery_page_enabled='false' — the route 308s to
+    // /menu at request time and must not be listed in the sitemap.
     if (r.flag === 'gallery' && gRowPresent && !gRowNonEmpty) continue
+    if (r.flag === 'gallery' && !gPageEnabled) continue
     if (enabled[r.flag]) {
       entries.push(urlEntry(baseUrl, r.path, iso, r.changeFrequency, r.priority))
     }

@@ -67,7 +67,9 @@ import { NewsletterMapSection } from '@/components/sections/NewsletterMapSection
 import { BreakfastComingSoonSection } from '@/components/sections/BreakfastComingSoonSection'
 import { BreakfastLiveSection } from '@/components/sections/BreakfastLiveSection'
 import { HomeRotatingGallery } from '@/components/sections/HomeRotatingGallery'
+import { ReviewsSection } from '@/components/sections/ReviewsSection'
 import { parseGalleryList } from '@/lib/gallery'
+import { parseReviews } from '@/lib/reviews'
 import { AwashBakerySection } from '@/components/sections/AwashBakerySection'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
@@ -321,6 +323,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     .trim()
     .toLowerCase()
   const showFromKitchen = fromKitchenRaw !== 'false'
+  // Per-tenant opt-out for the /gallery route. When set to 'false', the
+  // route 308s to /menu — so the home teaser tiles must not link into a
+  // redirecting page. Absent / any other value → true; every existing
+  // tenant keeps the historical anchors.
+  const galleryPageEnabledRaw = ((await getSiteSetting('gallery_page_enabled')) || '')
+    .trim()
+    .toLowerCase()
+  const galleryPageEnabled = galleryPageEnabledRaw !== 'false'
+  // Static reviews grid (Phase 7C). Absent / empty / malformed → the
+  // section is not injected into the home layout at all, so no other
+  // tenant sees a change until they seed the row.
+  const reviewsRaw = await getSiteSetting('reviews')
+  const reviews = parseReviews(reviewsRaw)
+  const reviewsCopy = await getSiteSettings([
+    'reviews_heading',
+    'reviews_link_url',
+    'reviews_link_label',
+  ])
   // bakery_media_side: 'left' swaps the desktop column order via CSS
   // `order` (source order preserved for screen readers and mobile).
   // Absent / any other value → 'right', historical layout.
@@ -822,8 +842,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     // but has opted out via show_from_kitchen=false, we render nothing so
     // /gallery keeps working without the home teaser also showing.
     gallery_home: showFromKitchen ? (
-      <GalleryHomeSection images={galleryHomeImages} />
+      <GalleryHomeSection
+        images={galleryHomeImages}
+        linkToGalleryPage={galleryPageEnabled}
+      />
     ) : null,
+    reviews: (
+      <ReviewsSection
+        reviews={reviews}
+        heading={reviewsCopy.reviews_heading}
+        linkUrl={reviewsCopy.reviews_link_url}
+        linkLabel={reviewsCopy.reviews_link_label}
+      />
+    ),
     newsletter_map: (
       <NewsletterMapSection
         headline={restaurantCenteredSettings.newsletter_headline}
@@ -926,6 +957,23 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     const aboutIdx = finalOrder.indexOf('about')
     const insertAt = aboutIdx >= 0 ? aboutIdx + 1 : finalOrder.length
     finalOrder.splice(insertAt, 0, 'gallery_home')
+  }
+  // Inject the reviews grid between the lunch gallery band and the
+  // location/contact section so social proof lands right before the
+  // address+hours block. Falls back through location → contact → end so
+  // layouts without a dedicated location section still see the section
+  // land after the last home band. Gated on reviews.length so tenants
+  // without the row are byte-identical.
+  if (reviews.length > 0 && !finalOrder.includes('reviews')) {
+    const lunchIdx = finalOrder.indexOf('home_lunch_gallery')
+    const locationIdx = finalOrder.indexOf('location')
+    const contactIdx = finalOrder.indexOf('contact')
+    const insertAt =
+      lunchIdx >= 0 ? lunchIdx + 1 :
+      locationIdx >= 0 ? locationIdx :
+      contactIdx >= 0 ? contactIdx :
+      finalOrder.length
+    finalOrder.splice(insertAt, 0, 'reviews')
   }
 
   return (

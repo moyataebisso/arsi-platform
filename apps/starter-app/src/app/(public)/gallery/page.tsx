@@ -1,9 +1,21 @@
 import { siteConfig } from '@config'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { getSiteSetting } from '@/lib/settings'
 import { GalleryGrid, type GalleryImage } from './GalleryGrid'
+
+// Per-tenant opt-out for the /gallery route. Any value other than the
+// literal string "false" (case-insensitive, trimmed) leaves the historical
+// behavior in place. Value === "false" triggers a 308 to /menu — same
+// mechanism drinks/page.tsx uses via drinks_redirect_to, kept intentionally
+// symmetric so operators only learn one pattern.
+async function galleryPageEnabled(): Promise<boolean> {
+  const raw = ((await getSiteSetting('gallery_page_enabled')) || '')
+    .trim()
+    .toLowerCase()
+  return raw !== 'false'
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -38,6 +50,11 @@ interface LegacyGalleryRow {
 }
 
 export default async function GalleryPage() {
+  // Route-level opt-out — checked first so a disabled tenant never touches
+  // the module gate or the TABLE query. Bookmarks + external links keep
+  // working via the 308 to /menu.
+  if (!(await galleryPageEnabled())) permanentRedirect('/menu')
+
   // Tenant-scoped resolution, mirroring the /book gate: use the new
   // site_settings.gallery_images renderer only when the tenant has BOTH
   // opted into gallery via enabled_modules AND seeded a non-empty object
