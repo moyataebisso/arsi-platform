@@ -252,6 +252,44 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // every tenant without the row is byte-identical.
   const heroFitRaw = (await getSiteSetting('hero_fit') || '').trim().toLowerCase()
   const heroFit: 'contain' | 'cover' = heroFitRaw === 'cover' ? 'cover' : 'contain'
+  // Phase 8 — hero typographic lockup + scrim + tagline layout. All four
+  // keys are optional; absent-value defaults preserve today's render for
+  // every tenant that hasn't seeded them.
+  const heroLockupSettings = await getSiteSettings([
+    'hero_title_parts',
+    'hero_title_rule',
+    'hero_scrim',
+    'hero_tagline_inline',
+  ])
+  let heroTitleParts: string[] = []
+  const heroTitlePartsRaw = heroLockupSettings.hero_title_parts
+  if (heroTitlePartsRaw) {
+    try {
+      const parsed = JSON.parse(heroTitlePartsRaw) as unknown
+      if (Array.isArray(parsed)) {
+        heroTitleParts = parsed
+          .filter((s): s is string => typeof s === 'string')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
+      }
+    } catch {
+      heroTitleParts = []
+    }
+  }
+  const heroTitleRule =
+    (heroLockupSettings.hero_title_rule || '').trim().toLowerCase() === 'true'
+  const heroScrimRaw =
+    (heroLockupSettings.hero_scrim || '').trim().toLowerCase()
+  const heroScrim: 'none' | 'soft' | 'strong' | undefined =
+    heroScrimRaw === 'none'
+      ? 'none'
+      : heroScrimRaw === 'soft'
+        ? 'soft'
+        : heroScrimRaw === 'strong'
+          ? 'strong'
+          : undefined
+  const heroTaglineInline =
+    (heroLockupSettings.hero_tagline_inline || '').trim().toLowerCase() === 'true'
   // Optional one-line marketing strip under the hero subheadline. Empty/missing
   // → nothing renders. Used by El Roi for the service-list strip.
   const heroBadgeText = await getSiteSetting('hero_badge_text')
@@ -561,6 +599,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroEyebrow={heroEyebrow}
         heroImages={heroImages}
         heroFit={heroFit}
+        heroTitleParts={heroTitleParts.length > 0 ? heroTitleParts : undefined}
+        heroTitleRule={heroTitleRule}
+        heroScrim={heroScrim}
+        heroTaglineInline={heroTaglineInline}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}

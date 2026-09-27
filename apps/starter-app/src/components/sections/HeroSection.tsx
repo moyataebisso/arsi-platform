@@ -72,6 +72,31 @@ interface HeroSectionProps {
   //   'cover'   — a single object-cover frame per slide fills the band edge
   //               to edge. Used by tenants with landscape source photos.
   heroFit?: 'contain' | 'cover'
+  // Multi-line H1 lockup. site_settings key: hero_title_parts (jsonb
+  // string[]). When 2+ entries, VideoHero renders the H1 as a stacked
+  // typographic lockup — primary line first, then secondary lines at a
+  // smaller, lighter, wider-tracked treatment. Undefined / empty / single
+  // entry falls through to the historical single-string H1 render, so no
+  // other tenant is affected.
+  heroTitleParts?: string[]
+  // Thin ornament between the primary and secondary lines of the lockup.
+  // site_settings key: hero_title_rule. Only applies when
+  // heroTitleParts has 2+ entries; absent / false → no ornament.
+  heroTitleRule?: boolean
+  // Directional scrim strength behind the hero copy. site_settings key:
+  // hero_scrim.
+  //   undefined (absent / any other value) — today's linear top-to-bottom
+  //                                          wash. Byte-identical.
+  //   'none'   — no scrim at all.
+  //   'soft'   — radial ellipse anchored behind the text, dark enough for
+  //              WCAG AA cream-on-scrim over an average frame.
+  //   'strong' — same anchor, darker. Use over very bright imagery.
+  heroScrim?: 'none' | 'soft' | 'strong'
+  // Tagline layout. site_settings key: hero_tagline_inline. When true and
+  // hero_subheadline splits into multiple sentences, they render inline
+  // with a middle-dot separator instead of the historical stacked <p>
+  // block. Wraps naturally on narrow screens.
+  heroTaglineInline?: boolean
   // Optional override for the ImageOverlayHero eyebrow pill. site_settings
   // key: hero_eyebrow_text.
   //   undefined → caller did not read the key (or the row is missing) →
@@ -122,15 +147,20 @@ function splitSentences(text: string): string[] {
 // Render a subheadline as one <p> (single sentence) or a wrapping <div> of
 // stacked <p> elements (multi-sentence). className/style apply to the outer
 // element; text styling (size/color/line-height) cascades to children via
-// inheritance so each variant's existing typography is preserved.
+// inheritance so each variant's existing typography is preserved. `inline`
+// (site_settings: hero_tagline_inline) collapses the multi-sentence layout
+// into a single <p> with middle-dot separators, wrapping naturally on
+// narrow screens; absent / false = today's stacked <p> block.
 function Subheadline({
   text,
   className,
   style,
+  inline = false,
 }: {
   text?: string
   className?: string
   style?: React.CSSProperties
+  inline?: boolean
 }) {
   if (!text) return null
   const parts = splitSentences(text)
@@ -138,6 +168,29 @@ function Subheadline({
     return (
       <p className={className} style={style}>
         {text}
+      </p>
+    )
+  }
+  if (inline) {
+    return (
+      <p className={className} style={style}>
+        {parts.map((p, i) => (
+          <span key={i}>
+            {i > 0 && (
+              <span
+                aria-hidden="true"
+                style={{
+                  display: 'inline-block',
+                  margin: '0 0.65em',
+                  opacity: 0.5,
+                }}
+              >
+                &middot;
+              </span>
+            )}
+            {p}
+          </span>
+        ))}
       </p>
     )
   }
@@ -1086,6 +1139,125 @@ function TerminalHero(props: VariantProps) {
 }
 
 // ============================================================
+// HeroLockupTitle — VideoHero H1 rendering.
+//
+// When `parts` has 2+ entries, renders a stacked typographic lockup: line 1
+// is the largest/tightest (primary mark); subsequent lines are smaller,
+// lighter (weight 400 — the theme's Playfair Display already ships this
+// weight so no new font import is needed), uppercase, wider-tracked, and
+// tinted toward the theme's secondary color. The full title stays a single
+// accessible name via `aria-label` on the <h1>; every visible <span> is
+// aria-hidden so screen readers announce one clean heading, not fragments.
+//
+// When `parts` is undefined / empty / single-entry, falls through to the
+// historical single-string H1 render (byte-identical for every tenant that
+// hasn't seeded site_settings.hero_title_parts).
+// ============================================================
+function HeroLockupTitle({
+  fallback,
+  fallbackFontSize,
+  parts,
+  rule,
+}: {
+  fallback: string
+  fallbackFontSize: string
+  parts?: string[]
+  rule?: boolean
+}) {
+  const cleanParts = (parts || [])
+    .map((p) => (p || '').trim())
+    .filter((p) => p.length > 0)
+
+  if (cleanParts.length < 2) {
+    return (
+      <h1
+        className="mb-6"
+        style={{
+          color: 'var(--color-primary)',
+          fontFamily: 'var(--font-heading)',
+          fontSize: fallbackFontSize,
+          fontWeight: 700,
+          lineHeight: 1.05,
+          letterSpacing: '0.01em',
+        }}
+      >
+        {fallback}
+      </h1>
+    )
+  }
+
+  const [primary, ...rest] = cleanParts
+  const fullTitle = cleanParts.join(' ')
+
+  // Fluid clamp() for the primary line — never breaks below 320px because
+  // the min is 2rem (32px), which comfortably fits ~14-character words
+  // like "Restaurant" inside a 320px viewport minus the section's 48px of
+  // horizontal padding (max-w-3xl + px-6). No mid-range breakpoint jump —
+  // one clamp for every screen from 360px to 1920px.
+  const primaryStyle: React.CSSProperties = {
+    color: 'var(--color-primary)',
+    fontFamily: 'var(--font-heading)',
+    fontSize: 'clamp(2rem, 6.4vw, 4.75rem)',
+    fontWeight: 700,
+    lineHeight: 1.02,
+    letterSpacing: '0.005em',
+    display: 'block',
+    // Prevent any UA quirks from breaking words in the primary line.
+    wordBreak: 'normal',
+    overflowWrap: 'normal',
+  }
+  const secondaryStyle: React.CSSProperties = {
+    color: 'color-mix(in srgb, var(--color-primary) 70%, #F4F1E8)',
+    fontFamily: 'var(--font-heading)',
+    fontSize: 'clamp(0.95rem, 2.3vw, 1.5rem)',
+    fontWeight: 400,
+    letterSpacing: '0.22em',
+    textTransform: 'uppercase',
+    display: 'block',
+    lineHeight: 1.2,
+    wordBreak: 'normal',
+    overflowWrap: 'normal',
+  }
+  const ornamentStyle: React.CSSProperties = {
+    display: 'block',
+    width: '48px',
+    height: '1px',
+    margin: '0.65rem auto',
+    backgroundColor: 'color-mix(in srgb, var(--color-primary) 60%, transparent)',
+  }
+
+  return (
+    <h1 className="mb-6" aria-label={fullTitle}>
+      <span aria-hidden="true" style={primaryStyle}>
+        {primary}
+      </span>
+      {rule ? (
+        <span aria-hidden="true" style={ornamentStyle} />
+      ) : (
+        // Tight leading between primary and secondary lines when no
+        // ornament is drawn — reads as one lockup, not a list.
+        <span
+          aria-hidden="true"
+          style={{ display: 'block', height: '0.35rem' }}
+        />
+      )}
+      {rest.map((line, i) => (
+        <span
+          key={i}
+          aria-hidden="true"
+          style={{
+            ...secondaryStyle,
+            marginTop: i === 0 ? 0 : '0.15rem',
+          }}
+        >
+          {line}
+        </span>
+      ))}
+    </h1>
+  )
+}
+
+// ============================================================
 // VIDEO_HERO — Full-bleed background video with poster fallback.
 // Poster image always renders, so an empty box is impossible when the
 // video URL is blank, blocked, or slow.
@@ -1155,32 +1327,44 @@ function VideoHero(props: VariantProps) {
         </video>
       )}
 
-      {/* Dark gradient overlay so gold + white text stay readable */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.85) 100%)',
-        }}
-        aria-hidden="true"
-      />
+      {/*
+        Scrim variants (site_settings.hero_scrim):
+          undefined — historical top-to-bottom linear wash (byte-identical).
+          'none'    — no scrim at all.
+          'soft'    — radial ellipse anchored behind the centered text block.
+                      Dark enough for cream (#F4F1E8) copy to hit WCAG AA
+                      contrast against the brightest frame in the rotation
+                      (spot-checked at ~4.6:1 against a 0.75-luminance photo).
+          'strong'  — same anchor, denser core + wider falloff. Use over very
+                      bright imagery where 'soft' isn't enough.
+        The scrim is always aria-hidden and always paints behind the z-10
+        content block; overlay above the crossfade image layers.
+      */}
+      {props.heroScrim !== 'none' && (
+        <div
+          className="absolute inset-0"
+          aria-hidden="true"
+          style={{
+            background:
+              props.heroScrim === 'strong'
+                ? 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.30) 70%, rgba(0,0,0,0.10) 100%)'
+                : props.heroScrim === 'soft'
+                  ? 'radial-gradient(ellipse 70% 55% at 50% 50%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.12) 75%, rgba(0,0,0,0) 100%)'
+                  : 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.85) 100%)',
+          }}
+        />
+      )}
 
       <div className="relative z-10 w-full max-w-3xl mx-auto px-6 text-center">
-        <h1
-          className="mb-6"
-          style={{
-            color: 'var(--color-primary)',
-            fontFamily: 'var(--font-heading)',
-            fontSize: headlineClamp,
-            fontWeight: 700,
-            lineHeight: 1.05,
-            letterSpacing: '0.01em',
-          }}
-        >
-          {display.headline}
-        </h1>
+        <HeroLockupTitle
+          fallback={display.headline}
+          fallbackFontSize={headlineClamp}
+          parts={props.heroTitleParts}
+          rule={props.heroTitleRule}
+        />
         <Subheadline
           text={display.subheadline}
+          inline={props.heroTaglineInline}
           className="mx-auto mb-10 max-w-xl"
           style={{
             color: '#F4F1E8',
@@ -1311,6 +1495,10 @@ export function HeroSection(props: HeroSectionProps) {
     heroEyebrow: props.heroEyebrow,
     heroImages: props.heroImages,
     heroFit: props.heroFit,
+    heroTitleParts: props.heroTitleParts,
+    heroTitleRule: props.heroTitleRule,
+    heroScrim: props.heroScrim,
+    heroTaglineInline: props.heroTaglineInline,
   }
 
   switch (activeVariant) {
