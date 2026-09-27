@@ -42,6 +42,32 @@ interface LocationStripSectionProps {
   city?: string
   state?: string
   zip?: string
+  // Multiplier over the historical font-size at each breakpoint. Absent →
+  // 1.0 (byte-identical). Any value outside [1.0, 1.4] is clamped so a
+  // fat-fingered seed can't blow the banner up to something absurd. Below
+  // md the effective scale is capped tighter — see mobileScale below —
+  // because 1.4× at 360px would push the address onto two lines.
+  bannerScale?: number
+  // Font-weight override for the address line. Absent → today's default
+  // (400, browser default). Any positive integer accepted; the browser
+  // handles synthetic fallback for weights the system doesn't have.
+  bannerWeight?: number
+}
+
+// Effective mobile scale caps at 1.15 even when the operator requests
+// 1.4 — measured at 360px width, the concatenated Adama address
+// ("3970 Central Avenue Northeast · Columbia Heights, MN 55421") starts
+// wrapping to two lines around 1.20×, so 1.15 is the safe ceiling.
+// Above md we honor the requested scale up to 1.4×.
+const MIN_SCALE = 1.0
+const MAX_SCALE = 1.4
+const MOBILE_SCALE_CAP = 1.15
+
+function clampScale(s: number | undefined): number {
+  if (typeof s !== 'number' || !Number.isFinite(s)) return 1.0
+  if (s < MIN_SCALE) return MIN_SCALE
+  if (s > MAX_SCALE) return MAX_SCALE
+  return s
 }
 
 export function LocationStripSection({
@@ -49,6 +75,8 @@ export function LocationStripSection({
   city,
   state,
   zip,
+  bannerScale,
+  bannerWeight,
 }: LocationStripSectionProps = {}) {
   const cfg = siteConfig.location
   const single = buildLine({
@@ -60,6 +88,37 @@ export function LocationStripSection({
 
   const lines: LocationLine[] = single ? [single] : []
   if (lines.length === 0) return null
+
+  // Scale + weight are OFF (byte-identical) when both are undefined. As
+  // soon as either is set we switch to inline style-driven sizing.
+  const scaleProvided =
+    typeof bannerScale === 'number' && Number.isFinite(bannerScale)
+  const weightProvided =
+    typeof bannerWeight === 'number' && Number.isFinite(bannerWeight)
+  const hasOverride = scaleProvided || weightProvided
+
+  // Historical sizes: 13px mobile / 16px md+. clamp() gives a smooth
+  // ramp between the two so a scaled banner doesn't jump at md. Mobile
+  // scale caps at MOBILE_SCALE_CAP (1.15) so the address never wraps at
+  // 360px even when the operator seeds 1.4. Letter-spacing tightens as
+  // the scale rises (0 at 1.0×, −0.015em at 1.4×) so the line stays
+  // visually tight rather than looser as it grows.
+  const clampedScale = clampScale(bannerScale)
+  const mobileScale = Math.min(clampedScale, MOBILE_SCALE_CAP)
+  const mobilePx = 13 * mobileScale
+  const desktopPx = 16 * clampedScale
+  const bannerFontSize = hasOverride
+    ? `clamp(${mobilePx.toFixed(2)}px, ${(mobilePx + (desktopPx - mobilePx) * 0.4).toFixed(2)}px + 1.2vw, ${desktopPx.toFixed(2)}px)`
+    : undefined
+  const bannerLetterSpacing = scaleProvided
+    ? `${(-0.015 * ((clampedScale - 1) / 0.4)).toFixed(4)}em`
+    : undefined
+  const bannerFontWeight = weightProvided
+    ? Math.round(bannerWeight as number)
+    : undefined
+  const liClassName = hasOverride
+    ? 'flex items-center justify-center gap-2 flex-wrap'
+    : 'flex items-center justify-center gap-2 text-[13px] md:text-base flex-wrap'
 
   return (
     <section
@@ -78,7 +137,16 @@ export function LocationStripSection({
           {lines.map((line, i) => (
             <li
               key={i}
-              className="flex items-center justify-center gap-2 text-[13px] md:text-base flex-wrap"
+              className={liClassName}
+              style={
+                hasOverride
+                  ? {
+                      fontSize: bannerFontSize,
+                      letterSpacing: bannerLetterSpacing,
+                      fontWeight: bannerFontWeight,
+                    }
+                  : undefined
+              }
             >
               <MapPin
                 className="w-4 h-4 shrink-0"

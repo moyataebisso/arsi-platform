@@ -83,6 +83,19 @@ interface HeroSectionProps {
   // site_settings key: hero_title_rule. Only applies when
   // heroTitleParts has 2+ entries; absent / false → no ornament.
   heroTitleRule?: boolean
+  // Weight overrides for the H1 lockup primary + secondary lines.
+  // site_settings keys: hero_title_weight, hero_subtitle_weight.
+  // Snapped to the nearest loaded Playfair Display weight ({400, 500, 600,
+  // 700, 800, 900}) to avoid synthetic-bold rendering. Undefined → today's
+  // defaults (700 / 400).
+  heroTitleWeight?: number
+  heroSubtitleWeight?: number
+  // Overrides --color-primary for the lockup H1 only. site_settings key:
+  // hero_title_color. Any CSS color string. The secondary line keeps its
+  // relationship to the primary — it renders as `color-mix(in srgb, <this>
+  // 70%, #F4F1E8)`, so one key shifts both lines in step. Undefined →
+  // var(--color-primary), today's behavior.
+  heroTitleColor?: string
   // Directional scrim strength behind the hero copy. site_settings key:
   // hero_scrim.
   //   undefined (absent / any other value) — today's linear top-to-bottom
@@ -1153,30 +1166,66 @@ function TerminalHero(props: VariantProps) {
 // historical single-string H1 render (byte-identical for every tenant that
 // hasn't seeded site_settings.hero_title_parts).
 // ============================================================
+// Snap any requested weight to the nearest weight the theme actually
+// loads for Playfair Display. layout.tsx imports Playfair Display as a
+// variable font (400-900 axis) plus a static [400,500,600,700] loader —
+// intersection safe against synthetic bold is {400,500,600,700,800,900}.
+// Anything outside that range falls back to the closest neighbor rather
+// than asking the browser to bold-simulate a missing weight.
+const LOADED_HEADING_WEIGHTS = [400, 500, 600, 700, 800, 900] as const
+function snapHeadingWeight(requested: number | undefined, fallback: number): number {
+  if (typeof requested !== 'number' || !Number.isFinite(requested)) return fallback
+  return LOADED_HEADING_WEIGHTS.reduce(
+    (best, w) =>
+      Math.abs(w - requested) < Math.abs(best - requested) ? w : best,
+    LOADED_HEADING_WEIGHTS[0] as number,
+  )
+}
+
 function HeroLockupTitle({
   fallback,
   fallbackFontSize,
   parts,
   rule,
+  titleWeight,
+  subtitleWeight,
+  titleColor,
 }: {
   fallback: string
   fallbackFontSize: string
   parts?: string[]
   rule?: boolean
+  titleWeight?: number
+  subtitleWeight?: number
+  titleColor?: string
 }) {
   const cleanParts = (parts || [])
     .map((p) => (p || '').trim())
     .filter((p) => p.length > 0)
+
+  // Snap requested weights to the nearest loaded Playfair Display weight
+  // before rendering. Absent → today's defaults (700 primary, 400 secondary).
+  const primaryWeight = snapHeadingWeight(titleWeight, 700)
+  const secondaryWeight = snapHeadingWeight(subtitleWeight, 400)
+
+  // Override --color-primary for the lockup only when the operator has
+  // seeded hero_title_color. Absent → var(--color-primary), byte-identical.
+  // The secondary line uses `color-mix` against the resolved color so a
+  // single key shifts both lines in step (per the spec's "keeps its
+  // current relationship to the primary" contract).
+  const resolvedPrimaryColor = (titleColor || '').trim() || 'var(--color-primary)'
+  const resolvedSecondaryColor = `color-mix(in srgb, ${resolvedPrimaryColor} 70%, #F4F1E8)`
+  const resolvedOrnamentColor = `color-mix(in srgb, ${resolvedPrimaryColor} 60%, transparent)`
 
   if (cleanParts.length < 2) {
     return (
       <h1
         className="mb-6"
         style={{
-          color: 'var(--color-primary)',
+          color: resolvedPrimaryColor,
           fontFamily: 'var(--font-heading)',
           fontSize: fallbackFontSize,
-          fontWeight: 700,
+          fontWeight: primaryWeight,
           lineHeight: 1.05,
           letterSpacing: '0.01em',
         }}
@@ -1195,10 +1244,10 @@ function HeroLockupTitle({
   // horizontal padding (max-w-3xl + px-6). No mid-range breakpoint jump —
   // one clamp for every screen from 360px to 1920px.
   const primaryStyle: React.CSSProperties = {
-    color: 'var(--color-primary)',
+    color: resolvedPrimaryColor,
     fontFamily: 'var(--font-heading)',
     fontSize: 'clamp(2rem, 6.4vw, 4.75rem)',
-    fontWeight: 700,
+    fontWeight: primaryWeight,
     lineHeight: 1.02,
     letterSpacing: '0.005em',
     display: 'block',
@@ -1207,10 +1256,10 @@ function HeroLockupTitle({
     overflowWrap: 'normal',
   }
   const secondaryStyle: React.CSSProperties = {
-    color: 'color-mix(in srgb, var(--color-primary) 70%, #F4F1E8)',
+    color: resolvedSecondaryColor,
     fontFamily: 'var(--font-heading)',
     fontSize: 'clamp(0.95rem, 2.3vw, 1.5rem)',
-    fontWeight: 400,
+    fontWeight: secondaryWeight,
     letterSpacing: '0.22em',
     textTransform: 'uppercase',
     display: 'block',
@@ -1223,7 +1272,7 @@ function HeroLockupTitle({
     width: '48px',
     height: '1px',
     margin: '0.65rem auto',
-    backgroundColor: 'color-mix(in srgb, var(--color-primary) 60%, transparent)',
+    backgroundColor: resolvedOrnamentColor,
   }
 
   return (
@@ -1361,6 +1410,9 @@ function VideoHero(props: VariantProps) {
           fallbackFontSize={headlineClamp}
           parts={props.heroTitleParts}
           rule={props.heroTitleRule}
+          titleWeight={props.heroTitleWeight}
+          subtitleWeight={props.heroSubtitleWeight}
+          titleColor={props.heroTitleColor}
         />
         <Subheadline
           text={display.subheadline}
@@ -1499,6 +1551,9 @@ export function HeroSection(props: HeroSectionProps) {
     heroTitleRule: props.heroTitleRule,
     heroScrim: props.heroScrim,
     heroTaglineInline: props.heroTaglineInline,
+    heroTitleWeight: props.heroTitleWeight,
+    heroSubtitleWeight: props.heroSubtitleWeight,
+    heroTitleColor: props.heroTitleColor,
   }
 
   switch (activeVariant) {

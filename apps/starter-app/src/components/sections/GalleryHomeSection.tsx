@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 import { isAllowedImageHost } from '@/lib/image-hosts'
+import { RotatingGalleryTiles } from './RotatingGalleryTiles'
 
 export interface GalleryHomeImage {
   url: string
@@ -22,15 +23,26 @@ export function GalleryHomeSection({
   headline = 'From our kitchen',
   href = '/gallery',
   linkToGalleryPage = true,
+  rotate = false,
+  rotationPool,
 }: {
   images: GalleryHomeImage[]
   headline?: string
   href?: string
   linkToGalleryPage?: boolean
+  // Phase 9 — when true, tiles crossfade independently through
+  // rotationPool (defaults to `images` if not provided) via
+  // RotatingGalleryTiles. Absent / false → today's static grid render.
+  rotate?: boolean
+  // Deduped source pool for rotation. When rotate=false this is ignored.
+  rotationPool?: GalleryHomeImage[]
 }) {
   if (!images || images.length === 0) return null
   const shown = images.slice(0, 8)
   const hasMore = images.length > shown.length && linkToGalleryPage
+  const effectivePool = (rotationPool && rotationPool.length > 0
+    ? rotationPool
+    : images)
 
   return (
     <section className="py-16 sm:py-20" style={{ backgroundColor: 'var(--color-background)' }}>
@@ -61,6 +73,14 @@ export function GalleryHomeSection({
           intentional composition instead of "square photo shoved into a
           square hole". Mobile keeps the 2-col square grid it had.
         */}
+        {rotate ? (
+          <RotatingGalleryTiles
+            pool={effectivePool}
+            tileCount={Math.min(shown.length, effectivePool.length)}
+            linkHref={href}
+            linkEnabled={linkToGalleryPage}
+          />
+        ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           {shown.map((img, i) => {
             const tileClass =
@@ -104,6 +124,7 @@ export function GalleryHomeSection({
             )
           })}
         </div>
+        )}
       </div>
     </section>
   )

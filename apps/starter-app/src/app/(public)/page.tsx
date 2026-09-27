@@ -290,6 +290,35 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           : undefined
   const heroTaglineInline =
     (heroLockupSettings.hero_tagline_inline || '').trim().toLowerCase() === 'true'
+  // Phase 9 — hero weight + color overrides and address-banner scale.
+  const heroWeightSettings = await getSiteSettings([
+    'hero_title_weight',
+    'hero_subtitle_weight',
+    'hero_title_color',
+    'address_banner_weight',
+    'address_banner_scale',
+  ])
+  function parsePositiveNumber(raw: string | undefined): number | undefined {
+    if (!raw) return undefined
+    const n = Number.parseFloat(raw.trim())
+    return Number.isFinite(n) && n > 0 ? n : undefined
+  }
+  const heroTitleWeight = parsePositiveNumber(heroWeightSettings.hero_title_weight)
+  const heroSubtitleWeight = parsePositiveNumber(heroWeightSettings.hero_subtitle_weight)
+  const heroTitleColor = (heroWeightSettings.hero_title_color || '').trim() || undefined
+  const addressBannerWeight = parsePositiveNumber(heroWeightSettings.address_banner_weight)
+  const addressBannerScale = parsePositiveNumber(heroWeightSettings.address_banner_scale)
+  // Phase 9 — rotating "From our kitchen" tiles.
+  const kitchenRotateSettings = await getSiteSettings([
+    'gallery_home_rotate',
+    'gallery_home_pool',
+  ])
+  const kitchenRotate =
+    (kitchenRotateSettings.gallery_home_rotate || '').trim().toLowerCase() === 'true'
+  const kitchenPoolMode: 'gallery' | 'all' =
+    (kitchenRotateSettings.gallery_home_pool || '').trim().toLowerCase() === 'all'
+      ? 'all'
+      : 'gallery'
   // Optional one-line marketing strip under the hero subheadline. Empty/missing
   // → nothing renders. Used by El Roi for the service-list strip.
   const heroBadgeText = await getSiteSetting('hero_badge_text')
@@ -603,6 +632,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroTitleRule={heroTitleRule}
         heroScrim={heroScrim}
         heroTaglineInline={heroTaglineInline}
+        heroTitleWeight={heroTitleWeight}
+        heroSubtitleWeight={heroSubtitleWeight}
+        heroTitleColor={heroTitleColor}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}
@@ -742,6 +774,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         city={business.city}
         state={business.state}
         zip={business.zip}
+        bannerScale={addressBannerScale}
+        bannerWeight={addressBannerWeight}
       />
     ),
     // modern_minimal
@@ -883,12 +917,32 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     // "From our kitchen" band. When the tenant has seeded gallery_images
     // but has opted out via show_from_kitchen=false, we render nothing so
     // /gallery keeps working without the home teaser also showing.
-    gallery_home: showFromKitchen ? (
-      <GalleryHomeSection
-        images={galleryHomeImages}
-        linkToGalleryPage={galleryPageEnabled}
-      />
-    ) : null,
+    // Phase 9 — when gallery_home_rotate=true, tiles crossfade through a
+    // pool. "gallery" (default) uses gallery_images alone; "all" merges
+    // home_breakfast_gallery + home_lunch_gallery URLs on top, deduping by
+    // URL so the same photo can't appear twice in the pool. Empty labels
+    // survive so the crossfade still has a working alt text.
+    gallery_home: showFromKitchen ? (() => {
+      let pool = galleryHomeImages
+      if (kitchenRotate && kitchenPoolMode === 'all') {
+        const seen = new Set(galleryHomeImages.map((img) => img.url))
+        const extras: GalleryHomeImage[] = []
+        for (const g of [...homeBreakfastGallery, ...homeLunchGallery]) {
+          if (seen.has(g.url)) continue
+          seen.add(g.url)
+          extras.push({ url: g.url, alt: g.label || '' })
+        }
+        pool = [...galleryHomeImages, ...extras]
+      }
+      return (
+        <GalleryHomeSection
+          images={galleryHomeImages}
+          linkToGalleryPage={galleryPageEnabled}
+          rotate={kitchenRotate}
+          rotationPool={kitchenRotate ? pool : undefined}
+        />
+      )
+    })() : null,
     reviews: (
       <ReviewsSection
         reviews={reviews}
