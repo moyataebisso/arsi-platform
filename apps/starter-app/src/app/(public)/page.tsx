@@ -270,6 +270,18 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         : heroHeightRaw === 'full'
           ? 'full'
           : undefined
+  // Phase 11 — heroFit='fill-blur' foreground scale. Absent / malformed
+  // → 1.0 (byte-identical to Phase 10). Clamped to [1.0, 1.6] so a
+  // fat-fingered seed can't overflow. Values below 1.0 clamp UP to 1.0
+  // because 'fill-blur' only makes sense at natural-size or larger; a
+  // smaller foreground would leave more of the blurred bleed visible,
+  // which is the opposite of the mode's intent.
+  const heroFillScaleRaw = (await getSiteSetting('hero_fill_scale') || '').trim()
+  const parsedFillScale = Number.parseFloat(heroFillScaleRaw)
+  const heroFillScale: number =
+    Number.isFinite(parsedFillScale)
+      ? Math.max(1.0, Math.min(1.6, parsedFillScale))
+      : 1.0
   // Phase 10 — shared aspect ratio setting for the two homepage image
   // bands (HomeRotatingGallery + BreakfastLiveSection image slot). Each
   // component owns its own historical default when the key is absent so
@@ -662,6 +674,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroSubtitleWeight={heroSubtitleWeight}
         heroTitleColor={heroTitleColor}
         heroHeight={heroHeight}
+        heroFillScale={heroFillScale}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}

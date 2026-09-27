@@ -87,6 +87,12 @@ interface HeroSectionProps {
   //               the centered H1 + tagline + CTAs still fit down to
   //               360px viewport width without overflow.
   heroHeight?: 'full' | 'tall' | 'medium'
+  // Phase 11 — heroFit='fill-blur' only. Scales the sharp contain
+  // foreground so it covers more of the frame; the blurred backdrop's
+  // inner edge feathers in step. site_settings key: hero_fill_scale.
+  // Absent → 1.0, byte-identical to Phase 10 fill-blur. Clamped upstream
+  // in page.tsx to [1.0, 1.6]. No effect when heroFit is not fill-blur.
+  heroFillScale?: number
   // Multi-line H1 lockup. site_settings key: hero_title_parts (jsonb
   // string[]). When 2+ entries, VideoHero renders the H1 as a stacked
   // typographic lockup — primary line first, then secondary lines at a
@@ -1388,7 +1394,13 @@ function VideoHero(props: VariantProps) {
         backgroundColor: '#000',
       }}
     >
-      {useSlideshow && <HeroBackgroundCrossfade images={slideshowUrls} heroFit={props.heroFit} />}
+      {useSlideshow && (
+        <HeroBackgroundCrossfade
+          images={slideshowUrls}
+          heroFit={props.heroFit}
+          heroFillScale={props.heroFillScale}
+        />
+      )}
       {videoUrl && (
         // eslint-disable-next-line jsx-a11y/media-has-caption
         <video
@@ -1583,6 +1595,7 @@ export function HeroSection(props: HeroSectionProps) {
     heroSubtitleWeight: props.heroSubtitleWeight,
     heroTitleColor: props.heroTitleColor,
     heroHeight: props.heroHeight,
+    heroFillScale: props.heroFillScale,
   }
 
   switch (activeVariant) {

@@ -48,9 +48,19 @@ import { toGalleryImages, type GalleryImage } from '@/lib/gallery'
 export function HeroBackgroundCrossfade({
   images,
   heroFit = 'contain',
+  heroFillScale = 1.0,
 }: {
   images: ReadonlyArray<string | GalleryImage>
   heroFit?: 'contain' | 'cover' | 'fill-blur'
+  // Phase 11 — scales the sharp contain foreground inside the frame in
+  // fill-blur mode. 1.0 (default / absent) preserves today's ambient
+  // bleed exactly. Values > 1.0 grow the sharp image so it covers more
+  // width; the outer overflow-hidden on the section clips cleanly at
+  // the frame edge. Also drives an inner-edge feather on the blurred
+  // backdrop so the seam between the two layers softens as the scale
+  // rises — at 1.0 no mask is emitted (byte-identical to Phase 10).
+  // No effect when heroFit !== 'fill-blur'.
+  heroFillScale?: number
 }) {
   const slides: GalleryImage[] = toGalleryImages(images)
   const [index, setIndex] = useState(0)
@@ -146,44 +156,88 @@ export function HeroBackgroundCrossfade({
               // wash, not as visible letterbox bars around a smaller sharp
               // frame. sizes are widened over 'contain' because the sharp
               // layer runs edge-to-edge at every breakpoint now.
-              <>
-                <Image
-                  src={src}
-                  alt=""
-                  fill
-                  priority={i === 0}
-                  loading={i === 0 ? undefined : 'lazy'}
-                  sizes="100vw"
-                  unoptimized={!isAllowedImageHost(src)}
-                  className={
-                    focus === 'center'
-                      ? 'object-cover object-center'
-                      : 'object-cover'
-                  }
-                  style={{
-                    filter: 'blur(40px) brightness(0.55) saturate(1.05)',
-                    transform: 'scale(1.25)',
-                    ...(focus === 'center' ? {} : { objectPosition: focus }),
-                  }}
-                />
-                <Image
-                  src={src}
-                  alt={alt}
-                  fill
-                  priority={i === 0}
-                  loading={i === 0 ? undefined : 'lazy'}
-                  sizes="(min-width: 1024px) 1100px, 92vw"
-                  unoptimized={!isAllowedImageHost(src)}
-                  className={
-                    focus === 'center'
-                      ? 'object-contain object-center'
-                      : 'object-contain'
-                  }
-                  style={
-                    focus === 'center' ? undefined : { objectPosition: focus }
-                  }
-                />
-              </>
+              //
+              // Phase 11 — heroFillScale grows the sharp foreground inside
+              // the frame. At 1.0 no scale transform is emitted and no
+              // feather mask is applied to the backdrop → byte-identical
+              // to Phase 10. Above 1.0 we scale the sharp layer + feather
+              // the inner center of the backdrop so the seam between the
+              // two reads as a soft transition rather than a rectangle
+              // edge. Feather intensity ramps linearly from 0 at scale 1.0
+              // to 1.0 at scale 1.6 (matches the upstream clamp).
+              (() => {
+                const scaled = heroFillScale > 1.0
+                const feather = Math.max(
+                  0,
+                  Math.min(1, (heroFillScale - 1.0) / 0.6),
+                )
+                const backdropTransform = 'scale(1.25)'
+                // Center alpha drops from 1.0 (fully opaque mask = full
+                // blur visible) at feather 0 to 0.15 (mostly transparent
+                // mask = blur nearly hidden in center) at feather 1. Outer
+                // stop at 70% radius stays fully opaque so the edges
+                // continue to carry the ambient wash.
+                const centerAlpha = (1 - 0.85 * feather).toFixed(3)
+                const backdropMask =
+                  feather > 0
+                    ? `radial-gradient(ellipse 55% 55% at 50% 50%, rgba(0,0,0,${centerAlpha}) 0%, rgba(0,0,0,1) 70%)`
+                    : undefined
+                const backdropStyle: React.CSSProperties = {
+                  filter: 'blur(40px) brightness(0.55) saturate(1.05)',
+                  transform: backdropTransform,
+                  ...(focus === 'center' ? {} : { objectPosition: focus }),
+                  ...(backdropMask
+                    ? {
+                        maskImage: backdropMask,
+                        WebkitMaskImage: backdropMask,
+                      }
+                    : {}),
+                }
+                const sharpTransform = scaled
+                  ? `scale(${heroFillScale.toFixed(3)})`
+                  : undefined
+                const sharpStyle: React.CSSProperties | undefined =
+                  focus === 'center' && !sharpTransform
+                    ? undefined
+                    : {
+                        ...(focus === 'center' ? {} : { objectPosition: focus }),
+                        ...(sharpTransform ? { transform: sharpTransform } : {}),
+                      }
+                return (
+                  <>
+                    <Image
+                      src={src}
+                      alt=""
+                      fill
+                      priority={i === 0}
+                      loading={i === 0 ? undefined : 'lazy'}
+                      sizes="100vw"
+                      unoptimized={!isAllowedImageHost(src)}
+                      className={
+                        focus === 'center'
+                          ? 'object-cover object-center'
+                          : 'object-cover'
+                      }
+                      style={backdropStyle}
+                    />
+                    <Image
+                      src={src}
+                      alt={alt}
+                      fill
+                      priority={i === 0}
+                      loading={i === 0 ? undefined : 'lazy'}
+                      sizes="(min-width: 1024px) 1100px, 92vw"
+                      unoptimized={!isAllowedImageHost(src)}
+                      className={
+                        focus === 'center'
+                          ? 'object-contain object-center'
+                          : 'object-contain'
+                      }
+                      style={sharpStyle}
+                    />
+                  </>
+                )
+              })()
             ) : (
               <>
                 {/*
