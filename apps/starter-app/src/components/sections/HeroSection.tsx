@@ -64,14 +64,29 @@ interface HeroSectionProps {
   // blank. Every other variant ignores this prop.
   heroImages?: string[]
   // How the crossfade layer fits the hero band. site_settings key: hero_fit.
-  //   'contain' (default / absent / malformed) — desktop renders a blurred
+  //   'contain'   (default / absent / malformed) — desktop renders a blurred
   //                                             cover backdrop plus a sharp
   //                                             centered contain foreground.
   //                                             Byte-identical to prior
   //                                             behavior.
-  //   'cover'   — a single object-cover frame per slide fills the band edge
-  //               to edge. Used by tenants with landscape source photos.
-  heroFit?: 'contain' | 'cover'
+  //   'cover'     — a single object-cover frame per slide fills the band
+  //                 edge to edge. Used by tenants with landscape source
+  //                 photos.
+  //   'fill-blur' — Phase 10 addition. Sharp object-contain foreground at
+  //                 every breakpoint + an ambient-blurred cover copy sized
+  //                 to bleed rather than letterbox. Use when the frame is
+  //                 much wider than the source photo and you'd rather show
+  //                 the whole dish.
+  heroFit?: 'contain' | 'cover' | 'fill-blur'
+  // Hero container height. site_settings key: hero_height.
+  //   undefined (absent / malformed) — today's min-h ladder
+  //                                    (560 / 640 / 720 at base / sm / lg).
+  //   'full'    — same as absent.
+  //   'tall'    — a shorter ladder (480 / 560 / 620).
+  //   'medium'  — the shortest ladder (420 / 480 / 540). At every value
+  //               the centered H1 + tagline + CTAs still fit down to
+  //               360px viewport width without overflow.
+  heroHeight?: 'full' | 'tall' | 'medium'
   // Multi-line H1 lockup. site_settings key: hero_title_parts (jsonb
   // string[]). When 2+ entries, VideoHero renders the H1 as a stacked
   // typographic lockup — primary line first, then secondary lines at a
@@ -1347,9 +1362,22 @@ function VideoHero(props: VariantProps) {
         ? 'clamp(2.25rem, 5.6vw, 4.5rem)'
         : 'clamp(2.75rem, 6vw, 5.25rem)'
 
+  // Height ladder driven by hero_height. 'full' + absent keep the
+  // historical 560/640/720 min-h. 'tall' and 'medium' step down so the
+  // frame's aspect ratio sits closer to the source photos and object-cover
+  // crops less. All three ladders were sized against the H1 + tagline +
+  // stacked CTAs at 360px viewport width — the shortest ('medium', 420px
+  // mobile) still leaves ~90px of vertical breathing room around the
+  // centered content.
+  const heightLadder =
+    props.heroHeight === 'medium'
+      ? 'min-h-[420px] sm:min-h-[480px] lg:min-h-[540px]'
+      : props.heroHeight === 'tall'
+        ? 'min-h-[480px] sm:min-h-[560px] lg:min-h-[620px]'
+        : 'min-h-[560px] sm:min-h-[640px] lg:min-h-[720px]'
   return (
     <section
-      className="relative w-full overflow-hidden min-h-[560px] sm:min-h-[640px] lg:min-h-[720px] flex items-center justify-center"
+      className={`relative w-full overflow-hidden ${heightLadder} flex items-center justify-center`}
       style={{
         // Suppress the single-image background whenever the crossfade is
         // active — the slideshow layer paints its own frames from index 0
@@ -1554,6 +1582,7 @@ export function HeroSection(props: HeroSectionProps) {
     heroTitleWeight: props.heroTitleWeight,
     heroSubtitleWeight: props.heroSubtitleWeight,
     heroTitleColor: props.heroTitleColor,
+    heroHeight: props.heroHeight,
   }
 
   switch (activeVariant) {

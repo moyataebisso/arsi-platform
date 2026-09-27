@@ -21,25 +21,36 @@ import { toGalleryImages, type GalleryImage } from '@/lib/gallery'
 //   - Foreign hosts (not in next.config.js images.remotePatterns): fall back
 //     to an unoptimized <Image> so a stray external URL can never throw.
 //
-// heroFit ('contain' default | 'cover'):
-//   - 'contain' — desktop renders a blurred cover backdrop plus a sharp
-//                 centered contain foreground (below-lg keeps one cover
-//                 frame). Byte-identical to the pre-fit render.
-//   - 'cover'   — a single object-cover frame per slide fills the band edge
-//                 to edge at all breakpoints. Skips the blur backdrop and
-//                 the contain foreground.
+// heroFit ('contain' default | 'cover' | 'fill-blur'):
+//   - 'contain'   — desktop renders a blurred cover backdrop plus a sharp
+//                   centered contain foreground (below-lg keeps one cover
+//                   frame). Byte-identical to the pre-fit render.
+//   - 'cover'     — a single object-cover frame per slide fills the band
+//                   edge to edge at every breakpoint. Skips the blur
+//                   backdrop and the contain foreground.
+//   - 'fill-blur' — Phase 10 addition. object-contain foreground at EVERY
+//                   breakpoint (not just desktop like 'contain'), paired
+//                   with an ambient-blurred cover copy sized wide enough
+//                   to read as a bleed rather than the hard letterbox bars
+//                   the original 'contain' variant fixed. Use when the
+//                   band is much wider than the source photos and you'd
+//                   rather show the whole dish than crop into it.
 //
 // Accepts a legacy string[] shape and the new GalleryImage[] shape
 // interchangeably. When an element has a non-empty label the crossfade
 // paints a bottom-up dark scrim + a bottom-left caption inside the same
 // slide wrapper so both fade together with the image. Captions are
 // decorative duplicates of the alt text and marked aria-hidden.
+//
+// Per-slide focus: GalleryImage.focus (CSS object-position) overrides the
+// hardcoded object-center for that slide only. Applies to the cover layer
+// in both 'cover' and 'fill-blur' modes. Absent → 'center', unchanged.
 export function HeroBackgroundCrossfade({
   images,
   heroFit = 'contain',
 }: {
   images: ReadonlyArray<string | GalleryImage>
-  heroFit?: 'contain' | 'cover'
+  heroFit?: 'contain' | 'cover' | 'fill-blur'
 }) {
   const slides: GalleryImage[] = toGalleryImages(images)
   const [index, setIndex] = useState(0)
@@ -84,6 +95,11 @@ export function HeroBackgroundCrossfade({
         // Real alt text on the image is the label when present; the visible
         // caption below duplicates that alt and is aria-hidden per the spec.
         const alt = caption
+        // Per-slide focal point. Falls back to 'center' — the historical
+        // hardcoded object-center. Only applied when a slide sets it, so
+        // the emitted DOM for slides without a focus value stays
+        // byte-identical to the pre-Phase-10 render.
+        const focus = slide.focus || 'center'
         return (
           <div
             key={src + i}
@@ -102,6 +118,10 @@ export function HeroBackgroundCrossfade({
               // slide; no blurred backdrop and no contain foreground. Used by
               // tenants whose source photos are landscape enough to fill the
               // hero band edge to edge without cropping the subject.
+              //
+              // When focus === 'center' the class-based object-center paints
+              // (byte-identical to pre-Phase-10). A custom focus drops the
+              // class and emits inline objectPosition for that slide only.
               <Image
                 src={src}
                 alt={alt}
@@ -110,8 +130,60 @@ export function HeroBackgroundCrossfade({
                 loading={i === 0 ? undefined : 'lazy'}
                 sizes="100vw"
                 unoptimized={!isAllowedImageHost(src)}
-                className="object-cover object-center"
+                className={
+                  focus === 'center'
+                    ? 'object-cover object-center'
+                    : 'object-cover'
+                }
+                style={
+                  focus === 'center' ? undefined : { objectPosition: focus }
+                }
               />
+            ) : heroFit === 'fill-blur' ? (
+              // Phase 10 — ambient bleed. Same idea as the desktop half of
+              // 'contain' but at every breakpoint AND with a stronger blur
+              // radius + wider scale so the backdrop reads as ambient light
+              // wash, not as visible letterbox bars around a smaller sharp
+              // frame. sizes are widened over 'contain' because the sharp
+              // layer runs edge-to-edge at every breakpoint now.
+              <>
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  priority={i === 0}
+                  loading={i === 0 ? undefined : 'lazy'}
+                  sizes="100vw"
+                  unoptimized={!isAllowedImageHost(src)}
+                  className={
+                    focus === 'center'
+                      ? 'object-cover object-center'
+                      : 'object-cover'
+                  }
+                  style={{
+                    filter: 'blur(40px) brightness(0.55) saturate(1.05)',
+                    transform: 'scale(1.25)',
+                    ...(focus === 'center' ? {} : { objectPosition: focus }),
+                  }}
+                />
+                <Image
+                  src={src}
+                  alt={alt}
+                  fill
+                  priority={i === 0}
+                  loading={i === 0 ? undefined : 'lazy'}
+                  sizes="(min-width: 1024px) 1100px, 92vw"
+                  unoptimized={!isAllowedImageHost(src)}
+                  className={
+                    focus === 'center'
+                      ? 'object-contain object-center'
+                      : 'object-contain'
+                  }
+                  style={
+                    focus === 'center' ? undefined : { objectPosition: focus }
+                  }
+                />
+              </>
             ) : (
               <>
                 {/*

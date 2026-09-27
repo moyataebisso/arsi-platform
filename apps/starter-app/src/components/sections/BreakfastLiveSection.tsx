@@ -20,6 +20,7 @@ export function BreakfastLiveSection({
   imageUrl,
   galleryImages,
   eyebrow,
+  aspectRatio,
 }: {
   heading: string
   body: string
@@ -31,6 +32,10 @@ export function BreakfastLiveSection({
   // falls through to the historical literal "Now serving" so tenants
   // without site_settings.breakfast_eyebrow are unchanged.
   eyebrow?: string
+  // "W / H" aspect ratio for the image slot. Absent → 4 / 3, today's
+  // value. Same key upstream as HomeRotatingGallery so operators can
+  // tune both bands from one setting.
+  aspectRatio?: string
 }) {
   const label = (ctaLabel || '').trim() || 'See the breakfast menu'
   const cleanGallery = toGalleryImages(galleryImages)
@@ -38,6 +43,7 @@ export function BreakfastLiveSection({
   const staticImage = (imageUrl || '').trim()
   const hasImage = !hasGallery && staticImage.length > 0
   const eyebrowText = (eyebrow || '').trim() || 'Now serving'
+  const resolvedAspect = (aspectRatio || '').trim() || '4 / 3'
 
   return (
     <section
@@ -102,7 +108,7 @@ export function BreakfastLiveSection({
             <div
               className="relative w-full overflow-hidden rounded-2xl"
               style={{
-                aspectRatio: '4 / 3',
+                aspectRatio: resolvedAspect,
                 backgroundColor: 'var(--color-background)',
               }}
             >

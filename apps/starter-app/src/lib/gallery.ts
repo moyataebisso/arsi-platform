@@ -14,6 +14,53 @@ export interface GalleryImage {
   // decorative caption + scrim over the slide; when absent no scrim or
   // caption box is drawn for that slide.
   label?: string
+  // Optional CSS object-position value ("center", "50% 30%", "top left",
+  // etc.). Absent → 'center', matching the historical hardcoded
+  // object-center everywhere. Malformed values fall back to 'center' so a
+  // stray token can't break the slide's paint.
+  focus?: string
+}
+
+// Validate a raw object-position string. Accepts 1-4 whitespace-separated
+// tokens where each token is either a positional keyword (center, top,
+// bottom, left, right) or a CSS length (`\d+(.\d+)?%|px`, optionally
+// negative). Anything else falls back to 'center'.
+const FOCUS_KEYWORDS = new Set(['center', 'top', 'bottom', 'left', 'right'])
+const FOCUS_LENGTH = /^-?\d+(\.\d+)?(%|px)?$/
+export function validateObjectPosition(raw: unknown): string {
+  if (typeof raw !== 'string') return 'center'
+  const s = raw.trim()
+  if (!s) return 'center'
+  const tokens = s.split(/\s+/)
+  if (tokens.length < 1 || tokens.length > 4) return 'center'
+  for (const t of tokens) {
+    const lt = t.toLowerCase()
+    if (FOCUS_KEYWORDS.has(lt)) continue
+    if (FOCUS_LENGTH.test(t)) continue
+    return 'center'
+  }
+  return s.toLowerCase()
+}
+
+// Validate a raw "W/H" or "W:H" aspect ratio string. Returns the
+// normalized "W / H" form when the parse succeeds; returns the caller's
+// fallback (usually the historical value) on anything malformed. Prevents
+// injection into CSS since we never emit the raw string.
+export function validateAspectRatio(
+  raw: string | undefined | null,
+  fallback: string,
+): string {
+  if (typeof raw !== 'string') return fallback
+  const s = raw.trim()
+  if (!s) return fallback
+  const m = /^(\d+)\s*[/:]\s*(\d+)$/.exec(s)
+  if (!m) return fallback
+  const w = Number(m[1])
+  const h = Number(m[2])
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+    return fallback
+  }
+  return `${w} / ${h}`
 }
 
 // Normalize a single raw jsonb array element. Returns null when the element
@@ -24,11 +71,22 @@ export function normalizeGalleryElement(raw: unknown): GalleryImage | null {
     return url ? { url } : null
   }
   if (raw && typeof raw === 'object') {
-    const obj = raw as { url?: unknown; label?: unknown }
+    const obj = raw as { url?: unknown; label?: unknown; focus?: unknown }
     const url = typeof obj.url === 'string' ? obj.url.trim() : ''
     if (!url) return null
     const label = typeof obj.label === 'string' ? obj.label.trim() : ''
-    return label ? { url, label } : { url }
+    // Only include `focus` in the returned object when the raw value is
+    // valid AND not the default 'center' — keeps the object shape minimal
+    // and lets callers cheaply check `focus === undefined` to know they
+    // should not emit a per-slide style.
+    const focusRaw = typeof obj.focus === 'string' ? obj.focus.trim() : ''
+    const focus = focusRaw ? validateObjectPosition(focusRaw) : ''
+    const focusOut = focus && focus !== 'center' ? { focus } : {}
+    return {
+      url,
+      ...(label ? { label } : {}),
+      ...focusOut,
+    }
   }
   return null
 }

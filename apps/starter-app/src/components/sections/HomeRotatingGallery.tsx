@@ -18,15 +18,21 @@ export function HomeRotatingGallery({
   heading,
   ctaHref,
   ctaLabel,
+  aspectRatio,
 }: {
   images: ReadonlyArray<string | GalleryImage>
   heading: string
   ctaHref: string
   ctaLabel?: string
+  // "W / H" string (already validated upstream by validateAspectRatio).
+  // Absent → today's 16 / 7 fallback so tenants without the
+  // home_gallery_aspect setting see zero change.
+  aspectRatio?: string
 }) {
   const list = toGalleryImages(images)
   if (list.length === 0) return null
   const label = (ctaLabel || '').trim() || 'See the menu'
+  const resolvedAspect = (aspectRatio || '').trim() || '16 / 7'
 
   return (
     <section
@@ -56,7 +62,7 @@ export function HomeRotatingGallery({
         <div
           className="relative w-full overflow-hidden rounded-2xl"
           style={{
-            aspectRatio: '16 / 7',
+            aspectRatio: resolvedAspect,
             backgroundColor: 'var(--color-surface)',
           }}
         >

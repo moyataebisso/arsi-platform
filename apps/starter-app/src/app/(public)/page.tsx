@@ -68,7 +68,7 @@ import { BreakfastComingSoonSection } from '@/components/sections/BreakfastComin
 import { BreakfastLiveSection } from '@/components/sections/BreakfastLiveSection'
 import { HomeRotatingGallery } from '@/components/sections/HomeRotatingGallery'
 import { ReviewsSection } from '@/components/sections/ReviewsSection'
-import { parseGalleryList } from '@/lib/gallery'
+import { parseGalleryList, validateAspectRatio } from '@/lib/gallery'
 import { parseReviews } from '@/lib/reviews'
 import { AwashBakerySection } from '@/components/sections/AwashBakerySection'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
@@ -248,10 +248,36 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // render — blurred cover backdrop + sharp centered contain foreground.
   // 'cover' skips the backdrop/contain split and renders a single object-cover
   // frame edge-to-edge; used when the tenant has landscape source photos.
-  // Any other value (missing / malformed) falls through to 'contain' so
-  // every tenant without the row is byte-identical.
+  // 'fill-blur' (Phase 10) keeps object-contain sharp at every breakpoint
+  // and pairs it with an ambient blurred bleed. Any other value (missing /
+  // malformed) falls through to 'contain' so every tenant without the row
+  // is byte-identical.
   const heroFitRaw = (await getSiteSetting('hero_fit') || '').trim().toLowerCase()
-  const heroFit: 'contain' | 'cover' = heroFitRaw === 'cover' ? 'cover' : 'contain'
+  const heroFit: 'contain' | 'cover' | 'fill-blur' =
+    heroFitRaw === 'cover'
+      ? 'cover'
+      : heroFitRaw === 'fill-blur'
+        ? 'fill-blur'
+        : 'contain'
+  // Hero container height. Absent / malformed → undefined so VideoHero
+  // uses today's 560/640/720 min-h ladder.
+  const heroHeightRaw = (await getSiteSetting('hero_height') || '').trim().toLowerCase()
+  const heroHeight: 'full' | 'tall' | 'medium' | undefined =
+    heroHeightRaw === 'medium'
+      ? 'medium'
+      : heroHeightRaw === 'tall'
+        ? 'tall'
+        : heroHeightRaw === 'full'
+          ? 'full'
+          : undefined
+  // Phase 10 — shared aspect ratio setting for the two homepage image
+  // bands (HomeRotatingGallery + BreakfastLiveSection image slot). Each
+  // component owns its own historical default when the key is absent so
+  // tenants without home_gallery_aspect stay byte-identical. Malformed
+  // strings fall through to a per-caller fallback via validateAspectRatio.
+  const homeGalleryAspectRaw = await getSiteSetting('home_gallery_aspect')
+  const rotatingGalleryAspect = validateAspectRatio(homeGalleryAspectRaw, '16 / 7')
+  const breakfastImageAspect = validateAspectRatio(homeGalleryAspectRaw, '4 / 3')
   // Phase 8 — hero typographic lockup + scrim + tagline layout. All four
   // keys are optional; absent-value defaults preserve today's render for
   // every tenant that hasn't seeded them.
@@ -635,6 +661,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroTitleWeight={heroTitleWeight}
         heroSubtitleWeight={heroSubtitleWeight}
         heroTitleColor={heroTitleColor}
+        heroHeight={heroHeight}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}
@@ -886,6 +913,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           imageUrl={breakfastLiveSettings.breakfast_image_url}
           galleryImages={homeBreakfastGallery}
           eyebrow={breakfastLiveSettings.breakfast_eyebrow}
+          aspectRatio={breakfastImageAspect}
         />
       ) : (
         <BreakfastComingSoonSection
@@ -900,6 +928,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heading={lunchGalleryHeading}
         ctaHref={lunchGalleryHref}
         ctaLabel="See the lunch menu"
+        aspectRatio={rotatingGalleryAspect}
       />
     ),
     awash_bakery: (
