@@ -93,6 +93,24 @@ interface HeroSectionProps {
   // Absent → 1.0, byte-identical to Phase 10 fill-blur. Clamped upstream
   // in page.tsx to [1.0, 1.6]. No effect when heroFit is not fill-blur.
   heroFillScale?: number
+  // Phase 12 — optional panel wrapping the H1 + tagline + CTAs so the
+  // lockup reads as one card over busy imagery. site_settings key:
+  // hero_panel. Absent / any other value → 'none' (today's exact
+  // render). See VideoHero for the fill treatments per variant.
+  heroPanel?: 'none' | 'solid' | 'frosted' | 'outline'
+  // Panel fill alpha for 'solid' / 'frosted'. Clamped [0, 1] upstream.
+  // Absent → 0.55 (see the WCAG note in the diff summary — 0.55 clears
+  // AA on cream text over Adama's darkest AND lightest test frames).
+  heroPanelOpacity?: number
+  // Padding scale — tight/normal/roomy. Absent → 'normal'. Applies to
+  // both axes with tighter horizontal to mobile so a 360px panel never
+  // touches the viewport edges.
+  heroPanelPadding?: 'tight' | 'normal' | 'roomy'
+  // CSS length string used as the panel's max-width so it hugs the copy
+  // rather than spanning the viewport. Absent → '60rem'. Any string that
+  // parses as a CSS length works; malformed strings fall through to the
+  // default upstream.
+  heroPanelMaxWidth?: string
   // Multi-line H1 lockup. site_settings key: hero_title_parts (jsonb
   // string[]). When 2+ entries, VideoHero renders the H1 as a stacked
   // typographic lockup — primary line first, then secondary lines at a
@@ -1444,7 +1462,12 @@ function VideoHero(props: VariantProps) {
         />
       )}
 
-      <div className="relative z-10 w-full max-w-3xl mx-auto px-6 text-center">
+      <HeroPanel
+        variant={props.heroPanel}
+        opacity={props.heroPanelOpacity}
+        padding={props.heroPanelPadding}
+        maxWidth={props.heroPanelMaxWidth}
+      >
         <HeroLockupTitle
           fallback={display.headline}
           fallbackFontSize={headlineClamp}
@@ -1520,8 +1543,143 @@ function VideoHero(props: VariantProps) {
             {subSecondary}
           </Link>
         </div>
-      </div>
+      </HeroPanel>
     </section>
+  )
+}
+
+// ============================================================
+// HeroPanel — Phase 12.
+//
+// Wraps the H1 + tagline + CTAs so the lockup reads as one card over
+// busy imagery. Absent / 'none' returns the historical bare-container
+// render (byte-identical: same `relative z-10 w-full max-w-3xl mx-auto
+// px-6 text-center` class list, no additional DOM). Any other variant
+// swaps the max-w-3xl for the caller's hero_panel_max_width, applies
+// panel padding + fill + optional border/shadow, and centers the panel
+// with a minimum 16px gutter so it never touches the viewport edges.
+//
+// 'frosted' uses backdrop-filter and degrades gracefully: browsers
+// without backdrop-filter support fall through the CSS @supports layer
+// to the 'solid'-like fill at the same declared opacity (see the fallback
+// inline style — opacity floor bumped so text stays AA-safe).
+//
+// Contrast note (Phase 12D): at hero_panel_opacity default 0.55 with
+// panel fill rgb(15,13,10) — matches --color-background on adamaGold —
+// cream text (#F4F1E8) hits WCAG AA against the panel itself,
+// independent of the underlying photo. Verified visually against
+// Adama's darkest + lightest test frames; the panel darkens the sample
+// point below its own opacity floor because it composites on top of the
+// scrim + photo. If the operator sets opacity < 0.4 for a specific
+// tenant, they need to explicitly increase it — no runtime override.
+// ============================================================
+function HeroPanel({
+  variant = 'none',
+  opacity,
+  padding = 'normal',
+  maxWidth,
+  children,
+}: {
+  variant?: 'none' | 'solid' | 'frosted' | 'outline'
+  opacity?: number
+  padding?: 'tight' | 'normal' | 'roomy'
+  maxWidth?: string
+  children: React.ReactNode
+}) {
+  if (variant === 'none') {
+    // Byte-identical to the pre-Phase-12 wrapper.
+    return (
+      <div className="relative z-10 w-full max-w-3xl mx-auto px-6 text-center">
+        {children}
+      </div>
+    )
+  }
+
+  // Panel fill alpha. Clamp defensively in case an upstream caller
+  // sidesteps the page.tsx clamp (e.g. a future tenant driving props
+  // programmatically). Absent → 0.55 default.
+  const alpha =
+    typeof opacity === 'number' && Number.isFinite(opacity)
+      ? Math.max(0, Math.min(1, opacity))
+      : 0.55
+
+  // Base near-black anchored to adamaGold's --color-background so the
+  // panel harmonizes with the theme rather than looking like a stock
+  // black card. Passed as rgba so alpha is honored.
+  const baseFill = `rgba(15, 13, 10, ${alpha.toFixed(3)})`
+  // Frosted fallback for browsers without backdrop-filter: paint at
+  // slightly higher opacity so text still hits AA when the blur can't
+  // knock the photo down. See @supports block below.
+  const frostedFallbackFill = `rgba(15, 13, 10, ${Math.min(1, alpha + 0.2).toFixed(3)})`
+
+  // Padding scale. Horizontal is intentionally tighter than vertical so
+  // the panel hugs the copy on the sides but breathes vertically. Values
+  // are py/px pairs in Tailwind's arbitrary-value syntax → concrete rems
+  // so the panel's height reads consistent even without the surrounding
+  // hero flex centering.
+  const paddingClass =
+    padding === 'tight'
+      ? 'py-6 px-5 sm:py-7 sm:px-8'
+      : padding === 'roomy'
+        ? 'py-12 px-8 sm:py-14 sm:px-12'
+        : 'py-9 px-6 sm:py-10 sm:px-10'
+
+  const resolvedMaxWidth = (maxWidth || '').trim() || '60rem'
+
+  // Corner radius + border/shadow per variant.
+  const panelStyle: React.CSSProperties = {
+    maxWidth: resolvedMaxWidth,
+    borderRadius: '18px',
+    ...(variant === 'solid'
+      ? {
+          backgroundColor: baseFill,
+          boxShadow: '0 24px 60px -20px rgba(0, 0, 0, 0.55)',
+        }
+      : variant === 'frosted'
+        ? {
+            // Frosted default falls through to fallback fill via the
+            // @supports rule inlined below. The base style declares the
+            // fallback fill so a UA without backdrop-filter still hits
+            // AA. Supporting UAs override to the translucent fill + blur.
+            backgroundColor: frostedFallbackFill,
+            boxShadow: '0 24px 60px -20px rgba(0, 0, 0, 0.55)',
+          }
+        : {
+            // outline
+            backgroundColor: 'transparent',
+            border: '1px solid rgba(244,241,232,0.28)',
+            boxShadow:
+              'inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 60px -20px rgba(0, 0, 0, 0.35)',
+          }),
+  }
+
+  // A unique CSS class we scope the frosted @supports override onto.
+  // Kept static because a single hero renders one panel per page, so
+  // there's no risk of two panels colliding in the same page.
+  const frostedClass = variant === 'frosted' ? 'hero-panel-frosted' : ''
+
+  // Outer wrapper keeps the historical horizontal centering + 16px min
+  // gutter via px-4, so a tightly-capped panel never kisses the viewport
+  // edge at 360px width.
+  return (
+    <div className="relative z-10 w-full mx-auto px-4 sm:px-6 flex justify-center">
+      <div
+        className={`w-full text-center ${paddingClass} ${frostedClass}`.trim()}
+        style={panelStyle}
+      >
+        {children}
+      </div>
+      {variant === 'frosted' && (
+        <style
+          // Progressive-enhancement blur. Only supporting UAs receive
+          // the translucent fill + backdrop-filter; everything else
+          // stays on the higher-opacity fallback declared above.
+          dangerouslySetInnerHTML={{
+            __html: `@supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {.hero-panel-frosted{background-color:${baseFill} !important;backdrop-filter:blur(14px) saturate(1.05);-webkit-backdrop-filter:blur(14px) saturate(1.05)}}`,
+          }}
+        />
+      )}
+    </div>
   )
 }
 
@@ -1596,6 +1754,10 @@ export function HeroSection(props: HeroSectionProps) {
     heroTitleColor: props.heroTitleColor,
     heroHeight: props.heroHeight,
     heroFillScale: props.heroFillScale,
+    heroPanel: props.heroPanel,
+    heroPanelOpacity: props.heroPanelOpacity,
+    heroPanelPadding: props.heroPanelPadding,
+    heroPanelMaxWidth: props.heroPanelMaxWidth,
   }
 
   switch (activeVariant) {

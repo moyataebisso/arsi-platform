@@ -282,6 +282,48 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     Number.isFinite(parsedFillScale)
       ? Math.max(1.0, Math.min(1.6, parsedFillScale))
       : 1.0
+  // Phase 12 — panel wrapping the H1 + tagline + CTAs. Absent → 'none'
+  // (byte-identical to Phase 11). Any other value that doesn't match
+  // the three supported variants also falls through to 'none' so a
+  // typo can't produce a broken card.
+  const heroPanelSettings = await getSiteSettings([
+    'hero_panel',
+    'hero_panel_opacity',
+    'hero_panel_padding',
+    'hero_panel_max_width',
+  ])
+  const heroPanelRaw = (heroPanelSettings.hero_panel || '').trim().toLowerCase()
+  const heroPanel: 'none' | 'solid' | 'frosted' | 'outline' =
+    heroPanelRaw === 'solid'
+      ? 'solid'
+      : heroPanelRaw === 'frosted'
+        ? 'frosted'
+        : heroPanelRaw === 'outline'
+          ? 'outline'
+          : 'none'
+  const heroPanelOpacityRaw = (heroPanelSettings.hero_panel_opacity || '').trim()
+  const parsedPanelOpacity = Number.parseFloat(heroPanelOpacityRaw)
+  const heroPanelOpacity: number | undefined = Number.isFinite(parsedPanelOpacity)
+    ? Math.max(0, Math.min(1, parsedPanelOpacity))
+    : undefined
+  const heroPanelPaddingRaw = (heroPanelSettings.hero_panel_padding || '').trim().toLowerCase()
+  const heroPanelPadding: 'tight' | 'normal' | 'roomy' | undefined =
+    heroPanelPaddingRaw === 'tight'
+      ? 'tight'
+      : heroPanelPaddingRaw === 'roomy'
+        ? 'roomy'
+        : heroPanelPaddingRaw === 'normal'
+          ? 'normal'
+          : undefined
+  // Panel max-width. Whitelist a CSS length so a bad string can't inject
+  // arbitrary values into the inline style. `<number><unit>` where unit
+  // is rem/em/px/vw/ch, or bare percentages, are accepted. Anything
+  // else falls back to '60rem' via HeroPanel's own default.
+  const heroPanelMaxWidthRaw = (heroPanelSettings.hero_panel_max_width || '').trim()
+  const heroPanelMaxWidth: string | undefined =
+    /^\d+(\.\d+)?(rem|em|px|vw|ch|%)$/i.test(heroPanelMaxWidthRaw)
+      ? heroPanelMaxWidthRaw
+      : undefined
   // Phase 10 — shared aspect ratio setting for the two homepage image
   // bands (HomeRotatingGallery + BreakfastLiveSection image slot). Each
   // component owns its own historical default when the key is absent so
@@ -675,6 +717,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroTitleColor={heroTitleColor}
         heroHeight={heroHeight}
         heroFillScale={heroFillScale}
+        heroPanel={heroPanel}
+        heroPanelOpacity={heroPanelOpacity}
+        heroPanelPadding={heroPanelPadding}
+        heroPanelMaxWidth={heroPanelMaxWidth}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}
