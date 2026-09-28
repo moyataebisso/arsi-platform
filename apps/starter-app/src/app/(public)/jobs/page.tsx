@@ -3,6 +3,7 @@ import { getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { JobApplicationForm, type JobApplicationVariant } from '@/components/forms/JobApplicationForm'
+import { PageHeroBanner } from '@/components/sections/PageHeroBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,7 +69,13 @@ export default async function JobsPage() {
     'jobs_openings',
     'jobs_roles',
     'jobs_form_variant',
+    'unified_page_hero',
   ])
+  // /jobs does not have a dedicated page_hero_image key in Phase 15's
+  // named set — when the unified flag is on it falls back to the
+  // theme's hero-gradient. If a tenant asks for a photo, the operator
+  // can wire a new key later without touching the shared component.
+  const unifiedOn = (settings.unified_page_hero || '').trim().toLowerCase() === 'true'
   // Form variant. 'open_application' (Adama-style) shows multi-position
   // checkboxes + weekday/parts-of-day availability + earliest start; the
   // default 'shift_dropdown' preserves Entrusted's existing form
@@ -90,6 +97,26 @@ export default async function JobsPage() {
   const openings = parseJobs(settings.jobs_openings)
   const parsedRoles = parseRoles(settings.jobs_roles)
   const applicationRoles = parsedRoles.length > 0 ? parsedRoles : ['General Interest']
+
+  if (unifiedOn) {
+    // Delegate the heading + body to the shared banner and reuse the
+    // historical body markup below. Kept a thin wrapper so any future
+    // structural change lands in one place.
+    return (
+      <>
+        <PageHeroBanner heading={headline} subhead={body} />
+        <JobsPageBody
+          openings={openings}
+          applyUrl={applyUrl}
+          applyEmail={applyEmail}
+          applyPhone={applyPhone}
+          jobsVariant={jobsVariant}
+          applicationRoles={applicationRoles}
+          showFormBlock={Boolean(modules.jobs_application_form)}
+        />
+      </>
+    )
+  }
 
   return (
     <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--color-background)' }}>
@@ -211,6 +238,143 @@ export default async function JobsPage() {
         </div>
 
         {modules.jobs_application_form && (
+          <div className="mt-14">
+            <h2
+              className="mb-6"
+              style={{
+                color: 'var(--color-text)',
+                fontFamily: 'var(--font-heading)',
+                fontSize: '1.75rem',
+                fontWeight: 700,
+              }}
+            >
+              Apply now
+            </h2>
+            <JobApplicationForm roles={applicationRoles} variant={jobsVariant} />
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+// Body markup extracted so both the historical and unified-hero paths
+// share identical downstream content. Kept as a plain server function
+// component; no state, no effects.
+function JobsPageBody({
+  openings,
+  applyUrl,
+  applyEmail,
+  applyPhone,
+  jobsVariant,
+  applicationRoles,
+  showFormBlock,
+}: {
+  openings: JobOpening[]
+  applyUrl: string
+  applyEmail: string
+  applyPhone: string
+  jobsVariant: JobApplicationVariant
+  applicationRoles: string[]
+  showFormBlock: boolean
+}) {
+  return (
+    <section className="py-14 sm:py-20" style={{ backgroundColor: 'var(--color-background)' }}>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        {openings.length > 0 && (
+          <ul className="space-y-6 mb-12">
+            {openings.map((job, i) => (
+              <li
+                key={`${job.title}-${i}`}
+                className="p-6"
+                style={{ border: '1px solid var(--color-border)' }}
+              >
+                <h3 style={{ color: 'var(--color-text)', fontSize: '20px', fontWeight: 700 }}>
+                  {job.title}
+                </h3>
+                {job.description && (
+                  <p className="mt-2" style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>
+                    {job.description}
+                  </p>
+                )}
+                {job.url && (
+                  <a
+                    href={job.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-3"
+                    style={{
+                      color: 'var(--color-primary)',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      letterSpacing: '0.15em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Apply
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {applyUrl && (
+            <a
+              href={applyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center transition-all hover:opacity-90"
+              style={{
+                color: 'var(--color-primary)',
+                border: '1px solid var(--color-primary)',
+                padding: '14px 28px',
+                fontSize: '12px',
+                fontWeight: 700,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Apply Online
+            </a>
+          )}
+          {applyEmail && (
+            <a
+              href={`mailto:${applyEmail}?subject=${encodeURIComponent('Job Application')}`}
+              className="inline-flex items-center justify-center transition-all hover:opacity-90"
+              style={{
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
+                padding: '14px 28px',
+                fontSize: '12px',
+                fontWeight: 700,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Email Your Resume
+            </a>
+          )}
+          {applyPhone && (
+            <a
+              href={`tel:${applyPhone.replace(/[^0-9+]/g, '')}`}
+              className="inline-flex items-center justify-center transition-all hover:opacity-90"
+              style={{
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
+                padding: '14px 28px',
+                fontSize: '12px',
+                fontWeight: 700,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+              }}
+              aria-label={`Call ${applyPhone}`}
+            >
+              Call {applyPhone}
+            </a>
+          )}
+        </div>
+        {showFormBlock && (
           <div className="mt-14">
             <h2
               className="mb-6"

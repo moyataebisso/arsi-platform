@@ -125,6 +125,11 @@ interface HeroSectionProps {
   // (validated upstream). Threaded through here so page.tsx can
   // forward one prop.
   heroFocusMobile?: string
+  // Phase 15 — randomize the rotation order after mount. Absent /
+  // false → fixed round-robin (byte-identical). true → per-mount
+  // shuffle; the wrap boundary never repeats the currently-visible
+  // image. Reduced-motion + tab-hidden behavior unchanged.
+  heroShuffle?: boolean
   // Multi-line H1 lockup. site_settings key: hero_title_parts (jsonb
   // string[]). When 2+ entries, VideoHero renders the H1 as a stacked
   // typographic lockup — primary line first, then secondary lines at a
@@ -1432,6 +1437,7 @@ function VideoHero(props: VariantProps) {
           heroFit={props.heroFit}
           heroFillScale={props.heroFillScale}
           heroFocusMobile={props.heroFocusMobile}
+          shuffle={props.heroShuffle}
         />
       )}
       {videoUrl && (
@@ -1864,6 +1870,7 @@ export function HeroSection(props: HeroSectionProps) {
     heroPanelMaxWidth: props.heroPanelMaxWidth,
     heroPanelMobile: props.heroPanelMobile,
     heroFocusMobile: props.heroFocusMobile,
+    heroShuffle: props.heroShuffle,
   }
 
   switch (activeVariant) {

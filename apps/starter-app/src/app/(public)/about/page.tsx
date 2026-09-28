@@ -8,6 +8,7 @@ import { getBusinessProfile } from '@/lib/business'
 import { getContentMany } from '@/lib/content/resolver'
 import { getSiteSetting, getSiteSettings } from '@/lib/settings'
 import { FounderBio } from '@/components/sections/FounderBio'
+import { PageHeroBanner } from '@/components/sections/PageHeroBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -102,7 +103,7 @@ export default async function AboutPage() {
   // supabase call internally) was the only surface still showing the unsplash
   // fallback for the uploaded image — unifying the call shape eliminates any
   // subtle divergence.
-  const [profile, content, aboutImage1Alt] = await Promise.all([
+  const [profile, content, aboutImage1Alt, unifiedFlag] = await Promise.all([
     getBusinessProfile(),
     getContentMany([
       'about_values',
@@ -111,7 +112,9 @@ export default async function AboutPage() {
       'about_image_1',
     ]),
     getSiteSetting('about_image_1_alt'),
+    getSiteSetting('unified_page_hero'),
   ])
+  const unifiedOn = ((unifiedFlag || '') as string).trim().toLowerCase() === 'true'
 
   const headlineName = profile.name || 'us'
   const heroIntro = (() => {
@@ -183,30 +186,34 @@ export default async function AboutPage() {
   return (
     <>
       {/* Hero */}
-      <section
-        className="py-16 sm:py-20"
-        style={{
-          background:
-            'linear-gradient(135deg, var(--color-surface) 0%, var(--color-accent-light) 100%)',
-        }}
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            <h1
-              className="text-4xl sm:text-5xl font-bold tracking-tight mb-6"
-              style={{
-                color: 'var(--color-text)',
-                fontFamily: 'var(--font-playfair)',
-              }}
-            >
-              About {headlineName}
-            </h1>
-            <p className="text-lg leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-              {heroIntro}
-            </p>
+      {unifiedOn ? (
+        <PageHeroBanner heading={`About ${headlineName}`} subhead={heroIntro} />
+      ) : (
+        <section
+          className="py-16 sm:py-20"
+          style={{
+            background:
+              'linear-gradient(135deg, var(--color-surface) 0%, var(--color-accent-light) 100%)',
+          }}
+        >
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl">
+              <h1
+                className="text-4xl sm:text-5xl font-bold tracking-tight mb-6"
+                style={{
+                  color: 'var(--color-text)',
+                  fontFamily: 'var(--font-playfair)',
+                }}
+              >
+                About {headlineName}
+              </h1>
+              <p className="text-lg leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                {heroIntro}
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Story */}
       <section className="py-20 sm:py-24" style={{ backgroundColor: 'var(--color-surface)' }}>

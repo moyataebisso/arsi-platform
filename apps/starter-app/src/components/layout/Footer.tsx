@@ -26,6 +26,9 @@ interface FooterProps {
   showCatering?: boolean
   showJobs?: boolean
   showBakery?: boolean
+  // Phase 15 — per-tenant override for the Bakery footer link label.
+  // Absent → literal 'Bakery' (byte-identical). Mirrors Header.
+  bakeryLabel?: string
   // Mirrors the Header prop. When true, /our-homes is dropped from Quick
   // Links and the license-scoped routes (/assisted-living, /assisted-living/
   // homes, /assisted-living/services, /hcbs, /hcbs/homes, /hcbs/services) are
@@ -69,6 +72,7 @@ export async function Footer({
   showCatering,
   showJobs,
   showBakery,
+  bakeryLabel,
   showLicenseSeparatedNav,
   navVariant = 'default',
   navCenterSplit,
@@ -118,7 +122,7 @@ export async function Footer({
     menu:     { href: '/menu',     label: 'Menu',     enabled: Boolean(showMenuLink) },
     drinks:   { href: '/drinks',   label: 'Drinks',   enabled: Boolean(showDrinks) },
     order:    { href: '/order',    label: 'Order',    enabled: Boolean(showOrder) },
-    bakery:   { href: '/bakery',   label: 'Bakery',   enabled: Boolean(showBakery) },
+    bakery:   { href: '/bakery',   label: (bakeryLabel || '').trim() || 'Bakery', enabled: Boolean(showBakery) },
     reserve:  { href: '/book',     label: 'Reserve',  enabled: Boolean(showReserve) },
     catering: { href: '/catering', label: 'Catering', enabled: Boolean(showCatering) },
     jobs:     { href: '/jobs',     label: 'Jobs',     enabled: Boolean(showJobs) },
@@ -184,7 +188,7 @@ export async function Footer({
         showReferrals && { href: '/referrals', label: 'Referrals' },
         showParties && { href: '/parties', label: 'Parties' },
         showCatering && { href: '/catering', label: 'Catering' },
-        showBakery && { href: '/bakery', label: 'Bakery' },
+        showBakery && { href: '/bakery', label: (bakeryLabel || '').trim() || 'Bakery' },
         showJobs && { href: '/jobs', label: 'Jobs' },
         (pages.shop.enabled || modules.ecommerce) && { href: '/shop', label: pages.shop.title },
         !showReserve && (pages.book.enabled || modules.booking) && { href: '/book', label: pages.book.title },

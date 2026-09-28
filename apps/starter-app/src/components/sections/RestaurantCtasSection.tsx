@@ -8,6 +8,11 @@ interface RestaurantCtasSectionProps {
   cateringHref?: string
   reserveHref?: string
   reserveSubtitle?: string
+  // Phase 15 — persistent offset underline on each label. Absent /
+  // false → today's hover-only underline via group-hover:underline.
+  // true → each label carries an offset underline at rest; hover +
+  // focus intensify to a thicker rule so the affordance is preserved.
+  persistentUnderline?: boolean
 }
 
 // Three gold-on-black CTA blocks for the restaurant home page. Only renders
@@ -21,6 +26,7 @@ export function RestaurantCtasSection({
   cateringHref = '/catering',
   reserveHref = '/book',
   reserveSubtitle,
+  persistentUnderline = false,
 }: RestaurantCtasSectionProps) {
   const reserveSub = (reserveSubtitle || '').trim() || 'Book your table'
   const ctas = [
@@ -46,14 +52,20 @@ export function RestaurantCtasSection({
             <Link
               key={cta.label}
               href={cta.href}
-              className="group flex flex-col items-center justify-center text-center transition-all py-8 px-2 sm:py-16 sm:px-6"
+              className={`group flex flex-col items-center justify-center text-center transition-all py-8 px-2 sm:py-16 sm:px-6${
+                persistentUnderline ? ' quicklink-underline-card' : ''
+              }`}
               style={{
                 backgroundColor: 'var(--color-background)',
                 color: 'var(--color-text)',
               }}
             >
               <span
-                className="block mb-1.5 sm:mb-3 transition-colors group-hover:underline break-words"
+                className={
+                  persistentUnderline
+                    ? 'block mb-1.5 sm:mb-3 transition-all break-words quicklink-underline-label'
+                    : 'block mb-1.5 sm:mb-3 transition-colors group-hover:underline break-words'
+                }
                 style={{
                   color: 'var(--color-primary)',
                   fontFamily: 'var(--font-heading)',
@@ -62,6 +74,13 @@ export function RestaurantCtasSection({
                   letterSpacing: '0.04em',
                   textTransform: 'uppercase',
                   lineHeight: 1.15,
+                  ...(persistentUnderline
+                    ? {
+                        textDecoration: 'underline',
+                        textDecorationThickness: '1px',
+                        textUnderlineOffset: '6px',
+                      }
+                    : {}),
                 }}
               >
                 {cta.label}
@@ -78,6 +97,18 @@ export function RestaurantCtasSection({
           ))}
         </div>
       </div>
+      {persistentUnderline && (
+        <style
+          // Hover/focus intensifier — thicker underline so the affordance
+          // is still visible even though the base state also carries an
+          // underline. Focus mirrors hover so keyboard nav sees the
+          // same delta as pointer nav.
+          dangerouslySetInnerHTML={{
+            __html:
+              '.quicklink-underline-card:hover .quicklink-underline-label, .quicklink-underline-card:focus-visible .quicklink-underline-label { text-decoration-thickness: 2px !important; }',
+          }}
+        />
+      )}
     </section>
   )
 }

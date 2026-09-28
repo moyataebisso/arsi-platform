@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
+import { PageHeroBanner } from '@/components/sections/PageHeroBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +20,10 @@ export default async function OrderPage() {
     'order_mode',
     'order_headline',
     'order_intro',
+    'unified_page_hero',
+    'page_hero_image_order',
   ])
+  const unifiedOn = (settings.unified_page_hero || '').trim().toLowerCase() === 'true'
   const business = await getBusinessProfile()
   const brand = business.name || ''
 
@@ -30,26 +34,7 @@ export default async function OrderPage() {
     settings.order_intro ||
     'Pickup and delivery available. Order online and we will have your meal ready.'
 
-  return (
-    <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--color-background)' }}>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1
-          className="mb-6"
-          style={{
-            color: 'var(--color-primary)',
-            fontFamily: 'var(--font-heading)',
-            fontSize: 'clamp(2.5rem, 5vw, 4rem)',
-            fontWeight: 700,
-            lineHeight: 1.1,
-          }}
-        >
-          {headline}
-        </h1>
-        <p className="text-lg sm:text-xl mb-10 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-          {intro}
-        </p>
-
-        {orderMode === 'linkout' && orderUrl ? (
+  const cta = orderMode === 'linkout' && orderUrl ? (
           <a
             href={orderUrl}
             target="_blank"
@@ -88,7 +73,44 @@ export default async function OrderPage() {
               </>
             )}
           </div>
-        )}
+        )
+
+  if (unifiedOn) {
+    return (
+      <>
+        <PageHeroBanner
+          heading={headline}
+          subhead={intro}
+          imageUrl={settings.page_hero_image_order}
+        />
+        <section className="py-14 sm:py-20" style={{ backgroundColor: 'var(--color-background)' }}>
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            {cta}
+          </div>
+        </section>
+      </>
+    )
+  }
+
+  return (
+    <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--color-background)' }}>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1
+          className="mb-6"
+          style={{
+            color: 'var(--color-primary)',
+            fontFamily: 'var(--font-heading)',
+            fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+            fontWeight: 700,
+            lineHeight: 1.1,
+          }}
+        >
+          {headline}
+        </h1>
+        <p className="text-lg sm:text-xl mb-10 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+          {intro}
+        </p>
+        {cta}
       </div>
     </section>
   )

@@ -6,6 +6,8 @@ import { getEnabledModules } from '@/lib/enabled-modules'
 import { getSiteSettings } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { PrivateRoomRequestForm } from '@/components/forms/PrivateRoomRequestForm'
+import { PageHeroBanner } from '@/components/sections/PageHeroBanner'
+import { getSiteSetting } from '@/lib/settings'
 
 // Fallback matches the API route so form and server agree if the DB row is
 // absent or malformed. Historical value was 16; raised because the current
@@ -41,6 +43,8 @@ export default async function BookPage() {
       'booking_headline',
       'booking_body',
       'private_room_capacity',
+      'unified_page_hero',
+      'page_hero_image_book',
     ])
     const mode = (settings.booking_mode || '').trim().toLowerCase() === 'request' ? 'request' : 'services'
     if (mode === 'request') {
@@ -52,6 +56,40 @@ export default async function BookPage() {
         `Our private room seats up to ${capacity} — business meetings, birthdays, family gatherings. No deposit. This sends a request; we’ll call or email to confirm.`
       const body = settings.booking_body || bodyDefault
       const telHref = phone ? `tel:${phone.replace(/[^0-9+]/g, '')}` : ''
+
+      const unifiedOn =
+        (settings.unified_page_hero || '').trim().toLowerCase() === 'true'
+      const callLine = telHref ? (
+        <p className="mb-10 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+          Prefer to talk?{' '}
+          <a
+            href={telHref}
+            className="font-semibold"
+            style={{ color: 'var(--color-primary)' }}
+            aria-label={`Call ${phone}`}
+          >
+            Call {phone}
+          </a>
+        </p>
+      ) : null
+
+      if (unifiedOn) {
+        return (
+          <>
+            <PageHeroBanner
+              heading={headline}
+              subhead={body}
+              imageUrl={settings.page_hero_image_book}
+            />
+            <section className="py-14 sm:py-20" style={{ backgroundColor: 'var(--color-background)' }}>
+              <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+                {callLine}
+                <PrivateRoomRequestForm capacity={capacity} />
+              </div>
+            </section>
+          </>
+        )
+      }
 
       return (
         <section className="py-14 sm:py-20" style={{ backgroundColor: 'var(--color-background)' }}>
@@ -74,19 +112,7 @@ export default async function BookPage() {
             >
               {body}
             </p>
-            {telHref && (
-              <p className="mb-10 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                Prefer to talk?{' '}
-                <a
-                  href={telHref}
-                  className="font-semibold"
-                  style={{ color: 'var(--color-primary)' }}
-                  aria-label={`Call ${phone}`}
-                >
-                  Call {phone}
-                </a>
-              </p>
-            )}
+            {callLine}
             <PrivateRoomRequestForm capacity={capacity} />
           </div>
         </section>

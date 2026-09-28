@@ -5,6 +5,7 @@ import { MapEmbed } from '@/components/shared/MapEmbed'
 import { getContentMany } from '@/lib/content/resolver'
 import { getBusinessProfile, fullAddress } from '@/lib/business'
 import { getSiteSetting, getSiteSettings } from '@/lib/settings'
+import { PageHeroBanner } from '@/components/sections/PageHeroBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,44 +31,53 @@ export default async function ContactPage() {
   const fullAddr = fullAddress(profile)
   const mapsUrl = fullAddr ? `https://maps.google.com/?q=${encodeURIComponent(fullAddr)}` : ''
 
-  const [content, serviceAreaRaw, hoursNoteRaw] = await Promise.all([
+  const [content, serviceAreaRaw, hoursNoteRaw, unifiedFlag] = await Promise.all([
     getContentMany(['contact_headline', 'contact_intro']),
     getSiteSetting('service_area'),
     getSiteSetting('hours_note'),
+    getSiteSetting('unified_page_hero'),
   ])
   const serviceArea = (serviceAreaRaw || '').trim()
   const hoursNote = (hoursNoteRaw || '').trim()
+  const unifiedOn = ((unifiedFlag || '') as string).trim().toLowerCase() === 'true'
 
   return (
     <>
       {/* Hero */}
-      <section
-        className="py-16 sm:py-20"
-        style={{
-          background:
-            'linear-gradient(135deg, var(--color-surface) 0%, var(--color-accent-light) 100%)',
-        }}
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            <h1
-              className="text-4xl sm:text-5xl font-bold tracking-tight mb-4"
-              style={{
-                color: 'var(--color-text)',
-                fontFamily: 'var(--font-playfair)',
-              }}
-            >
-              {content.contact_headline}
-            </h1>
-            <p
-              className="text-lg leading-relaxed"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              {content.contact_intro}
-            </p>
+      {unifiedOn ? (
+        <PageHeroBanner
+          heading={content.contact_headline}
+          subhead={content.contact_intro}
+        />
+      ) : (
+        <section
+          className="py-16 sm:py-20"
+          style={{
+            background:
+              'linear-gradient(135deg, var(--color-surface) 0%, var(--color-accent-light) 100%)',
+          }}
+        >
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl">
+              <h1
+                className="text-4xl sm:text-5xl font-bold tracking-tight mb-4"
+                style={{
+                  color: 'var(--color-text)',
+                  fontFamily: 'var(--font-playfair)',
+                }}
+              >
+                {content.contact_headline}
+              </h1>
+              <p
+                className="text-lg leading-relaxed"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                {content.contact_intro}
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Content */}
       <section className="py-16 sm:py-20">

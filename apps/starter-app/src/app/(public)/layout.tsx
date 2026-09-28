@@ -27,6 +27,7 @@ export default async function PublicLayout({ children }: { children: React.React
       'nav_center_split',
       'gallery_images',
       'gallery_page_enabled',
+      'bakery_nav_label',
       'social_facebook',
       'social_instagram',
       'social_twitter',
@@ -119,6 +120,7 @@ export default async function PublicLayout({ children }: { children: React.React
           showCatering={enabledModules.catering}
           showJobs={enabledModules.jobs}
           showBakery={enabledModules.bakery}
+          bakeryLabel={settings.bakery_nav_label || undefined}
           showLicenseSeparatedNav={enabledModules.license_separated_nav}
           promoBarText={settings.promo_bar_text}
           promoBarCtaUrl={settings.promo_bar_cta_url}
@@ -146,6 +148,7 @@ export default async function PublicLayout({ children }: { children: React.React
           showCatering={enabledModules.catering}
           showJobs={enabledModules.jobs}
           showBakery={enabledModules.bakery}
+          bakeryLabel={settings.bakery_nav_label || undefined}
           showLicenseSeparatedNav={enabledModules.license_separated_nav}
           navVariant={navVariant}
           navCenterSplit={navCenterSplit}

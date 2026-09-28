@@ -51,6 +51,7 @@ export function HeroBackgroundCrossfade({
   heroFit = 'contain',
   heroFillScale = 1.0,
   heroFocusMobile,
+  shuffle = false,
 }: {
   images: ReadonlyArray<string | GalleryImage>
   heroFit?: 'contain' | 'cover' | 'fill-blur'
@@ -69,9 +70,20 @@ export function HeroBackgroundCrossfade({
   // Absent → 'center' at every width (byte-identical). Validated
   // upstream by validateObjectPosition().
   heroFocusMobile?: string
+  // Phase 15 — randomize the rotation order after mount. Default false =
+  // fixed round-robin, byte-identical to prior behavior. When true, SSR
+  // and first client paint use the identity order (no hydration
+  // mismatch); a mount effect Fisher-Yates shuffles the order once and
+  // then the interval advances through the shuffled ring. The next-slot
+  // pick uses "different from current index" so the boundary from the
+  // last slot of one shuffle to the first of the next never repeats the
+  // currently-visible image.
+  shuffle?: boolean
 }) {
   const slides: GalleryImage[] = toGalleryImages(images)
   const [index, setIndex] = useState(0)
+  const orderRef = useRef<number[] | null>(null)
+  const posRef = useRef<number>(0)
   const reducedRef = useRef(false)
 
   // Phase 14 — mobile-only object-position override. Only meaningful for
@@ -92,11 +104,50 @@ export function HeroBackgroundCrossfade({
     reducedRef.current = Boolean(mql?.matches)
     if (reducedRef.current) return
 
+    // Phase 15 — build the shuffled ring once at mount when the shuffle
+    // prop is on. Fisher-Yates on the identity permutation, then the
+    // interval advances through it. The identity order is what SSR
+    // painted, so leaving the initial index at 0 (== order[0] == 0)
+    // keeps hydration bit-identical.
+    if (shuffle) {
+      const order = Array.from({ length: slides.length }, (_, i) => i)
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        const tmp = order[i]
+        order[i] = order[j]
+        order[j] = tmp
+      }
+      orderRef.current = order
+      // Find where the current index (0 from SSR) lands in the shuffled
+      // order so posRef points at the CURRENTLY-visible slot. Then each
+      // tick advances posRef and picks the next slot, avoiding the
+      // "same image on ring wrap" boundary by requiring
+      // order[nextPos] !== currentIndex.
+      posRef.current = order.indexOf(0)
+    } else {
+      orderRef.current = null
+    }
+
     let timer: ReturnType<typeof setInterval> | null = null
     const start = () => {
       if (timer !== null) return
       timer = setInterval(() => {
-        setIndex(i => (i + 1) % slides.length)
+        setIndex((prev) => {
+          if (orderRef.current) {
+            const order = orderRef.current
+            // Advance around the shuffled ring. If the wrap lands on the
+            // currently-visible index, skip one more slot so the same
+            // image never appears twice in a row across the boundary.
+            posRef.current = (posRef.current + 1) % order.length
+            let nextIdx = order[posRef.current]
+            if (nextIdx === prev && order.length > 1) {
+              posRef.current = (posRef.current + 1) % order.length
+              nextIdx = order[posRef.current]
+            }
+            return nextIdx
+          }
+          return (prev + 1) % slides.length
+        })
       }, 6000)
     }
     const stop = () => {
@@ -115,7 +166,7 @@ export function HeroBackgroundCrossfade({
       document.removeEventListener('visibilitychange', onVis)
       stop()
     }
-  }, [slides.length])
+  }, [slides.length, shuffle])
 
   return (
     <>

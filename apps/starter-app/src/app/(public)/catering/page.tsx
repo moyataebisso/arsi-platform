@@ -3,6 +3,7 @@ import { getSiteSettings, getSiteSetting } from '@/lib/settings'
 import { getBusinessProfile } from '@/lib/business'
 import { getEnabledModules } from '@/lib/enabled-modules'
 import { CateringQuoteForm } from '@/components/forms/CateringQuoteForm'
+import { PageHeroBanner } from '@/components/sections/PageHeroBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +34,10 @@ export default async function CateringPage() {
     'catering_body',
     'catering_image_url',
     'catering_menu_url',
+    'unified_page_hero',
+    'page_hero_image_catering',
   ])
+  const unifiedOn = (settings.unified_page_hero || '').trim().toLowerCase() === 'true'
   const cateringImagesRaw = await getSiteSetting('catering_images')
   const cateringImages = parseImages(cateringImagesRaw)
   const business = await getBusinessProfile()
@@ -54,33 +58,40 @@ export default async function CateringPage() {
 
   return (
     <>
-      <section
-        className="relative w-full overflow-hidden flex items-end"
-        style={{
-          backgroundImage: heroImage
-            ? `linear-gradient(to bottom, rgba(0,0,0,0.30), rgba(0,0,0,0.65)), url('${heroImage.replace(/'/g, "\\'")}')`
-            : 'var(--color-hero-gradient)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          minHeight: '360px',
-        }}
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full">
-          <h1
-            style={{
-              color: heroImage ? 'var(--color-primary)' : 'var(--color-text)',
-              fontFamily: 'var(--font-heading)',
-              fontSize: 'clamp(2.25rem, 5vw, 4.25rem)',
-              fontWeight: 700,
-              lineHeight: 1.05,
-              letterSpacing: '0.01em',
-              textTransform: 'uppercase',
-            }}
-          >
-            {headline}
-          </h1>
-        </div>
-      </section>
+      {unifiedOn ? (
+        <PageHeroBanner
+          heading={headline}
+          imageUrl={settings.page_hero_image_catering || heroImage}
+        />
+      ) : (
+        <section
+          className="relative w-full overflow-hidden flex items-end"
+          style={{
+            backgroundImage: heroImage
+              ? `linear-gradient(to bottom, rgba(0,0,0,0.30), rgba(0,0,0,0.65)), url('${heroImage.replace(/'/g, "\\'")}')`
+              : 'var(--color-hero-gradient)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            minHeight: '360px',
+          }}
+        >
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full">
+            <h1
+              style={{
+                color: heroImage ? 'var(--color-primary)' : 'var(--color-text)',
+                fontFamily: 'var(--font-heading)',
+                fontSize: 'clamp(2.25rem, 5vw, 4.25rem)',
+                fontWeight: 700,
+                lineHeight: 1.05,
+                letterSpacing: '0.01em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {headline}
+            </h1>
+          </div>
+        </section>
+      )}
 
       <section className="py-14 sm:py-20" style={{ backgroundColor: 'var(--color-background)' }}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -362,6 +362,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const heroFocusMobile: string | undefined = heroFocusMobileRaw
     ? validateObjectPosition(heroFocusMobileRaw)
     : undefined
+  // Phase 15 — hero rotation shuffle + quick-link persistent underline.
+  const phase15Settings = await getSiteSettings([
+    'hero_shuffle',
+    'quicklink_underline',
+  ])
+  const heroShuffle =
+    (phase15Settings.hero_shuffle || '').trim().toLowerCase() === 'true'
+  const quicklinkUnderline =
+    (phase15Settings.quicklink_underline || '').trim().toLowerCase() === 'true'
   // Phase 10 — shared aspect ratio setting for the two homepage image
   // bands (HomeRotatingGallery + BreakfastLiveSection image slot). Each
   // component owns its own historical default when the key is absent so
@@ -807,6 +816,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroPanelMaxWidth={heroPanelMaxWidth}
         heroPanelMobile={heroPanelMobile}
         heroFocusMobile={heroFocusMobile}
+        heroShuffle={heroShuffle}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}
@@ -1006,6 +1016,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           showCatering={enabledModules.catering}
           showReserve={enabledModules.booking}
           reserveSubtitle={reserveCtaSubtitle}
+          persistentUnderline={quicklinkUnderline}
         />
       ) : null,
     // restaurant_centered layout bands. Each is data-driven; a section with
