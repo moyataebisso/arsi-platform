@@ -629,6 +629,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // video_hero only — both keys swappable per tenant. Poster MUST always
   // render so an empty hero is impossible when the video is blocked/slow.
   const heroVideo = await getSiteSetting('hero_video_url')
+  // Phase 16 — new video fallback poster + mobile gate.
+  const heroVideoSettings = await getSiteSettings([
+    'hero_video_poster',
+    'hero_video_mobile',
+  ])
+  const heroVideoPoster =
+    (heroVideoSettings.hero_video_poster || '').trim() || undefined
+  const heroVideoMobile =
+    (heroVideoSettings.hero_video_mobile || '').trim().toLowerCase() === 'true'
   const heroPoster = await getSiteSetting('hero_poster_url')
   // ImageOverlayHero eyebrow override. Must distinguish "row missing"
   // (undefined → use derived Serving <city>, <state> label — Adama and
@@ -817,6 +826,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroPanelMobile={heroPanelMobile}
         heroFocusMobile={heroFocusMobile}
         heroShuffle={heroShuffle}
+        heroVideoPoster={heroVideoPoster}
+        heroVideoMobile={heroVideoMobile}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}

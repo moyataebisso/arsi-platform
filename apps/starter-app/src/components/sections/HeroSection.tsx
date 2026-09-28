@@ -5,6 +5,7 @@ import type { HeroVariant } from '@/lib/layouts'
 import { displayBusinessName } from '@/lib/business'
 import { ImageSlideshowHero } from './ImageSlideshowHero'
 import { HeroBackgroundCrossfade } from './HeroBackgroundCrossfade'
+import { HeroVideoLayer } from './HeroVideoLayer'
 
 const PLACEHOLDER_NAME = 'Client Business Name'
 const PLACEHOLDER_TAGLINE = 'Your tagline here'
@@ -130,6 +131,18 @@ interface HeroSectionProps {
   // shuffle; the wrap boundary never repeats the currently-visible
   // image. Reduced-motion + tab-hidden behavior unchanged.
   heroShuffle?: boolean
+  // Phase 16 — video-hero fallback poster (new key
+  // site_settings.hero_video_poster). When set it's applied as the
+  // <video> poster attribute; when absent the attribute is omitted and
+  // the image crossfade underneath is the visible-until-first-frame
+  // fallback. Separate from the legacy hero_poster_url which continues
+  // to feed the section's CSS background poster.
+  heroVideoPoster?: string
+  // Phase 16 — mobile gate for the video layer. Absent / false → the
+  // <video> element is never mounted below md, so no fetch and no
+  // element in the DOM (satisfies "not downloaded and hidden with CSS"
+  // per spec). true → video plays at every breakpoint.
+  heroVideoMobile?: boolean
   // Multi-line H1 lockup. site_settings key: hero_title_parts (jsonb
   // string[]). When 2+ entries, VideoHero renders the H1 as a stacked
   // typographic lockup — primary line first, then secondary lines at a
@@ -1381,14 +1394,19 @@ function VideoHero(props: VariantProps) {
     props.heroImageUrl ||
     'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=1200&q=80'
 
-  const videoUrl = props.heroVideoUrl || ''
+  const videoUrl = (props.heroVideoUrl || '').trim()
 
-  // Optional crossfade slideshow behind the existing overlay. Only kicks in
-  // when the tenant seeds hero_images with 2+ URLs AND has no hero_video_url
-  // (video would sit on top of the slideshow anyway). 0-1 URLs -> keep the
-  // existing single CSS background-image render byte-for-byte.
+  // Phase 16 — the crossfade now mounts underneath the video whenever the
+  // tenant has seeded 2+ hero_images, regardless of hero_video_url. This
+  // gives the poster-less video a visible fallback layer AND paints
+  // while the mp4 loads. When there's no video the crossfade is the
+  // primary render, unchanged from before.
   const slideshowUrls = (props.heroImages || []).map(s => (s || '').trim()).filter(Boolean)
-  const useSlideshow = !videoUrl && slideshowUrls.length >= 2
+  const useSlideshow = slideshowUrls.length >= 2
+  // The section's own CSS background-image still guards the case where
+  // neither video nor crossfade is present, so the frame is never blank
+  // (spec: "The hero must never render black or empty at any point").
+  const hasCssBackgroundPoster = !useSlideshow
 
   const subPrimary = display.ctaPrimary
   const subSecondary = display.ctaSecondary
@@ -1425,7 +1443,7 @@ function VideoHero(props: VariantProps) {
         // Suppress the single-image background whenever the crossfade is
         // active — the slideshow layer paints its own frames from index 0
         // with priority so the first image is still the LCP.
-        backgroundImage: useSlideshow ? undefined : cssUrl(posterUrl),
+        backgroundImage: hasCssBackgroundPoster ? cssUrl(posterUrl) : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundColor: '#000',
@@ -1441,18 +1459,12 @@ function VideoHero(props: VariantProps) {
         />
       )}
       {videoUrl && (
-        // eslint-disable-next-line jsx-a11y/media-has-caption
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster={posterUrl}
-          className="absolute inset-0 w-full h-full object-cover"
-          aria-hidden="true"
-        >
-          <source src={videoUrl} />
-        </video>
+        <HeroVideoLayer
+          src={videoUrl}
+          poster={props.heroVideoPoster}
+          fit={props.heroFit}
+          mobileEnabled={Boolean(props.heroVideoMobile)}
+        />
       )}
 
       {/*
@@ -1871,6 +1883,8 @@ export function HeroSection(props: HeroSectionProps) {
     heroPanelMobile: props.heroPanelMobile,
     heroFocusMobile: props.heroFocusMobile,
     heroShuffle: props.heroShuffle,
+    heroVideoPoster: props.heroVideoPoster,
+    heroVideoMobile: props.heroVideoMobile,
   }
 
   switch (activeVariant) {
