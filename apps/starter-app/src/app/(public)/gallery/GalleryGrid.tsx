@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { isAllowedImageHost } from '@/lib/image-hosts'
+import { TileCaption } from '@/components/sections/TileCaption'
 
 export interface GalleryImage {
   url: string
@@ -15,7 +16,17 @@ export interface GalleryImage {
 //   - Arrow keys navigate prev / next
 //   - Focus trapped inside the dialog while open
 //   - Prior focus restored on close
-export function GalleryGrid({ images }: { images: GalleryImage[] }) {
+//
+// Phase 13 — `showCaptions` (site_settings.gallery_page_captions) paints
+// each tile's img.alt as a bottom-left caption over the shared TileCaption
+// scrim. Absent / false → no caption, today's grid render.
+export function GalleryGrid({
+  images,
+  showCaptions = false,
+}: {
+  images: GalleryImage[]
+  showCaptions?: boolean
+}) {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const openerRef = useRef<HTMLButtonElement | null>(null)
@@ -97,6 +108,7 @@ export function GalleryGrid({ images }: { images: GalleryImage[] }) {
               unoptimized={!isAllowedImageHost(img.url)}
               className="object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]"
             />
+            {showCaptions && <TileCaption label={img.alt} />}
           </button>
         ))}
       </div>

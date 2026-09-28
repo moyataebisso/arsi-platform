@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { isAllowedImageHost } from '@/lib/image-hosts'
 import { toGalleryImages, type GalleryImage } from '@/lib/gallery'
+import { TileCaption } from './TileCaption'
 
 // Absolute-positioned crossfading background layer for whichever hero variant
 // the tenant is on. Sits BEHIND the variant's dark gradient overlay so the
@@ -295,37 +296,15 @@ export function HeroBackgroundCrossfade({
                 />
               </>
             )}
-            {caption && (
-              <>
-                {/* Bottom-up scrim for legibility. Sits inside the slide
-                    wrapper so it inherits the same opacity animation as the
-                    image — the caption never bleeds through the previous
-                    slide during a crossfade. */}
-                <div
-                  className="absolute inset-x-0 bottom-0 pointer-events-none"
-                  style={{
-                    height: '45%',
-                    background:
-                      'linear-gradient(to top, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0) 100%)',
-                  }}
-                  aria-hidden="true"
-                />
-                <p
-                  className="absolute bottom-3 left-4 right-4 sm:bottom-4 sm:left-6 sm:right-6 pointer-events-none"
-                  style={{
-                    color: '#ffffff',
-                    fontSize: 'clamp(13px, 1.1vw, 15px)',
-                    fontWeight: 500,
-                    lineHeight: 1.5,
-                    letterSpacing: '0.005em',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.35)',
-                  }}
-                  aria-hidden="true"
-                >
-                  {caption}
-                </p>
-              </>
-            )}
+            {/*
+              Scrim + caption. Extracted to <TileCaption> in Phase 13 so
+              the hero, the rotating home tiles, and the /gallery page all
+              paint captions the same way. Nested inside this slide's
+              absolute wrapper so it inherits the wrapper's opacity
+              animation — a caption never lives on the previous photo
+              during a crossfade.
+            */}
+            <TileCaption label={caption} />
           </div>
         )
       })}

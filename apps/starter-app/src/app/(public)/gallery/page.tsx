@@ -55,6 +55,15 @@ export default async function GalleryPage() {
   // working via the 308 to /menu.
   if (!(await galleryPageEnabled())) permanentRedirect('/menu')
 
+  // Phase 13 — per-tile caption opt-in. Absent / any other value →
+  // false (byte-identical to today's tile render). The route currently
+  // 308s for Adama so this is dark-launched behind that flag; other
+  // tenants remain opt-in.
+  const pageCaptionsRaw = ((await getSiteSetting('gallery_page_captions')) || '')
+    .trim()
+    .toLowerCase()
+  const showCaptions = pageCaptionsRaw === 'true'
+
   // Tenant-scoped resolution, mirroring the /book gate: use the new
   // site_settings.gallery_images renderer only when the tenant has BOTH
   // opted into gallery via enabled_modules AND seeded a non-empty object
@@ -78,7 +87,7 @@ export default async function GalleryPage() {
             <p className="mb-10 text-lg" style={{ color: 'var(--color-text-muted)' }}>
               A closer look at our kitchen.
             </p>
-            <GalleryGrid images={images} />
+            <GalleryGrid images={images} showCaptions={showCaptions} />
           </div>
         </section>
       )
@@ -116,7 +125,7 @@ export default async function GalleryPage() {
           Gallery coming soon.
         </p>
       ) : (
-        <GalleryGrid images={legacy} />
+        <GalleryGrid images={legacy} showCaptions={showCaptions} />
       )}
     </div>
   )

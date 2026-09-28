@@ -388,10 +388,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const heroTitleColor = (heroWeightSettings.hero_title_color || '').trim() || undefined
   const addressBannerWeight = parsePositiveNumber(heroWeightSettings.address_banner_weight)
   const addressBannerScale = parsePositiveNumber(heroWeightSettings.address_banner_scale)
-  // Phase 9 — rotating "From our kitchen" tiles.
+  // Phase 9 — rotating "From our kitchen" tiles. Phase 13 adds timing +
+  // caption keys; each falls through to today's defaults when absent.
   const kitchenRotateSettings = await getSiteSettings([
     'gallery_home_rotate',
     'gallery_home_pool',
+    'gallery_home_interval_ms',
+    'gallery_home_stagger_ms',
+    'gallery_home_fade_ms',
+    'gallery_home_captions',
   ])
   const kitchenRotate =
     (kitchenRotateSettings.gallery_home_rotate || '').trim().toLowerCase() === 'true'
@@ -399,6 +404,37 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     (kitchenRotateSettings.gallery_home_pool || '').trim().toLowerCase() === 'all'
       ? 'all'
       : 'gallery'
+  // Timing clamps: interval 2-30s, stagger 0-5s, fade 200-3000ms. Any
+  // non-finite / out-of-range value falls through to `undefined` so the
+  // downstream component's default fires — no need to hard-code the
+  // 5000/900/700 defaults twice.
+  function parseTimingMs(
+    raw: string | undefined,
+    min: number,
+    max: number,
+  ): number | undefined {
+    if (!raw) return undefined
+    const n = Number.parseFloat(raw.trim())
+    if (!Number.isFinite(n)) return undefined
+    return Math.max(min, Math.min(max, n))
+  }
+  const kitchenIntervalMs = parseTimingMs(
+    kitchenRotateSettings.gallery_home_interval_ms,
+    2000,
+    30000,
+  )
+  const kitchenStaggerMs = parseTimingMs(
+    kitchenRotateSettings.gallery_home_stagger_ms,
+    0,
+    5000,
+  )
+  const kitchenFadeMs = parseTimingMs(
+    kitchenRotateSettings.gallery_home_fade_ms,
+    200,
+    3000,
+  )
+  const kitchenCaptions =
+    (kitchenRotateSettings.gallery_home_captions || '').trim().toLowerCase() === 'true'
   // Optional one-line marketing strip under the hero subheadline. Empty/missing
   // → nothing renders. Used by El Roi for the service-list strip.
   const heroBadgeText = await getSiteSetting('hero_badge_text')
@@ -1028,6 +1064,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           linkToGalleryPage={galleryPageEnabled}
           rotate={kitchenRotate}
           rotationPool={kitchenRotate ? pool : undefined}
+          intervalMs={kitchenIntervalMs}
+          staggerMs={kitchenStaggerMs}
+          fadeMs={kitchenFadeMs}
+          captions={kitchenCaptions}
         />
       )
     })() : null,

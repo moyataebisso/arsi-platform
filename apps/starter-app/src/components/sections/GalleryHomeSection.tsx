@@ -25,6 +25,10 @@ export function GalleryHomeSection({
   linkToGalleryPage = true,
   rotate = false,
   rotationPool,
+  intervalMs,
+  staggerMs,
+  fadeMs,
+  captions = false,
 }: {
   images: GalleryHomeImage[]
   headline?: string
@@ -36,6 +40,17 @@ export function GalleryHomeSection({
   rotate?: boolean
   // Deduped source pool for rotation. When rotate=false this is ignored.
   rotationPool?: GalleryHomeImage[]
+  // Phase 13 — rotation timing overrides. Undefined lets
+  // RotatingGalleryTiles fall through to its own defaults
+  // (5000 / 900 / 700). No effect when rotate=false.
+  intervalMs?: number
+  staggerMs?: number
+  fadeMs?: number
+  // Phase 13 — render each rotating tile's img.alt as a bottom-left
+  // caption over a soft scrim, using the shared TileCaption treatment.
+  // Absent / false → no caption is drawn, today's rotating-tile render.
+  // No effect when rotate=false or when a tile has no non-empty alt.
+  captions?: boolean
 }) {
   if (!images || images.length === 0) return null
   const shown = images.slice(0, 8)
@@ -79,6 +94,10 @@ export function GalleryHomeSection({
             tileCount={Math.min(shown.length, effectivePool.length)}
             linkHref={href}
             linkEnabled={linkToGalleryPage}
+            intervalMs={intervalMs}
+            staggerMs={staggerMs}
+            fadeMs={fadeMs}
+            captions={captions}
           />
         ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
