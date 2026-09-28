@@ -50,6 +50,7 @@ export function HeroBackgroundCrossfade({
   images,
   heroFit = 'contain',
   heroFillScale = 1.0,
+  heroFocusMobile,
 }: {
   images: ReadonlyArray<string | GalleryImage>
   heroFit?: 'contain' | 'cover' | 'fill-blur'
@@ -62,10 +63,28 @@ export function HeroBackgroundCrossfade({
   // rises — at 1.0 no mask is emitted (byte-identical to Phase 10).
   // No effect when heroFit !== 'fill-blur'.
   heroFillScale?: number
+  // Phase 14 — mobile-only object-position override for the sharp image
+  // layers. Below the md breakpoint, this value is applied via a
+  // scoped @media rule; at md+ the per-slide `focus` (or 'center') wins.
+  // Absent → 'center' at every width (byte-identical). Validated
+  // upstream by validateObjectPosition().
+  heroFocusMobile?: string
 }) {
   const slides: GalleryImage[] = toGalleryImages(images)
   const [index, setIndex] = useState(0)
   const reducedRef = useRef(false)
+
+  // Phase 14 — mobile-only object-position override. Only meaningful for
+  // the sharp image layers (cover branch's single layer, fill-blur's
+  // foreground, and contain branch's below-lg cover). Applied via a
+  // scoped @media rule below md so it doesn't touch the per-slide
+  // `focus` value at md+. Absent or 'center' → no rule emitted, DOM
+  // stays byte-identical.
+  const cleanMobileFocus = (heroFocusMobile || '').trim().toLowerCase()
+  const mobileFocusRule =
+    cleanMobileFocus && cleanMobileFocus !== 'center'
+      ? `@media (max-width: 767.98px) { .hero-crossfade-sharp { object-position: ${cleanMobileFocus} !important; } }`
+      : ''
 
   useEffect(() => {
     if (slides.length <= 1) return
@@ -100,6 +119,9 @@ export function HeroBackgroundCrossfade({
 
   return (
     <>
+      {mobileFocusRule && (
+        <style dangerouslySetInnerHTML={{ __html: mobileFocusRule }} />
+      )}
       {slides.map((slide, i) => {
         const src = slide.url
         const caption = slide.label && slide.label.length > 0 ? slide.label : ''
@@ -143,8 +165,8 @@ export function HeroBackgroundCrossfade({
                 unoptimized={!isAllowedImageHost(src)}
                 className={
                   focus === 'center'
-                    ? 'object-cover object-center'
-                    : 'object-cover'
+                    ? 'object-cover object-center hero-crossfade-sharp'
+                    : 'object-cover hero-crossfade-sharp'
                 }
                 style={
                   focus === 'center' ? undefined : { objectPosition: focus }
@@ -227,12 +249,19 @@ export function HeroBackgroundCrossfade({
                       fill
                       priority={i === 0}
                       loading={i === 0 ? undefined : 'lazy'}
-                      sizes="(min-width: 1024px) 1100px, 92vw"
+                      // Widened from 92vw to 100vw below lg in Phase 14
+                      // — the historical 92vw left a theoretical 4vw of
+                      // whitespace either side that could show as a
+                      // hairline of blurred backdrop at narrow widths.
+                      // The object-fit-driven fill still respects the
+                      // parent box; sizes only steers which optimized
+                      // variant Next.js requests.
+                      sizes="(min-width: 1024px) 1100px, 100vw"
                       unoptimized={!isAllowedImageHost(src)}
                       className={
                         focus === 'center'
-                          ? 'object-contain object-center'
-                          : 'object-contain'
+                          ? 'object-contain object-center hero-crossfade-sharp'
+                          : 'object-contain hero-crossfade-sharp'
                       }
                       style={sharpStyle}
                     />
@@ -268,7 +297,7 @@ export function HeroBackgroundCrossfade({
                   loading={i === 0 ? undefined : 'lazy'}
                   sizes="(min-width: 1024px) 1400px, 100vw"
                   unoptimized={!isAllowedImageHost(src)}
-                  className="object-cover object-center lg:hidden"
+                  className="object-cover object-center lg:hidden hero-crossfade-sharp"
                 />
                 <Image
                   src={src}

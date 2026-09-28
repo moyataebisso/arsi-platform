@@ -52,6 +52,18 @@ interface LocationStripSectionProps {
   // (400, browser default). Any positive integer accepted; the browser
   // handles synthetic fallback for weights the system doesn't have.
   bannerWeight?: number
+  // Phase 14 — mobile-only weight. When set, applies below the md
+  // breakpoint (< 768px) via a scoped @media rule. Absent → falls back
+  // to bannerWeight at every width, byte-identical to Phase 6.
+  bannerWeightMobile?: number
+  // Phase 14 — optional lead-in line above the address (e.g. "Visit
+  // us"). Renders smaller, in the same color family. Absent → nothing
+  // renders, no extra spacing.
+  leadIn?: string
+  // Phase 14 — underline the address text itself with a comfortable
+  // offset so descenders don't touch the underline baseline. Absent /
+  // false → no underline (hover-underline behavior unchanged).
+  underline?: boolean
 }
 
 // Effective mobile scale caps at 1.15 even when the operator requests
@@ -77,6 +89,9 @@ export function LocationStripSection({
   zip,
   bannerScale,
   bannerWeight,
+  bannerWeightMobile,
+  leadIn,
+  underline,
 }: LocationStripSectionProps = {}) {
   const cfg = siteConfig.location
   const single = buildLine({
@@ -116,9 +131,35 @@ export function LocationStripSection({
   const bannerFontWeight = weightProvided
     ? Math.round(bannerWeight as number)
     : undefined
-  const liClassName = hasOverride
+  // Phase 14 — normalized props for the lead-in / underline / mobile weight
+  // features. Each stays absent-neutral so unseeded tenants render byte-
+  // identically to Phase 6.
+  const cleanLeadIn = (leadIn || '').trim()
+  const hasLeadIn = cleanLeadIn.length > 0
+  const wantsUnderline = underline === true
+  const mobileWeightProvided =
+    typeof bannerWeightMobile === 'number' &&
+    Number.isFinite(bannerWeightMobile) &&
+    bannerWeightMobile > 0
+  const mobileWeightRounded = mobileWeightProvided
+    ? Math.round(bannerWeightMobile as number)
+    : undefined
+
+  // The <li> flexes as a row when there's no lead-in (byte-identical to
+  // Phase 6). With a lead-in it becomes a column with the lead-in above
+  // and the historical row underneath, preserving vertical balance —
+  // padding on the outer wrapper handles the surrounding spacing.
+  const liLayoutClass = hasLeadIn
+    ? 'flex flex-col items-center gap-1'
+    : (hasOverride
+        ? 'flex items-center justify-center gap-2 flex-wrap'
+        : 'flex items-center justify-center gap-2 text-[13px] md:text-base flex-wrap')
+  const rowInnerClass = hasOverride
     ? 'flex items-center justify-center gap-2 flex-wrap'
     : 'flex items-center justify-center gap-2 text-[13px] md:text-base flex-wrap'
+  // Scope the mobile-weight override to a stable class name — one strip
+  // renders per page so a static class name never collides.
+  const mobileWeightClass = mobileWeightProvided ? 'ls-mobile-weight' : ''
 
   return (
     <section
@@ -133,50 +174,111 @@ export function LocationStripSection({
       }}
     >
       <div className="max-w-6xl mx-auto px-4 py-2.5 md:py-4">
+        {mobileWeightProvided && (
+          <style
+            // Mobile-only font-weight swap. Scoped to `.ls-mobile-weight`
+            // which is only applied when a mobile weight is set, so the
+            // rule is inert (and the class absent) for tenants without
+            // the row.
+            dangerouslySetInnerHTML={{
+              __html: `@media (max-width: 767.98px) { .ls-mobile-weight { font-weight: ${mobileWeightRounded} !important; } }`,
+            }}
+          />
+        )}
         <ul className="flex flex-col gap-y-2">
-          {lines.map((line, i) => (
-            <li
-              key={i}
-              className={liClassName}
-              style={
-                hasOverride
-                  ? {
-                      fontSize: bannerFontSize,
-                      letterSpacing: bannerLetterSpacing,
-                      fontWeight: bannerFontWeight,
-                    }
-                  : undefined
-              }
-            >
-              <MapPin
-                className="w-4 h-4 shrink-0"
-                strokeWidth={2.25}
-                style={{ color: 'var(--color-location-bar-icon)' }}
-                aria-hidden="true"
-              />
-              {line.label && (
-                <span
-                  className="font-medium"
-                  style={{ color: 'var(--color-location-bar-text)' }}
+          {lines.map((line, i) => {
+            const anchorStyle: React.CSSProperties = {
+              color: 'var(--color-location-bar-text)',
+              ...(wantsUnderline
+                ? {
+                    textDecoration: 'underline',
+                    textDecorationThickness: '1px',
+                    textUnderlineOffset: '4px',
+                  }
+                : {}),
+            }
+            const anchorClass = wantsUnderline
+              ? 'text-center'
+              : 'text-center hover:underline'
+            const inlineTextStyle: React.CSSProperties | undefined = hasOverride
+              ? {
+                  fontSize: bannerFontSize,
+                  letterSpacing: bannerLetterSpacing,
+                  fontWeight: bannerFontWeight,
+                }
+              : undefined
+            const rowContents = (
+              <>
+                <MapPin
+                  className="w-4 h-4 shrink-0"
+                  strokeWidth={2.25}
+                  style={{ color: 'var(--color-location-bar-icon)' }}
+                  aria-hidden="true"
+                />
+                {line.label && (
+                  <span
+                    className="font-medium"
+                    style={{ color: 'var(--color-location-bar-text)' }}
+                  >
+                    {line.label}:
+                  </span>
+                )}
+                <a
+                  href={line.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={anchorClass}
+                  style={anchorStyle}
                 >
-                  {line.label}:
+                  <span className="whitespace-nowrap">{line.address}</span>
+                  <span style={{ color: 'var(--color-text-muted)' }}>
+                    {' · '}
+                  </span>
+                  <span className="whitespace-nowrap">{line.cityStateZip}</span>
+                </a>
+              </>
+            )
+            // No lead-in: emit the historical flat <li> with icon + address
+            // as direct flex children. Byte-identical to Phase 6 when no
+            // Phase 14 keys are set (underline/mobile-weight also absent).
+            if (!hasLeadIn) {
+              return (
+                <li
+                  key={i}
+                  className={`${liLayoutClass} ${mobileWeightClass}`.trim()}
+                  style={inlineTextStyle}
+                >
+                  {rowContents}
+                </li>
+              )
+            }
+            // With lead-in: <li> becomes flex-col with the lead-in above
+            // and the row nested. Section's vertical padding still owns
+            // the outer breathing room so the strip stays balanced.
+            return (
+              <li key={i} className={liLayoutClass}>
+                <span
+                  className="block"
+                  style={{
+                    color: 'var(--color-location-bar-text)',
+                    opacity: 0.85,
+                    fontSize: 'clamp(10.5px, 0.9vw, 12.5px)',
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    fontWeight: 600,
+                  }}
+                >
+                  {cleanLeadIn}
                 </span>
-              )}
-              <a
-                href={line.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-center hover:underline"
-                style={{ color: 'var(--color-location-bar-text)' }}
-              >
-                <span className="whitespace-nowrap">{line.address}</span>
-                <span style={{ color: 'var(--color-text-muted)' }}>
-                  {' · '}
-                </span>
-                <span className="whitespace-nowrap">{line.cityStateZip}</span>
-              </a>
-            </li>
-          ))}
+                <div
+                  className={`${rowInnerClass} ${mobileWeightClass}`.trim()}
+                  style={inlineTextStyle}
+                >
+                  {rowContents}
+                </div>
+              </li>
+            )
+          })}
         </ul>
       </div>
     </section>

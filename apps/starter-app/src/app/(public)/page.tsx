@@ -68,7 +68,7 @@ import { BreakfastComingSoonSection } from '@/components/sections/BreakfastComin
 import { BreakfastLiveSection } from '@/components/sections/BreakfastLiveSection'
 import { HomeRotatingGallery } from '@/components/sections/HomeRotatingGallery'
 import { ReviewsSection } from '@/components/sections/ReviewsSection'
-import { parseGalleryList, validateAspectRatio } from '@/lib/gallery'
+import { parseGalleryList, validateAspectRatio, validateObjectPosition } from '@/lib/gallery'
 import { parseReviews } from '@/lib/reviews'
 import { AwashBakerySection } from '@/components/sections/AwashBakerySection'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
@@ -286,11 +286,17 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // (byte-identical to Phase 11). Any other value that doesn't match
   // the three supported variants also falls through to 'none' so a
   // typo can't produce a broken card.
+  //
+  // Phase 14 additions read alongside: hero_panel_mobile (breakpoint
+  // override) + hero_focus_mobile (mobile-only object-position for the
+  // crossfade sharp layers).
   const heroPanelSettings = await getSiteSettings([
     'hero_panel',
     'hero_panel_opacity',
     'hero_panel_padding',
     'hero_panel_max_width',
+    'hero_panel_mobile',
+    'hero_focus_mobile',
   ])
   const heroPanelRaw = (heroPanelSettings.hero_panel || '').trim().toLowerCase()
   const heroPanel: 'none' | 'solid' | 'frosted' | 'outline' =
@@ -324,6 +330,38 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     /^\d+(\.\d+)?(rem|em|px|vw|ch|%)$/i.test(heroPanelMaxWidthRaw)
       ? heroPanelMaxWidthRaw
       : undefined
+  // Phase 14 — mobile-only panel variant. 'inherit' (default / absent /
+  // any unrecognized value) means the base variant applies at every
+  // width; the four enum values override below md.
+  const heroPanelMobileRaw = (heroPanelSettings.hero_panel_mobile || '')
+    .trim()
+    .toLowerCase()
+  const heroPanelMobile:
+    | 'none'
+    | 'solid'
+    | 'frosted'
+    | 'outline'
+    | 'inherit'
+    | undefined =
+    heroPanelMobileRaw === 'none'
+      ? 'none'
+      : heroPanelMobileRaw === 'solid'
+        ? 'solid'
+        : heroPanelMobileRaw === 'frosted'
+          ? 'frosted'
+          : heroPanelMobileRaw === 'outline'
+            ? 'outline'
+            : heroPanelMobileRaw === 'inherit'
+              ? 'inherit'
+              : undefined
+  // Phase 14 — mobile-only object-position for the sharp crossfade
+  // layers. Validated via the same helper as GalleryImage.focus so
+  // malformed strings fall through to 'center' (which the crossfade
+  // treats as byte-identical to absent).
+  const heroFocusMobileRaw = (heroPanelSettings.hero_focus_mobile || '').trim()
+  const heroFocusMobile: string | undefined = heroFocusMobileRaw
+    ? validateObjectPosition(heroFocusMobileRaw)
+    : undefined
   // Phase 10 — shared aspect ratio setting for the two homepage image
   // bands (HomeRotatingGallery + BreakfastLiveSection image slot). Each
   // component owns its own historical default when the key is absent so
@@ -377,6 +415,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     'hero_title_color',
     'address_banner_weight',
     'address_banner_scale',
+    'address_banner_weight_mobile',
+    'address_banner_lead',
+    'address_banner_underline',
   ])
   function parsePositiveNumber(raw: string | undefined): number | undefined {
     if (!raw) return undefined
@@ -388,6 +429,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const heroTitleColor = (heroWeightSettings.hero_title_color || '').trim() || undefined
   const addressBannerWeight = parsePositiveNumber(heroWeightSettings.address_banner_weight)
   const addressBannerScale = parsePositiveNumber(heroWeightSettings.address_banner_scale)
+  const addressBannerWeightMobile = parsePositiveNumber(
+    heroWeightSettings.address_banner_weight_mobile,
+  )
+  const addressBannerLead =
+    (heroWeightSettings.address_banner_lead || '').trim() || undefined
+  const addressBannerUnderline =
+    (heroWeightSettings.address_banner_underline || '').trim().toLowerCase() === 'true'
   // Phase 9 — rotating "From our kitchen" tiles. Phase 13 adds timing +
   // caption keys; each falls through to today's defaults when absent.
   const kitchenRotateSettings = await getSiteSettings([
@@ -757,6 +805,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroPanelOpacity={heroPanelOpacity}
         heroPanelPadding={heroPanelPadding}
         heroPanelMaxWidth={heroPanelMaxWidth}
+        heroPanelMobile={heroPanelMobile}
+        heroFocusMobile={heroFocusMobile}
         variant={heroVariant}
         businessName={displayedBusinessName}
         tagline={business.tagline}
@@ -898,6 +948,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         zip={business.zip}
         bannerScale={addressBannerScale}
         bannerWeight={addressBannerWeight}
+        bannerWeightMobile={addressBannerWeightMobile}
+        leadIn={addressBannerLead}
+        underline={addressBannerUnderline}
       />
     ),
     // modern_minimal

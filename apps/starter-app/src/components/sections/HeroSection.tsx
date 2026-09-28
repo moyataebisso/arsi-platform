@@ -111,6 +111,20 @@ interface HeroSectionProps {
   // parses as a CSS length works; malformed strings fall through to the
   // default upstream.
   heroPanelMaxWidth?: string
+  // Phase 14 — mobile-only override for heroPanel. Absent / 'inherit' →
+  // heroPanel applies at every width (byte-identical to Phase 12). Any
+  // other value applies below the md breakpoint (<768px) via a scoped
+  // media query, so a tenant can drop the panel on phones where the
+  // copy would otherwise be squeezed. 'none' at mobile makes the panel
+  // visually disappear while keeping its padding + max-width so the
+  // text's vertical position doesn't shift when the panel toggles off.
+  heroPanelMobile?: 'none' | 'solid' | 'frosted' | 'outline' | 'inherit'
+  // Phase 14 — mobile-only object-position override for the crossfade's
+  // sharp image layers (cover branch and fill-blur foreground). Absent
+  // → 'center', today's crop. Any CSS object-position string
+  // (validated upstream). Threaded through here so page.tsx can
+  // forward one prop.
+  heroFocusMobile?: string
   // Multi-line H1 lockup. site_settings key: hero_title_parts (jsonb
   // string[]). When 2+ entries, VideoHero renders the H1 as a stacked
   // typographic lockup — primary line first, then secondary lines at a
@@ -1417,6 +1431,7 @@ function VideoHero(props: VariantProps) {
           images={slideshowUrls}
           heroFit={props.heroFit}
           heroFillScale={props.heroFillScale}
+          heroFocusMobile={props.heroFocusMobile}
         />
       )}
       {videoUrl && (
@@ -1467,6 +1482,7 @@ function VideoHero(props: VariantProps) {
         opacity={props.heroPanelOpacity}
         padding={props.heroPanelPadding}
         maxWidth={props.heroPanelMaxWidth}
+        mobileVariant={props.heroPanelMobile}
       >
         <HeroLockupTitle
           fallback={display.headline}
@@ -1578,19 +1594,69 @@ function HeroPanel({
   opacity,
   padding = 'normal',
   maxWidth,
+  mobileVariant,
   children,
 }: {
   variant?: 'none' | 'solid' | 'frosted' | 'outline'
   opacity?: number
   padding?: 'tight' | 'normal' | 'roomy'
   maxWidth?: string
+  // Phase 14 — mobile override. undefined / 'inherit' → same variant at
+  // every width. Any other value applies below md via a scoped @media
+  // rule; below md renders with the mobile variant's visual, at md+
+  // the base variant paints.
+  mobileVariant?: 'none' | 'solid' | 'frosted' | 'outline' | 'inherit'
   children: React.ReactNode
 }) {
+  const effectiveMobile: 'none' | 'solid' | 'frosted' | 'outline' | undefined =
+    mobileVariant && mobileVariant !== 'inherit' && mobileVariant !== variant
+      ? mobileVariant
+      : undefined
+
+  // Base 'none' cases:
+  //   - absent mobile → historical wrapper, byte-identical to Phase 12.
+  //   - mobile variant set → historical wrapper AT md+ (byte-identical
+  //                          at desktop), then a scoped mobile @media
+  //                          rule paints the mobile card. Wrapper markup
+  //                          stays the same so desktop is untouched.
   if (variant === 'none') {
-    // Byte-identical to the pre-Phase-12 wrapper.
+    if (!effectiveMobile) {
+      return (
+        <div className="relative z-10 w-full max-w-3xl mx-auto px-6 text-center">
+          {children}
+        </div>
+      )
+    }
+    // Alpha for the mobile fill. Uses the same default (0.55) as the
+    // desktop panel would, unless the operator explicitly overrode.
+    const alphaN =
+      typeof opacity === 'number' && Number.isFinite(opacity)
+        ? Math.max(0, Math.min(1, opacity))
+        : 0.55
+    const baseFillN = `rgba(15, 13, 10, ${alphaN.toFixed(3)})`
+    const frostedFallbackN = `rgba(15, 13, 10, ${Math.min(1, alphaN + 0.2).toFixed(3)})`
+    let bodyN = ''
+    if (effectiveMobile === 'solid') {
+      bodyN = `background-color: ${baseFillN} !important; border-radius: 18px; box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.55) !important;`
+    } else if (effectiveMobile === 'frosted') {
+      bodyN = `background-color: ${frostedFallbackN} !important; border-radius: 18px; box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.55) !important;`
+    } else if (effectiveMobile === 'outline') {
+      bodyN = 'background-color: transparent !important; border: 1px solid rgba(244,241,232,0.28) !important; border-radius: 18px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 60px -20px rgba(0, 0, 0, 0.35) !important;'
+    } else {
+      // 'none' overrides 'none' → no visual change; skip the block.
+      bodyN = ''
+    }
+    const supportsBlockN =
+      effectiveMobile === 'frosted' && bodyN
+        ? ` @supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) { .hero-panel-base-none-mobile { background-color: ${baseFillN} !important; backdrop-filter: blur(14px) saturate(1.05); -webkit-backdrop-filter: blur(14px) saturate(1.05); } }`
+        : ''
+    const ruleN = bodyN
+      ? `@media (max-width: 767.98px) { .hero-panel-base-none-mobile { ${bodyN} }${supportsBlockN} }`
+      : ''
     return (
-      <div className="relative z-10 w-full max-w-3xl mx-auto px-6 text-center">
+      <div className="relative z-10 w-full max-w-3xl mx-auto px-6 text-center hero-panel-base-none-mobile">
         {children}
+        {ruleN && <style dangerouslySetInnerHTML={{ __html: ruleN }} />}
       </div>
     )
   }
@@ -1658,13 +1724,48 @@ function HeroPanel({
   // there's no risk of two panels colliding in the same page.
   const frostedClass = variant === 'frosted' ? 'hero-panel-frosted' : ''
 
+  // Phase 14 — mobile override class. Only emitted when mobileVariant
+  // differs from variant; the corresponding @media (max-width) rule
+  // overrides background/border/backdrop-filter to the mobile look
+  // while keeping padding + max-width so text position doesn't shift.
+  const mobileClass = effectiveMobile ? 'hero-panel-mobile-override' : ''
+  const mobileFrostedFallback = `rgba(15, 13, 10, ${Math.min(1, alpha + 0.2).toFixed(3)})`
+
+  const mobileRule = (() => {
+    if (!effectiveMobile) return ''
+    // Rule body per mobile variant. 'none' zeros out fill/border/shadow
+    // AND explicitly disables backdrop-filter so a frosted base doesn't
+    // leak its blur onto mobile. Padding + max-width are untouched, so
+    // the block occupies the same space and the section's flex-center
+    // keeps the copy at the same y-coordinate.
+    let body = ''
+    if (effectiveMobile === 'none') {
+      body = 'background-color: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;'
+    } else if (effectiveMobile === 'solid') {
+      body = `background-color: ${baseFill} !important; border: none !important; box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.55) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;`
+    } else if (effectiveMobile === 'frosted') {
+      body = `background-color: ${mobileFrostedFallback} !important; border: none !important; box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.55) !important;`
+    } else {
+      // outline
+      body = 'background-color: transparent !important; border: 1px solid rgba(244,241,232,0.28) !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 60px -20px rgba(0, 0, 0, 0.35) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;'
+    }
+    // Frosted specifically needs the @supports upgrade at mobile too so
+    // supporting UAs render the translucent + blur look. Non-supporting
+    // UAs stay on the higher-opacity fallback above.
+    const supportsBlock =
+      effectiveMobile === 'frosted'
+        ? ` @supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) { .hero-panel-mobile-override { background-color: ${baseFill} !important; backdrop-filter: blur(14px) saturate(1.05); -webkit-backdrop-filter: blur(14px) saturate(1.05); } }`
+        : ''
+    return `@media (max-width: 767.98px) { .hero-panel-mobile-override { ${body} }${supportsBlock} }`
+  })()
+
   // Outer wrapper keeps the historical horizontal centering + 16px min
   // gutter via px-4, so a tightly-capped panel never kisses the viewport
   // edge at 360px width.
   return (
     <div className="relative z-10 w-full mx-auto px-4 sm:px-6 flex justify-center">
       <div
-        className={`w-full text-center ${paddingClass} ${frostedClass}`.trim()}
+        className={`w-full text-center ${paddingClass} ${frostedClass} ${mobileClass}`.trim()}
         style={panelStyle}
       >
         {children}
@@ -1678,6 +1779,9 @@ function HeroPanel({
             __html: `@supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {.hero-panel-frosted{background-color:${baseFill} !important;backdrop-filter:blur(14px) saturate(1.05);-webkit-backdrop-filter:blur(14px) saturate(1.05)}}`,
           }}
         />
+      )}
+      {mobileRule && (
+        <style dangerouslySetInnerHTML={{ __html: mobileRule }} />
       )}
     </div>
   )
@@ -1758,6 +1862,8 @@ export function HeroSection(props: HeroSectionProps) {
     heroPanelOpacity: props.heroPanelOpacity,
     heroPanelPadding: props.heroPanelPadding,
     heroPanelMaxWidth: props.heroPanelMaxWidth,
+    heroPanelMobile: props.heroPanelMobile,
+    heroFocusMobile: props.heroFocusMobile,
   }
 
   switch (activeVariant) {
