@@ -181,6 +181,16 @@ interface HeroSectionProps {
   // with a middle-dot separator instead of the historical stacked <p>
   // block. Wraps naturally on narrow screens.
   heroTaglineInline?: boolean
+  // Phase 21 — richer tagline layout. site_settings key:
+  // hero_tagline_layout. Takes precedence over hero_tagline_inline when
+  // present; absent → falls back to the boolean above so every tenant
+  // that has not seeded the row is byte-identical.
+  //   'inline'  — the boolean=true middot layout (single <p>, inline dot).
+  //   'stacked' — the historical stacked <p> block (no separator).
+  //   'divided' — each sentence on its own centered line with a small
+  //               centered rule element between consecutive sentences.
+  //               Single-sentence input renders with no separator at all.
+  heroTaglineLayout?: 'inline' | 'stacked' | 'divided'
   // Optional override for the ImageOverlayHero eyebrow pill. site_settings
   // key: hero_eyebrow_text.
   //   undefined → caller did not read the key (or the row is missing) →
@@ -228,25 +238,119 @@ function splitSentences(text: string): string[] {
   return out.filter(Boolean)
 }
 
+// Phase 21 — sentence splitter for the 'divided' layout. Unlike
+// splitSentences() above, this one accepts `.`, `!`, or `?` as
+// sentence-enders and does NOT require the next character to be a
+// capital letter. This keeps taglines like "Come hungry. Leave happy."
+// splittable AND handles operator copy that skips trailing periods
+// on the last fragment. A string with no sentence-ender at all
+// returns a single-element array (never an empty list, never empty
+// fragments), so single-line copy renders as one centered line with
+// no separator.
+function splitSentencesLoose(text: string): string[] {
+  const s = (text || '').trim()
+  if (!s) return []
+  const out: string[] = []
+  let current = ''
+  for (let i = 0; i < s.length; i++) {
+    current += s[i]
+    const ch = s[i]
+    if (ch === '.' || ch === '!' || ch === '?') {
+      // Consume any adjacent sentence-ender / closing punctuation so
+      // "?!" or "..." stay with the sentence they end. Then require
+      // whitespace (or end-of-string) to actually break — this avoids
+      // splitting on decimals like 4.5 or abbreviations mid-word.
+      while (
+        i + 1 < s.length &&
+        (s[i + 1] === '.' || s[i + 1] === '!' || s[i + 1] === '?')
+      ) {
+        current += s[i + 1]
+        i++
+      }
+      if (i + 1 >= s.length || /\s/.test(s[i + 1])) {
+        const trimmed = current.trim()
+        if (trimmed) out.push(trimmed)
+        current = ''
+      }
+    }
+  }
+  const tail = current.trim()
+  if (tail) out.push(tail)
+  return out.length > 0 ? out : [s]
+}
+
 // Render a subheadline as one <p> (single sentence) or a wrapping <div> of
 // stacked <p> elements (multi-sentence). className/style apply to the outer
 // element; text styling (size/color/line-height) cascades to children via
-// inheritance so each variant's existing typography is preserved. `inline`
-// (site_settings: hero_tagline_inline) collapses the multi-sentence layout
-// into a single <p> with middle-dot separators, wrapping naturally on
-// narrow screens; absent / false = today's stacked <p> block.
+// inheritance so each variant's existing typography is preserved.
+//
+// Layout precedence (Phase 21):
+//   - `layout` prop set → uses it directly ('inline' | 'stacked' | 'divided').
+//   - `layout` absent    → falls through to the boolean `inline` prop, which
+//     is fed by the legacy hero_tagline_inline site_setting. This keeps
+//     every tenant that has not seeded hero_tagline_layout byte-identical.
 function Subheadline({
   text,
   className,
   style,
   inline = false,
+  layout,
 }: {
   text?: string
   className?: string
   style?: React.CSSProperties
   inline?: boolean
+  layout?: 'inline' | 'stacked' | 'divided'
 }) {
   if (!text) return null
+  const resolvedLayout: 'inline' | 'stacked' | 'divided' =
+    layout ?? (inline ? 'inline' : 'stacked')
+
+  if (resolvedLayout === 'divided') {
+    // Loose splitter — accepts .!? without requiring capitals after,
+    // and returns [text] rather than [] when nothing matches.
+    const parts = splitSentencesLoose(text)
+    if (parts.length <= 1) {
+      return (
+        <p className={className} style={style}>
+          {parts[0] ?? text}
+        </p>
+      )
+    }
+    return (
+      <div
+        className={className}
+        style={{ ...(style || {}), lineHeight: 1.35 }}
+      >
+        {parts.map((p, i) => (
+          <div key={i}>
+            {i > 0 && (
+              // Ornament: short thin horizontal rule, its own centered
+              // block (not a text-flow character). Chose a rule over a
+              // middot at this size because at ~1rem body copy a bare
+              // middot on its own line reads as debris; a 24px rule
+              // reads as intentional editorial punctuation and matches
+              // the hero_title_rule ornament the H1 already uses.
+              <div
+                aria-hidden="true"
+                style={{
+                  width: '24px',
+                  height: '1px',
+                  margin: '0.55rem auto',
+                  backgroundColor: 'currentColor',
+                  opacity: 0.4,
+                }}
+              />
+            )}
+            <p style={{ margin: 0 }}>{p}</p>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // Non-divided paths keep the historical splitter so byte-identical
+  // output holds for tenants relying on the old key.
   const parts = splitSentences(text)
   if (parts.length <= 1) {
     return (
@@ -255,7 +359,7 @@ function Subheadline({
       </p>
     )
   }
-  if (inline) {
+  if (resolvedLayout === 'inline') {
     return (
       <p className={className} style={style}>
         {parts.map((p, i) => (
@@ -1514,6 +1618,7 @@ function VideoHero(props: VariantProps) {
         <Subheadline
           text={display.subheadline}
           inline={props.heroTaglineInline}
+          layout={props.heroTaglineLayout}
           className="mx-auto mb-10 max-w-xl"
           style={{
             color: '#F4F1E8',

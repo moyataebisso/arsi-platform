@@ -510,6 +510,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     'hero_title_rule',
     'hero_scrim',
     'hero_tagline_inline',
+    'hero_tagline_layout',
   ])
   let heroTitleParts: string[] = []
   const heroTitlePartsRaw = heroLockupSettings.hero_title_parts
@@ -540,6 +541,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           : undefined
   const heroTaglineInline =
     (heroLockupSettings.hero_tagline_inline || '').trim().toLowerCase() === 'true'
+  // Phase 21 — richer tagline layout. Absent / unrecognized → undefined,
+  // which lets Subheadline fall back to the historical inline boolean
+  // above. Present → takes precedence over the boolean.
+  const heroTaglineLayoutRaw =
+    (heroLockupSettings.hero_tagline_layout || '').trim().toLowerCase()
+  const heroTaglineLayout: 'inline' | 'stacked' | 'divided' | undefined =
+    heroTaglineLayoutRaw === 'inline'
+      ? 'inline'
+      : heroTaglineLayoutRaw === 'stacked'
+        ? 'stacked'
+        : heroTaglineLayoutRaw === 'divided'
+          ? 'divided'
+          : undefined
   // Phase 9 — hero weight + color overrides and address-banner scale.
   const heroWeightSettings = await getSiteSettings([
     'hero_title_weight',
@@ -937,6 +951,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         heroTitleRule={heroTitleRule}
         heroScrim={heroScrim}
         heroTaglineInline={heroTaglineInline}
+        heroTaglineLayout={heroTaglineLayout}
         heroTitleWeight={heroTitleWeight}
         heroSubtitleWeight={heroSubtitleWeight}
         heroTitleColor={heroTitleColor}
