@@ -32,14 +32,49 @@ export interface ShowcaseSlide {
   subheading?: string
   cta_label?: string
   cta_href?: string
+  // Phase 20 — per-slide fit and focus.
+  //   fit: 'cover' (default, today's behavior — crops to fill) or
+  //        'contain' (whole image shows; letterbox area filled with
+  //        a blurred, darkened copy of the same image so it never
+  //        reads as hard bars).
+  //   focus: any valid CSS object-position (e.g. "left top",
+  //        "50% 30%"). Absent → "center".
+  fit?: 'cover' | 'contain'
+  focus?: string
+}
+
+export type ShowcaseHeight = 'short' | 'medium' | 'tall'
+
+const HEIGHT_STYLES: Record<ShowcaseHeight | 'default', string> = {
+  default: 'clamp(420px, 62vh, 640px)',
+  short: 'clamp(340px, 48vh, 480px)',
+  medium: 'clamp(460px, 66vh, 680px)',
+  tall: 'clamp(560px, 82vh, 820px)',
+}
+
+// Very loose object-position validator. object-position accepts keywords,
+// percentages, and lengths; anything with characters outside that set is
+// treated as malformed and falls back to 'center'. Prevents a fat-fingered
+// seed from injecting arbitrary CSS via the inline style.
+function safeObjectPosition(raw: string | undefined): string {
+  const s = (raw || '').trim().toLowerCase()
+  if (!s) return 'center'
+  if (!/^[a-z0-9%.\s-]+$/.test(s)) return 'center'
+  return s
 }
 
 export function ShowcaseSection({
   slides,
   intervalMs = 7000,
+  height,
+  drift = false,
 }: {
   slides: ShowcaseSlide[]
   intervalMs?: number
+  height?: ShowcaseHeight
+  // Phase 20 — slow drift on the visible image between transitions.
+  // Off by default; reduced-motion always disables regardless.
+  drift?: boolean
 }) {
   const frames = slides.filter((s) => (s.image || '').trim().length > 0)
   const [index, setIndex] = useState(0)
@@ -85,6 +120,8 @@ export function ShowcaseSection({
 
   const active = frames[Math.min(index, frames.length - 1)]
   const hasMultiple = frames.length > 1
+  const heightStyle = HEIGHT_STYLES[height ?? 'default']
+  const driftEnabled = drift && !reducedMotion
 
   function goTo(next: number) {
     const n = frames.length
@@ -112,7 +149,7 @@ export function ShowcaseSection({
       className="relative w-full overflow-hidden"
       style={{
         backgroundColor: '#000',
-        minHeight: 'clamp(420px, 62vh, 640px)',
+        minHeight: heightStyle,
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -123,27 +160,88 @@ export function ShowcaseSection({
         }
       }}
     >
-      {frames.map((slide, i) => (
-        <div
-          key={slide.image + i}
-          className="absolute inset-0 transition-opacity"
-          style={{
-            opacity: i === index ? 1 : 0,
-            transitionDuration: '900ms',
-          }}
-          aria-hidden={i === index ? undefined : true}
-        >
-          <Image
-            src={slide.image}
-            alt=""
-            fill
-            priority={i === 0}
-            sizes="100vw"
-            unoptimized={!isAllowedImageHost(slide.image)}
-            className="object-cover object-center"
-          />
-        </div>
-      ))}
+      {/* Drift animation. Scoped keyframes so the section is fully
+          self-contained and pauses cleanly when the tab hides (drift
+          rides on the same visible slide; when a new slide fades in,
+          it starts a fresh drift cycle). transform is composited so
+          there's no layout shift or repaint. */}
+      {driftEnabled && (
+        <style>{`
+          @keyframes showcaseDrift {
+            0%   { transform: scale(1.00) translate(0%, 0%); }
+            50%  { transform: scale(1.06) translate(-1%, -1%); }
+            100% { transform: scale(1.00) translate(0%, 0%); }
+          }
+        `}</style>
+      )}
+      {frames.map((slide, i) => {
+        const fit: 'cover' | 'contain' = slide.fit === 'contain' ? 'contain' : 'cover'
+        const focus = safeObjectPosition(slide.focus)
+        const isActive = i === index
+        // Drift only rides on the visible slide so the offscreen
+        // frames never burn animation frames. Duration matches the
+        // full interval so the drift travels its whole arc between
+        // transitions, easing in/out so it never snaps.
+        const driftStyle: React.CSSProperties =
+          driftEnabled && isActive
+            ? {
+                animationName: 'showcaseDrift',
+                animationDuration: `${Math.max(intervalMs, 3000)}ms`,
+                animationTimingFunction: 'ease-in-out',
+                animationIterationCount: 'infinite',
+                willChange: 'transform',
+              }
+            : {}
+        return (
+          <div
+            key={slide.image + i}
+            className="absolute inset-0 transition-opacity"
+            style={{
+              opacity: isActive ? 1 : 0,
+              transitionDuration: '900ms',
+            }}
+            aria-hidden={isActive ? undefined : true}
+          >
+            {fit === 'contain' && (
+              // Blurred + darkened backdrop for letterbox fill. Same
+              // image as the sharp copy above, cover'd so it always
+              // fills, then blurred so it never competes with the
+              // focal image. The dark overlay in the section scrim
+              // below drops it further so it reads as ambience only.
+              <div
+                className="absolute inset-0"
+                style={{
+                  filter: 'blur(28px) brightness(0.55)',
+                  transform: 'scale(1.08)',
+                }}
+                aria-hidden="true"
+              >
+                <Image
+                  src={slide.image}
+                  alt=""
+                  fill
+                  priority={i === 0}
+                  sizes="100vw"
+                  unoptimized={!isAllowedImageHost(slide.image)}
+                  className="object-cover object-center"
+                />
+              </div>
+            )}
+            <div className="absolute inset-0" style={driftStyle}>
+              <Image
+                src={slide.image}
+                alt=""
+                fill
+                priority={i === 0}
+                sizes="100vw"
+                unoptimized={!isAllowedImageHost(slide.image)}
+                className={fit === 'contain' ? 'object-contain' : 'object-cover'}
+                style={{ objectPosition: focus }}
+              />
+            </div>
+          </div>
+        )
+      })}
 
       {/* Scrim — dark gradient behind the text block so the heading
           reads over photos of any tone. Same recipe as the video hero
@@ -159,7 +257,7 @@ export function ShowcaseSection({
 
       <div
         className="relative z-10 flex items-center justify-center px-6 sm:px-10 lg:px-16"
-        style={{ minHeight: 'clamp(420px, 62vh, 640px)' }}
+        style={{ minHeight: heightStyle }}
         onKeyDown={onKeyDown}
       >
         <div className="w-full max-w-3xl text-center">

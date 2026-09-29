@@ -71,7 +71,7 @@ import { ReviewsSection } from '@/components/sections/ReviewsSection'
 import { parseGalleryList, validateAspectRatio, validateObjectPosition } from '@/lib/gallery'
 import { parseReviews } from '@/lib/reviews'
 import { AwashBakerySection } from '@/components/sections/AwashBakerySection'
-import { ShowcaseSection, type ShowcaseSlide } from '@/components/sections/ShowcaseSection'
+import { ShowcaseSection, type ShowcaseSlide, type ShowcaseHeight } from '@/components/sections/ShowcaseSection'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
 import { themeToCSS, type ResolvedTheme } from '@/lib/theme-resolver'
@@ -382,6 +382,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const showcaseSettings = await getSiteSettings([
     'showcase_slides',
     'showcase_interval_ms',
+    'showcase_height',
+    'showcase_drift',
   ])
   let showcaseSlides: ShowcaseSlide[] = []
   const showcaseSlidesRaw = showcaseSettings.showcase_slides
@@ -398,6 +400,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             cta_label?: unknown
             cta_href?: unknown
           }
+          const recPlus = item as {
+            image?: unknown
+            heading?: unknown
+            subheading?: unknown
+            cta_label?: unknown
+            cta_href?: unknown
+            fit?: unknown
+            focus?: unknown
+          }
           const image = typeof rec.image === 'string' ? rec.image.trim() : ''
           const heading = typeof rec.heading === 'string' ? rec.heading.trim() : ''
           if (!image || !heading) continue
@@ -407,11 +418,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             typeof rec.cta_label === 'string' ? rec.cta_label.trim() : ''
           const cta_href =
             typeof rec.cta_href === 'string' ? rec.cta_href.trim() : ''
+          // Phase 20 — per-slide fit + focus. Malformed values fall
+          // through to the ShowcaseSection defaults (cover / center).
+          const fitRaw =
+            typeof recPlus.fit === 'string' ? recPlus.fit.trim().toLowerCase() : ''
+          const fit: 'cover' | 'contain' | undefined =
+            fitRaw === 'contain' ? 'contain' : fitRaw === 'cover' ? 'cover' : undefined
+          const focus =
+            typeof recPlus.focus === 'string' ? recPlus.focus.trim() : ''
           showcaseSlides.push({
             image,
             heading,
             ...(subheading ? { subheading } : {}),
             ...(cta_label && cta_href ? { cta_label, cta_href } : {}),
+            ...(fit ? { fit } : {}),
+            ...(focus ? { focus } : {}),
           })
         }
       }
@@ -425,6 +446,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const showcaseIntervalMs: number = Number.isFinite(parsedShowcaseInterval)
     ? Math.max(3000, Math.min(20000, parsedShowcaseInterval))
     : 7000
+  // Phase 20 — showcase section height + slow drift on the visible slide.
+  // Absent / unrecognized values keep today's defaults.
+  const showcaseHeightRaw = (showcaseSettings.showcase_height || '')
+    .trim()
+    .toLowerCase()
+  const showcaseHeight: ShowcaseHeight | undefined =
+    showcaseHeightRaw === 'short'
+      ? 'short'
+      : showcaseHeightRaw === 'medium'
+        ? 'medium'
+        : showcaseHeightRaw === 'tall'
+          ? 'tall'
+          : undefined
+  const showcaseDrift =
+    (showcaseSettings.showcase_drift || '').trim().toLowerCase() === 'true'
   // Phase 18 — richer feature cards with optional per-card images.
   // Absent → today's icon-only cards fed by getHomeServicesContent().
   const featureCardsRaw = await getSiteSetting('feature_cards')
@@ -925,7 +961,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       />
     ),
     services: showcaseSlides.length > 0 ? (
-      <ShowcaseSection slides={showcaseSlides} intervalMs={showcaseIntervalMs} />
+      <ShowcaseSection
+        slides={showcaseSlides}
+        intervalMs={showcaseIntervalMs}
+        height={showcaseHeight}
+        drift={showcaseDrift}
+      />
     ) : (
       <ServicesSection
         title={content.services_title}

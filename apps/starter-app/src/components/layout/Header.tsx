@@ -60,6 +60,17 @@ interface HeaderProps {
   // the badge jitter/clip that appeared in Phase 18 when the badge and
   // bar animated together at very different rates.
   logoShrinkRatio?: number
+  // Phase 20 — global nav link type scale at every scroll state.
+  // Clamped upstream to [0.75, 1.0]. Absent / 1.0 → byte-identical
+  // to today. Values < 1.0 shrink nav link font-size + padding
+  // proportionally so more air sits around the labels at every
+  // breakpoint.
+  navScale?: number
+  // Phase 20 — step the shrunk bar further down. Absent / false →
+  // Phase 19 heights. When true, the shrunk-state height class ladder
+  // drops one notch on each breakpoint so the nav labels have visible
+  // clearance above and below instead of crowding the bar's edge.
+  shrinkExtra?: boolean
   // MN license separation. When true, the healthcare nav replaces its
   // /our-homes + /services links with two dropdown top-level items pointing
   // to /assisted-living and /hcbs. Kept off by default so El Roi and every
@@ -113,6 +124,8 @@ export function Header({
   shrinkOnScroll,
   logoScale,
   logoShrinkRatio,
+  navScale,
+  shrinkExtra,
   showLicenseSeparatedNav,
   promoBarText,
   promoBarCtaUrl,
@@ -221,16 +234,58 @@ export function Header({
   }
   // Height classes. When shrinkOnScroll is false these strings equal
   // the historical values exactly so the emitted className is
-  // byte-identical for tenants without the flag.
+  // byte-identical for tenants without the flag. Phase 20 —
+  // shrinkExtra=true drops the shrunk-state one notch further so the
+  // nav labels stop crowding the bar's edge.
+  const useExtra = Boolean(shrinkExtra)
   const defaultHeightClass = shrunk
-    ? 'h-12 sm:h-14'
+    ? (useExtra ? 'h-14 sm:h-16' : 'h-12 sm:h-14')
     : 'h-16 sm:h-18'
   const centerHeightClass = shrunk
-    ? 'h-16 lg:h-20'
+    ? (useExtra ? 'h-20 lg:h-24' : 'h-16 lg:h-20')
     : 'h-20 lg:h-24'
+  const centerMobileHeightClass = shrunk
+    ? (useExtra ? 'h-14' : 'h-12')
+    : 'h-16'
   const heightTransitionClass = shrinkOnScroll
     ? (reducedMotion ? 'transition-none' : 'transition-[height] duration-240 ease-out')
     : ''
+  // Phase 20 — clamped nav scale. Absent / out-of-range → 1.0
+  // (byte-identical). At scale=1 all downstream style objects skip
+  // emitting a `fontSize`/`padding` inline style so the emitted DOM
+  // is unchanged for every tenant that hasn't seeded the row.
+  const clampedNavScale = Math.max(
+    0.75,
+    Math.min(
+      1.0,
+      typeof navScale === 'number' && Number.isFinite(navScale) ? navScale : 1.0,
+    ),
+  )
+  const navScaleActive = clampedNavScale < 1.0
+  // Nav link styles derived from clampedNavScale. Base values match
+  // the historical hardcoded Tailwind classes exactly at scale=1.0
+  // (13/14px default variant; 12/13px center_logo variant), then
+  // multiply down proportionally. Rounded to 1 decimal so the emitted
+  // CSS is stable and doesn't jitter across renders.
+  function scaled(px: number): string {
+    return `${(px * clampedNavScale).toFixed(2)}px`
+  }
+  // Default variant desktop nav link — historically text-[13px] lg:text-sm
+  // (13px → 14px at lg). Track that ladder via a min/max clamp so both
+  // breakpoints scale together.
+  const defaultNavLinkStyle: React.CSSProperties | undefined = navScaleActive
+    ? {
+        fontSize: `clamp(${scaled(13)}, ${(13 * clampedNavScale + (14 - 13) * clampedNavScale * 0.4).toFixed(2)}px, ${scaled(14)})`,
+        paddingTop: `${(8 * clampedNavScale).toFixed(2)}px`,
+        paddingBottom: `${(8 * clampedNavScale).toFixed(2)}px`,
+      }
+    : undefined
+  // center_logo variant nav link — historically text-[12px] lg:text-[13px].
+  const centerNavLinkStyle: React.CSSProperties | undefined = navScaleActive
+    ? {
+        fontSize: `clamp(${scaled(12)}, ${(12 * clampedNavScale + (13 - 12) * clampedNavScale * 0.4).toFixed(2)}px, ${scaled(13)})`,
+      }
+    : undefined
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -403,6 +458,7 @@ export function Header({
                     style={{
                       color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-header-text)',
                       fontFamily: 'var(--font-heading)',
+                      ...(centerNavLinkStyle || {}),
                     }}
                     onMouseEnter={e =>
                       ((e.currentTarget as HTMLElement).style.color = 'var(--color-primary)')
@@ -473,6 +529,7 @@ export function Header({
                     style={{
                       color: isActive(link.href) ? 'var(--color-primary)' : 'var(--color-header-text)',
                       fontFamily: 'var(--font-heading)',
+                      ...(centerNavLinkStyle || {}),
                     }}
                     onMouseEnter={e =>
                       ((e.currentTarget as HTMLElement).style.color = 'var(--color-primary)')
@@ -520,7 +577,7 @@ export function Header({
                 the hamburger sits at the right; nothing balances it, so a
                 flex justify-between layout centers the logo somewhere left
                 of true midpoint). Hamburger pins right via ml-auto. */}
-            <div className={`md:hidden relative flex items-center ${shrunk ? 'h-12' : 'h-16'} ${heightTransitionClass}`.trim()}>
+            <div className={`md:hidden relative flex items-center ${centerMobileHeightClass} ${heightTransitionClass}`.trim()}>
               <Link
                 href="/"
                 aria-label={displayBusinessName}
@@ -653,6 +710,7 @@ export function Header({
                       color: isActive(link.href)
                         ? 'var(--color-primary)'
                         : 'var(--color-header-text-muted)',
+                      ...(defaultNavLinkStyle || {}),
                     }}
                     onMouseEnter={e => {
                       if (!isActive(link.href))

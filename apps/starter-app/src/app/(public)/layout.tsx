@@ -31,6 +31,8 @@ export default async function PublicLayout({ children }: { children: React.React
       'header_shrink_on_scroll',
       'header_logo_scale',
       'header_logo_shrink_ratio',
+      'header_nav_scale',
+      'header_shrink_extra',
       'social_facebook',
       'social_instagram',
       'social_twitter',
@@ -118,6 +120,15 @@ export default async function PublicLayout({ children }: { children: React.React
     Number.isFinite(parsedLogoShrinkRatio)
       ? Math.max(0.85, Math.min(1.0, parsedLogoShrinkRatio))
       : undefined
+  // Phase 20 — nav type-scale + extra shrunk-height step.
+  const parsedNavScale = Number.parseFloat(
+    (settings.header_nav_scale || '').trim(),
+  )
+  const headerNavScale: number | undefined = Number.isFinite(parsedNavScale)
+    ? Math.max(0.75, Math.min(1.0, parsedNavScale))
+    : undefined
+  const headerShrinkExtra =
+    (settings.header_shrink_extra || '').trim().toLowerCase() === 'true'
 
   return (
     <>
@@ -151,6 +162,8 @@ export default async function PublicLayout({ children }: { children: React.React
           shrinkOnScroll={shrinkOnScroll}
           logoScale={headerLogoScale}
           logoShrinkRatio={headerLogoShrinkRatio}
+          navScale={headerNavScale}
+          shrinkExtra={headerShrinkExtra}
           showLicenseSeparatedNav={enabledModules.license_separated_nav}
           promoBarText={settings.promo_bar_text}
           promoBarCtaUrl={settings.promo_bar_cta_url}
