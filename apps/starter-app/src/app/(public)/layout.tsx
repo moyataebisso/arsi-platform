@@ -30,6 +30,7 @@ export default async function PublicLayout({ children }: { children: React.React
       'bakery_nav_label',
       'header_shrink_on_scroll',
       'header_logo_scale',
+      'header_logo_shrink_ratio',
       'social_facebook',
       'social_instagram',
       'social_twitter',
@@ -105,6 +106,18 @@ export default async function PublicLayout({ children }: { children: React.React
     Number.isFinite(parsedLogoScale)
       ? Math.max(0.6, Math.min(1.0, parsedLogoScale))
       : undefined
+  // Phase 19 — how much the logo badge shrinks when the header shrinks
+  // on scroll. Absent / malformed → undefined; Header clamps to
+  // [0.85, 1.0] and defaults to 1.0 (no badge shrink). Values in that
+  // range let a tenant dial in a mild shrink without triggering the
+  // Phase 18 jitter that came from shrinking the badge in lockstep.
+  const parsedLogoShrinkRatio = Number.parseFloat(
+    (settings.header_logo_shrink_ratio || '').trim(),
+  )
+  const headerLogoShrinkRatio: number | undefined =
+    Number.isFinite(parsedLogoShrinkRatio)
+      ? Math.max(0.85, Math.min(1.0, parsedLogoShrinkRatio))
+      : undefined
 
   return (
     <>
@@ -137,6 +150,7 @@ export default async function PublicLayout({ children }: { children: React.React
           bakeryLabel={settings.bakery_nav_label || undefined}
           shrinkOnScroll={shrinkOnScroll}
           logoScale={headerLogoScale}
+          logoShrinkRatio={headerLogoShrinkRatio}
           showLicenseSeparatedNav={enabledModules.license_separated_nav}
           promoBarText={settings.promo_bar_text}
           promoBarCtaUrl={settings.promo_bar_cta_url}

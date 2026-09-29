@@ -53,6 +53,13 @@ interface HeaderProps {
   // below 1.0 shrink the logo bubble via CSS transform, no layout
   // reflow.
   logoScale?: number
+  // Phase 19 — how much of the resting logo size is preserved when the
+  // header shrinks on scroll. 1.0 (default / absent) = badge does NOT
+  // shrink; only the bar chrome around it does. Lower values shrink
+  // the badge in lockstep. Clamped upstream to [0.85, 1.0] to prevent
+  // the badge jitter/clip that appeared in Phase 18 when the badge and
+  // bar animated together at very different rates.
+  logoShrinkRatio?: number
   // MN license separation. When true, the healthcare nav replaces its
   // /our-homes + /services links with two dropdown top-level items pointing
   // to /assisted-living and /hcbs. Kept off by default so El Roi and every
@@ -105,6 +112,7 @@ export function Header({
   bakeryLabel,
   shrinkOnScroll,
   logoScale,
+  logoShrinkRatio,
   showLicenseSeparatedNav,
   promoBarText,
   promoBarCtaUrl,
@@ -189,9 +197,21 @@ export function Header({
     Math.min(1.0, typeof logoScale === 'number' && Number.isFinite(logoScale) ? logoScale : 1.0),
   )
   // Additional shrink applied when scrolled + shrinkOnScroll=true.
-  const logoScrollFactor = 0.82
+  // Phase 19 — clamped to [0.85, 1.0] and defaults to 1.0 so the badge
+  // does NOT shrink at all on scroll. This eliminates the badge/bar
+  // dual-transition jitter that Phase 18 introduced; tenants can opt
+  // into a mild shrink (0.85-0.99) via header_logo_shrink_ratio.
+  const clampedShrinkRatio = Math.max(
+    0.85,
+    Math.min(
+      1.0,
+      typeof logoShrinkRatio === 'number' && Number.isFinite(logoShrinkRatio)
+        ? logoShrinkRatio
+        : 1.0,
+    ),
+  )
   const effectiveLogoScale = shrunk
-    ? restingLogoScale * logoScrollFactor
+    ? restingLogoScale * clampedShrinkRatio
     : restingLogoScale
   const logoTransitionStyle: React.CSSProperties = {
     transform: `scale(${effectiveLogoScale.toFixed(3)})`,

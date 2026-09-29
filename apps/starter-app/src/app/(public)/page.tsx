@@ -71,6 +71,7 @@ import { ReviewsSection } from '@/components/sections/ReviewsSection'
 import { parseGalleryList, validateAspectRatio, validateObjectPosition } from '@/lib/gallery'
 import { parseReviews } from '@/lib/reviews'
 import { AwashBakerySection } from '@/components/sections/AwashBakerySection'
+import { ShowcaseSection, type ShowcaseSlide } from '@/components/sections/ShowcaseSection'
 import { LAYOUT_IDS, LAYOUT_META, type LayoutId, type SectionId, type HeroVariant } from '@/lib/layouts'
 import { themes, getThemeStyle, type ThemeName } from '@/lib/theme'
 import { themeToCSS, type ResolvedTheme } from '@/lib/theme-resolver'
@@ -371,6 +372,59 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     (phase15Settings.hero_shuffle || '').trim().toLowerCase() === 'true'
   const quicklinkUnderline =
     (phase15Settings.quicklink_underline || '').trim().toLowerCase() === 'true'
+  // Phase 19 — full-bleed rotating showcase. When `showcase_slides`
+  // parses to at least one slide with an image URL, the services slot
+  // renders <ShowcaseSection> instead of the icon-card grid OR the
+  // Phase 18 mixed-image feature cards. Precedence:
+  //   showcase_slides > feature_cards > default services grid.
+  // Absent / malformed → falls through to the next tier, so every
+  // tenant without the row is byte-identical.
+  const showcaseSettings = await getSiteSettings([
+    'showcase_slides',
+    'showcase_interval_ms',
+  ])
+  let showcaseSlides: ShowcaseSlide[] = []
+  const showcaseSlidesRaw = showcaseSettings.showcase_slides
+  if (showcaseSlidesRaw) {
+    try {
+      const parsed = JSON.parse(showcaseSlidesRaw) as unknown
+      if (Array.isArray(parsed)) {
+        for (const item of parsed) {
+          if (!item || typeof item !== 'object') continue
+          const rec = item as {
+            image?: unknown
+            heading?: unknown
+            subheading?: unknown
+            cta_label?: unknown
+            cta_href?: unknown
+          }
+          const image = typeof rec.image === 'string' ? rec.image.trim() : ''
+          const heading = typeof rec.heading === 'string' ? rec.heading.trim() : ''
+          if (!image || !heading) continue
+          const subheading =
+            typeof rec.subheading === 'string' ? rec.subheading.trim() : ''
+          const cta_label =
+            typeof rec.cta_label === 'string' ? rec.cta_label.trim() : ''
+          const cta_href =
+            typeof rec.cta_href === 'string' ? rec.cta_href.trim() : ''
+          showcaseSlides.push({
+            image,
+            heading,
+            ...(subheading ? { subheading } : {}),
+            ...(cta_label && cta_href ? { cta_label, cta_href } : {}),
+          })
+        }
+      }
+    } catch {
+      showcaseSlides = []
+    }
+  }
+  const parsedShowcaseInterval = Number.parseFloat(
+    (showcaseSettings.showcase_interval_ms || '').trim(),
+  )
+  const showcaseIntervalMs: number = Number.isFinite(parsedShowcaseInterval)
+    ? Math.max(3000, Math.min(20000, parsedShowcaseInterval))
+    : 7000
   // Phase 18 — richer feature cards with optional per-card images.
   // Absent → today's icon-only cards fed by getHomeServicesContent().
   const featureCardsRaw = await getSiteSetting('feature_cards')
@@ -870,7 +924,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         phoneCtaHref={cta.phoneCtaHref}
       />
     ),
-    services: (
+    services: showcaseSlides.length > 0 ? (
+      <ShowcaseSection slides={showcaseSlides} intervalMs={showcaseIntervalMs} />
+    ) : (
       <ServicesSection
         title={content.services_title}
         subtitle={content.services_subtitle}
