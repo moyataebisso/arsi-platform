@@ -42,6 +42,17 @@ interface HeaderProps {
   // Phase 15 — per-tenant override for the Bakery nav link's label.
   // Absent → literal 'Bakery' (byte-identical).
   bakeryLabel?: string
+  // Phase 18 — shrink the header after a small scroll threshold. Absent
+  // → the header keeps its resting height at every scroll position
+  // (byte-identical). When true, after window.scrollY > 20 the outer
+  // height + logo scale both step down with a smooth CSS transition.
+  // Reduced motion snaps instead of animating.
+  shrinkOnScroll?: boolean
+  // Phase 18 — resting logo scale multiplier (clamped 0.6-1.0 upstream).
+  // Absent / 1.0 → today's exact logo size (byte-identical). Values
+  // below 1.0 shrink the logo bubble via CSS transform, no layout
+  // reflow.
+  logoScale?: number
   // MN license separation. When true, the healthcare nav replaces its
   // /our-homes + /services links with two dropdown top-level items pointing
   // to /assisted-living and /hcbs. Kept off by default so El Roi and every
@@ -92,6 +103,8 @@ export function Header({
   showJobs,
   showBakery,
   bakeryLabel,
+  shrinkOnScroll,
+  logoScale,
   showLicenseSeparatedNav,
   promoBarText,
   promoBarCtaUrl,
@@ -155,6 +168,49 @@ export function Header({
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Phase 18 — reduced-motion snap. Detected once at mount. Drives the
+  // header/logo transition durations: `none` when reduced motion, ease
+  // 240-300ms otherwise. State never flips after mount so a snap-to
+  // user won't get stuck in a half-animated state.
+  const [reducedMotion, setReducedMotion] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  }, [])
+
+  // Effective shrink flag: only fires when the tenant opts in AND the
+  // user has scrolled past the 20px threshold that the chrome-tint
+  // effect already uses.
+  const shrunk = Boolean(shrinkOnScroll) && scrolled
+  // Base logo transform. Absent / out-of-range → 1.0 (byte-identical).
+  const restingLogoScale = Math.max(
+    0.6,
+    Math.min(1.0, typeof logoScale === 'number' && Number.isFinite(logoScale) ? logoScale : 1.0),
+  )
+  // Additional shrink applied when scrolled + shrinkOnScroll=true.
+  const logoScrollFactor = 0.82
+  const effectiveLogoScale = shrunk
+    ? restingLogoScale * logoScrollFactor
+    : restingLogoScale
+  const logoTransitionStyle: React.CSSProperties = {
+    transform: `scale(${effectiveLogoScale.toFixed(3)})`,
+    transformOrigin: 'center',
+    transition: reducedMotion ? 'none' : 'transform 240ms ease',
+    display: 'inline-flex',
+  }
+  // Height classes. When shrinkOnScroll is false these strings equal
+  // the historical values exactly so the emitted className is
+  // byte-identical for tenants without the flag.
+  const defaultHeightClass = shrunk
+    ? 'h-12 sm:h-14'
+    : 'h-16 sm:h-18'
+  const centerHeightClass = shrunk
+    ? 'h-16 lg:h-20'
+    : 'h-20 lg:h-24'
+  const heightTransitionClass = shrinkOnScroll
+    ? (reducedMotion ? 'transition-none' : 'transition-[height] duration-240 ease-out')
+    : ''
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -316,7 +372,7 @@ export function Header({
           }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="hidden md:grid grid-cols-[1fr_auto_1fr] items-center gap-6 h-20 lg:h-24">
+            <div className={`hidden md:grid grid-cols-[1fr_auto_1fr] items-center gap-6 ${centerHeightClass} ${heightTransitionClass}`.trim()}>
               {/* Left items */}
               <nav className="flex items-center justify-end gap-5 lg:gap-7">
                 {centerLeftLinks.map(link => (
@@ -347,7 +403,11 @@ export function Header({
                 href="/"
                 aria-label={displayBusinessName}
                 className="relative flex items-center justify-center shrink-0"
-                style={{ transform: 'translateY(8px)' }}
+                style={{
+                  transform: `translateY(8px) scale(${effectiveLogoScale.toFixed(3)})`,
+                  transformOrigin: 'center',
+                  transition: reducedMotion ? 'none' : 'transform 240ms ease',
+                }}
               >
                 {logoUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
@@ -440,11 +500,24 @@ export function Header({
                 the hamburger sits at the right; nothing balances it, so a
                 flex justify-between layout centers the logo somewhere left
                 of true midpoint). Hamburger pins right via ml-auto. */}
-            <div className="md:hidden relative flex items-center h-16">
+            <div className={`md:hidden relative flex items-center ${shrunk ? 'h-12' : 'h-16'} ${heightTransitionClass}`.trim()}>
               <Link
                 href="/"
                 aria-label={displayBusinessName}
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                className={
+                  effectiveLogoScale === 1.0
+                    ? 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'
+                    : 'absolute left-1/2 top-1/2'
+                }
+                style={
+                  effectiveLogoScale === 1.0
+                    ? undefined
+                    : {
+                        transform: `translate(-50%, -50%) scale(${effectiveLogoScale.toFixed(3)})`,
+                        transformOrigin: 'center',
+                        transition: reducedMotion ? 'none' : 'transform 240ms ease',
+                      }
+                }
               >
                 {logoUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
@@ -492,7 +565,7 @@ export function Header({
         }}
       >
         <div className="max-w-7xl mx-auto pl-3 pr-4 sm:pl-4 sm:pr-6 lg:pl-4 lg:pr-6">
-          <div className="flex items-center justify-between h-16 sm:h-18 gap-6 lg:gap-10">
+          <div className={`flex items-center justify-between ${defaultHeightClass} gap-6 lg:gap-10 ${heightTransitionClass}`.trim()}>
             {/* Logo — sits at the far-left edge of the header container */}
             <Link
               href="/"
@@ -501,6 +574,7 @@ export function Header({
                   ? 'flex items-center shrink-0 group'
                   : 'flex flex-col leading-tight shrink-0 group'
               }
+              style={effectiveLogoScale === 1.0 ? undefined : logoTransitionStyle}
               aria-label={displayBusinessName}
             >
               {logoUrl ? (

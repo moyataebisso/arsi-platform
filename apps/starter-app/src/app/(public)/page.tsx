@@ -371,6 +371,39 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     (phase15Settings.hero_shuffle || '').trim().toLowerCase() === 'true'
   const quicklinkUnderline =
     (phase15Settings.quicklink_underline || '').trim().toLowerCase() === 'true'
+  // Phase 18 — richer feature cards with optional per-card images.
+  // Absent → today's icon-only cards fed by getHomeServicesContent().
+  const featureCardsRaw = await getSiteSetting('feature_cards')
+  let featureCards: import('@/components/sections/ServicesSection').FeatureCard[] = []
+  if (featureCardsRaw) {
+    try {
+      const parsed = JSON.parse(featureCardsRaw) as unknown
+      if (Array.isArray(parsed)) {
+        for (const item of parsed) {
+          if (!item || typeof item !== 'object') continue
+          const rec = item as {
+            title?: unknown
+            body?: unknown
+            image?: unknown
+            href?: unknown
+          }
+          const title = typeof rec.title === 'string' ? rec.title.trim() : ''
+          if (!title) continue
+          const body = typeof rec.body === 'string' ? rec.body.trim() : ''
+          const image = typeof rec.image === 'string' ? rec.image.trim() : ''
+          const href = typeof rec.href === 'string' ? rec.href.trim() : ''
+          featureCards.push({
+            title,
+            body,
+            ...(image ? { image } : {}),
+            ...(href ? { href } : {}),
+          })
+        }
+      }
+    } catch {
+      featureCards = []
+    }
+  }
   // Phase 10 — shared aspect ratio setting for the two homepage image
   // bands (HomeRotatingGallery + BreakfastLiveSection image slot). Each
   // component owns its own historical default when the key is absent so
@@ -844,6 +877,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         services={services}
         ctaLabel={isRestaurantLayout ? 'View full menu' : undefined}
         ctaHref={isRestaurantLayout ? '/menu' : undefined}
+        featureCards={featureCards.length > 0 ? featureCards : undefined}
       />
     ),
     about: (

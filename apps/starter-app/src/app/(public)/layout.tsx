@@ -28,6 +28,8 @@ export default async function PublicLayout({ children }: { children: React.React
       'gallery_images',
       'gallery_page_enabled',
       'bakery_nav_label',
+      'header_shrink_on_scroll',
+      'header_logo_scale',
       'social_facebook',
       'social_instagram',
       'social_twitter',
@@ -91,6 +93,18 @@ export default async function PublicLayout({ children }: { children: React.React
   const galleryPageEnabled =
     (settings.gallery_page_enabled || '').trim().toLowerCase() !== 'false'
   const showGallery = hasGallery && galleryPageEnabled
+  // Phase 18 — header shrink + logo scale. Both keys are optional;
+  // absent-value defaults preserve today's static header for every
+  // tenant that hasn't seeded either row.
+  const shrinkOnScroll =
+    (settings.header_shrink_on_scroll || '').trim().toLowerCase() === 'true'
+  const parsedLogoScale = Number.parseFloat(
+    (settings.header_logo_scale || '').trim(),
+  )
+  const headerLogoScale: number | undefined =
+    Number.isFinite(parsedLogoScale)
+      ? Math.max(0.6, Math.min(1.0, parsedLogoScale))
+      : undefined
 
   return (
     <>
@@ -121,6 +135,8 @@ export default async function PublicLayout({ children }: { children: React.React
           showJobs={enabledModules.jobs}
           showBakery={enabledModules.bakery}
           bakeryLabel={settings.bakery_nav_label || undefined}
+          shrinkOnScroll={shrinkOnScroll}
+          logoScale={headerLogoScale}
           showLicenseSeparatedNav={enabledModules.license_separated_nav}
           promoBarText={settings.promo_bar_text}
           promoBarCtaUrl={settings.promo_bar_cta_url}
