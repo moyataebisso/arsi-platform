@@ -63,11 +63,25 @@ const nextConfig = {
       'cimaa-adama-restaurant-177872679701.vercel.app',
       'adamarestaurant.com',
       'www.adamarestaurant.com',
+      // Legacy PHP site domain — pointed at this Vercel project so the
+      // old Google-indexed /*.php URLs land on the new routes instead
+      // of 404ing.
+      'adamarestaurantmn.com',
+      'www.adamarestaurantmn.com',
     ];
 
     const adamaLegacy = [
       ['/services', '/menu'],
       ['/parties',  '/catering'],
+      // Legacy PHP paths from the old adamarestaurantmn.com site. All
+      // gated on Adama hosts above so El Roi / Entrusted — which don't
+      // have /*.php paths — are unaffected.
+      ['/menu.php',        '/menu'],
+      ['/contact.php',     '/contact'],
+      ['/about.php',       '/about'],
+      ['/gallery.php',     '/menu'],
+      ['/reservation.php', '/book'],
+      ['/index.php',       '/'],
     ];
 
     const adamaRedirects = ADAMA_HOSTS.flatMap((host) =>
