@@ -36,6 +36,11 @@ interface FlagGatedRoute extends RouteEntry {
   flag: keyof EnabledModules
 }
 
+// Universal routes — rendered for every tenant regardless of module flags.
+// `/services` stays in this list to preserve the historical emission order
+// for healthcare tenants (byte-for-byte unchanged). Restaurant tenants (which
+// 308 /services -> /menu via next.config.js) get it suppressed at loop time
+// via the `enabled.menu` check below.
 const ALWAYS_PAGES: RouteEntry[] = [
   { path: '/',         priority: 1.0, changeFrequency: 'weekly'  },
   { path: '/about',    priority: 0.8, changeFrequency: 'monthly' },
@@ -44,6 +49,7 @@ const ALWAYS_PAGES: RouteEntry[] = [
 ]
 
 const FLAG_GATED_PAGES: FlagGatedRoute[] = [
+  { flag: 'menu',           path: '/menu',          priority: 1.0, changeFrequency: 'weekly'  },
   { flag: 'why_choose_us',  path: '/why-choose-us', priority: 0.7, changeFrequency: 'monthly' },
   { flag: 'referrals',      path: '/referrals',     priority: 0.8, changeFrequency: 'monthly' },
   { flag: 'jobs',           path: '/jobs',          priority: 0.7, changeFrequency: 'monthly' },
@@ -61,6 +67,14 @@ const FLAG_GATED_PAGES: FlagGatedRoute[] = [
   { flag: 'gallery',        path: '/gallery',       priority: 0.6, changeFrequency: 'weekly'  },
   { flag: 'faq',            path: '/faq',           priority: 0.6, changeFrequency: 'weekly'  },
   { flag: 'bakery',         path: '/bakery',        priority: 0.6, changeFrequency: 'weekly'  },
+]
+
+// Menu sub-routes exist on the filesystem but 404 unless the tenant has
+// opted in via site_settings.menu_split_pages='true' (loadMenuSplitPagesFlag
+// in src/app/(public)/menu/_shared.tsx). Also require the menu module itself.
+const MENU_SPLIT_PAGES: RouteEntry[] = [
+  { path: '/menu/breakfast', priority: 0.8, changeFrequency: 'weekly' },
+  { path: '/menu/lunch',     priority: 0.8, changeFrequency: 'weekly' },
 ]
 
 const LICENSE_SEPARATED_PAGES: RouteEntry[] = [
@@ -103,6 +117,10 @@ export async function GET() {
   const gsettings = await getSiteSettings([
     'gallery_images',
     'gallery_page_enabled',
+    // Phase: tenant-aware sitemap — menu_split_pages drives whether
+    // /menu/breakfast and /menu/lunch are listable; otherwise they
+    // notFound() at request time.
+    'menu_split_pages',
   ])
   const gRowPresent = 'gallery_images' in gsettings
   let gRowNonEmpty = false
@@ -118,10 +136,17 @@ export async function GET() {
   // Only the literal "false" suppresses /gallery from the sitemap.
   const gPageEnabled =
     (gsettings.gallery_page_enabled || '').trim().toLowerCase() !== 'false'
+  const menuSplitEnabled =
+    (gsettings.menu_split_pages || '').trim().toLowerCase() === 'true'
 
   const entries: string[] = []
 
   for (const p of ALWAYS_PAGES) {
+    // /services is listed in ALWAYS_PAGES to keep healthcare-tenant
+    // emission order byte-identical. Restaurant tenants (which 308
+    // /services → /menu via next.config.js adamaLegacy) suppress it
+    // here declaratively: when `menu` is enabled, drop /services.
+    if (p.path === '/services' && enabled.menu) continue
     entries.push(urlEntry(baseUrl, p.path, iso, p.changeFrequency, p.priority))
   }
 
@@ -135,8 +160,23 @@ export async function GET() {
     // /menu at request time and must not be listed in the sitemap.
     if (r.flag === 'gallery' && gRowPresent && !gRowNonEmpty) continue
     if (r.flag === 'gallery' && !gPageEnabled) continue
+    // /parties: next.config.js adamaLegacy 308s /parties → /catering
+    // whenever both are present. Mirror that declaratively: when the
+    // tenant enables both `parties` and `catering`, drop /parties from
+    // the sitemap. A tenant with parties-only (no catering) still lists
+    // /parties normally.
+    if (r.flag === 'parties' && enabled.catering) continue
     if (enabled[r.flag]) {
       entries.push(urlEntry(baseUrl, r.path, iso, r.changeFrequency, r.priority))
+    }
+  }
+
+  // Menu sub-routes exist iff menu_split_pages is seeded true. The /menu
+  // module flag is also required because without it the sub-routes would
+  // still 404 (the parent /menu is also absent).
+  if (enabled.menu && menuSplitEnabled) {
+    for (const p of MENU_SPLIT_PAGES) {
+      entries.push(urlEntry(baseUrl, p.path, iso, p.changeFrequency, p.priority))
     }
   }
 
