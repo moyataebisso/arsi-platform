@@ -1,3 +1,4 @@
+import Script from 'next/script'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { ThemeBackground } from '@/components/ThemeBackground'
@@ -38,6 +39,7 @@ export default async function PublicLayout({ children }: { children: React.React
       'social_twitter',
       'social_linkedin',
       'social_google',
+      'arsi_tracking_key',
     ]),
     getEnabledModules(),
     getCtaConfig(),
@@ -129,10 +131,18 @@ export default async function PublicLayout({ children }: { children: React.React
     : undefined
   const headerShrinkExtra =
     (settings.header_shrink_extra || '').trim().toLowerCase() === 'true'
+  const arsiTrackingKey = (settings.arsi_tracking_key || '').trim()
 
   return (
     <>
       {fontsUrl && <link rel="stylesheet" href={fontsUrl} />}
+      {arsiTrackingKey && (
+        <Script
+          src="https://arsi-command-center.vercel.app/t.js"
+          data-key={arsiTrackingKey}
+          strategy="afterInteractive"
+        />
+      )}
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <script
         id="__theme_styles__"
